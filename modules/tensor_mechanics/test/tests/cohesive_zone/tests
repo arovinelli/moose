@@ -1,0 +1,7 @@
+[Tests]
+  [./czm]
+    type = 'Exodiff'
+    input = 'czm.i'
+    exodiff = 'czm_out.e'
+  [../]
+[]

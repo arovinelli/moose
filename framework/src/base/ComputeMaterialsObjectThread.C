@@ -111,7 +111,8 @@ ComputeMaterialsObjectThread::onElement(const Elem * elem)
 void
 ComputeMaterialsObjectThread::onBoundary(const Elem * elem, unsigned int side, BoundaryID bnd_id)
 {
-  if (_fe_problem.needMaterialOnSide(bnd_id, _tid))
+  // if (_fe_problem.needMaterialOnSide(bnd_id, _tid))
+  if (bnd_id == 100)
   {
     _assembly[_tid]->reinit(elem, side);
     unsigned int face_n_points = _assembly[_tid]->qRuleFace()->n_points();
@@ -156,78 +157,78 @@ ComputeMaterialsObjectThread::onBoundary(const Elem * elem, unsigned int side, B
 void
 ComputeMaterialsObjectThread::onInternalSide(const Elem * elem, unsigned int side)
 {
-  if (_need_internal_side_material)
-  {
-    _assembly[_tid]->reinit(elem, side);
-    unsigned int face_n_points = _assembly[_tid]->qRuleFace()->n_points();
-    _bnd_material_data[_tid]->resize(face_n_points);
-    _neighbor_material_data[_tid]->resize(face_n_points);
-
-    if (_has_bnd_stateful_props)
-    {
-      if (_discrete_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
-        _bnd_material_props.initStatefulProps(
-            *_bnd_material_data[_tid],
-            _discrete_materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
-            face_n_points,
-            *elem,
-            side);
-      if (_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
-        _bnd_material_props.initStatefulProps(
-            *_bnd_material_data[_tid],
-            _materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
-            face_n_points,
-            *elem,
-            side);
-    }
-
-    const Elem * neighbor = elem->neighbor_ptr(side);
-    unsigned int neighbor_side = neighbor->which_neighbor_am_i(_assembly[_tid]->elem());
-    const dof_id_type elem_id = elem->id(), neighbor_id = neighbor->id();
-
-    if (_has_bnd_stateful_props &&
-        ((neighbor->active() && (neighbor->level() == elem->level()) && (elem_id < neighbor_id)) ||
-         (neighbor->level() < elem->level())))
-    {
-      _assembly[_tid]->reinitElemAndNeighbor(elem, side, neighbor, neighbor_side);
-
-      // Face Materials
-      if (_discrete_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
-        _bnd_material_props.initStatefulProps(
-            *_bnd_material_data[_tid],
-            _discrete_materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
-            face_n_points,
-            *elem,
-            side);
-      if (_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
-        _bnd_material_props.initStatefulProps(
-            *_bnd_material_data[_tid],
-            _materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
-            face_n_points,
-            *elem,
-            side);
-
-      // Neighbor Materials
-      if (_discrete_materials[Moose::NEIGHBOR_MATERIAL_DATA].hasActiveBlockObjects(
-              neighbor->subdomain_id(), _tid))
-        _bnd_material_props.initStatefulProps(
-            *_bnd_material_data[_tid],
-            _discrete_materials[Moose::NEIGHBOR_MATERIAL_DATA].getActiveBlockObjects(
-                neighbor->subdomain_id(), _tid),
-            face_n_points,
-            *elem,
-            side);
-      if (_materials[Moose::NEIGHBOR_MATERIAL_DATA].hasActiveBlockObjects(neighbor->subdomain_id(),
-                                                                          _tid))
-        _bnd_material_props.initStatefulProps(
-            *_neighbor_material_data[_tid],
-            _materials[Moose::NEIGHBOR_MATERIAL_DATA].getActiveBlockObjects(
-                neighbor->subdomain_id(), _tid),
-            face_n_points,
-            *neighbor,
-            neighbor_side);
-    }
-  }
+  // if (_need_internal_side_material)
+  // {
+  //   _assembly[_tid]->reinit(elem, side);
+  //   unsigned int face_n_points = _assembly[_tid]->qRuleFace()->n_points();
+  //   _bnd_material_data[_tid]->resize(face_n_points);
+  //   _neighbor_material_data[_tid]->resize(face_n_points);
+  //
+  //   if (_has_bnd_stateful_props)
+  //   {
+  //     if (_discrete_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
+  //       _bnd_material_props.initStatefulProps(
+  //           *_bnd_material_data[_tid],
+  //           _discrete_materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
+  //           face_n_points,
+  //           *elem,
+  //           side);
+  //     if (_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
+  //       _bnd_material_props.initStatefulProps(
+  //           *_bnd_material_data[_tid],
+  //           _materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
+  //           face_n_points,
+  //           *elem,
+  //           side);
+  //   }
+  //
+  //   const Elem * neighbor = elem->neighbor_ptr(side);
+  //   unsigned int neighbor_side = neighbor->which_neighbor_am_i(_assembly[_tid]->elem());
+  //   const dof_id_type elem_id = elem->id(), neighbor_id = neighbor->id();
+  //
+  //   if (_has_bnd_stateful_props &&
+  //       ((neighbor->active() && (neighbor->level() == elem->level()) && (elem_id < neighbor_id)) ||
+  //        (neighbor->level() < elem->level())))
+  //   {
+  //     _assembly[_tid]->reinitElemAndNeighbor(elem, side, neighbor, neighbor_side);
+  //
+  //     // Face Materials
+  //     if (_discrete_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
+  //       _bnd_material_props.initStatefulProps(
+  //           *_bnd_material_data[_tid],
+  //           _discrete_materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
+  //           face_n_points,
+  //           *elem,
+  //           side);
+  //     if (_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(_subdomain, _tid))
+  //       _bnd_material_props.initStatefulProps(
+  //           *_bnd_material_data[_tid],
+  //           _materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(_subdomain, _tid),
+  //           face_n_points,
+  //           *elem,
+  //           side);
+  //
+  //     // Neighbor Materials
+  //     if (_discrete_materials[Moose::NEIGHBOR_MATERIAL_DATA].hasActiveBlockObjects(
+  //             neighbor->subdomain_id(), _tid))
+  //       _bnd_material_props.initStatefulProps(
+  //           *_bnd_material_data[_tid],
+  //           _discrete_materials[Moose::NEIGHBOR_MATERIAL_DATA].getActiveBlockObjects(
+  //               neighbor->subdomain_id(), _tid),
+  //           face_n_points,
+  //           *elem,
+  //           side);
+  //     if (_materials[Moose::NEIGHBOR_MATERIAL_DATA].hasActiveBlockObjects(neighbor->subdomain_id(),
+  //                                                                         _tid))
+  //       _bnd_material_props.initStatefulProps(
+  //           *_neighbor_material_data[_tid],
+  //           _materials[Moose::NEIGHBOR_MATERIAL_DATA].getActiveBlockObjects(
+  //               neighbor->subdomain_id(), _tid),
+  //           face_n_points,
+  //           *neighbor,
+  //           neighbor_side);
+  //   }
+  // }
 }
 
 void
