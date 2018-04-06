@@ -24,22 +24,27 @@ class DatabaseItem(object):
         self.inputs = set()
         self.children = set()
 
-def build_class_database(include_dirs, input_dirs):
+def build_class_database(include_dirs=None, input_dirs=None):
     """
     Create the class database.
 
     Returns a dict() of DatabaseItem objects. The key is the class name e.g., Diffusion.
 
     Inputs:
-        include_dirs[str,list]: A space separated str or a list of include directories.
-        input_dirs[str,list]: A space separated str or a list of input file directories.
+        include_dirs[list]: A space separated str or a list of include directories.
+        input_dirs[list]: A space separated str or a list of input file directories.
     """
 
-    # Build the lists from strings
-    if isinstance(include_dirs, str):
-        include_dirs = [mooseutils.eval_path(x) for x in include_dirs.split()]
-    if isinstance(input_dirs, str):
-        input_dirs = [mooseutils.eval_path(x) for x in input_dirs.split()]
+    # Handle environment variables
+    if include_dirs:
+        include_dirs = [mooseutils.eval_path(x) for x in include_dirs]
+    else:
+        include_dirs = [MooseDocs.ROOT_DIR]
+
+    if input_dirs:
+        input_dirs = [mooseutils.eval_path(x) for x in input_dirs]
+    else:
+        input_dirs = [MooseDocs.ROOT_DIR]
 
     # Locate filenames
     headers = _locate_filenames(include_dirs, '.h')
@@ -57,11 +62,9 @@ def _locate_filenames(directories, ext):
 
     out = set()
     for location in directories:
-        for base, _, files in os.walk(location):
-            for fname in files:
-                full_file = os.path.join(base, fname)
-                if fname.endswith(ext) and not os.path.islink(full_file):
-                    out.add(full_file)
+        for filename in mooseutils.git_ls_files(os.path.join(MooseDocs.ROOT_DIR, location)):
+            if filename.endswith(ext) and not os.path.islink(filename):
+                out.add(filename)
     return out
 
 def _process(objects, filenames, regex, func):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #pylint: disable=missing-docstring
 #* This file is part of the MOOSE framework
 #* https://www.mooseframework.org
@@ -18,7 +18,9 @@ class TestClassDatabase(unittest.TestCase):
         """
         Create class database.
         """
-        cls.database = build_class_database('${MOOSE_DIR}/framework/include', '${MOOSE_DIR}/test/tests')
+        cls.database = build_class_database(['${MOOSE_DIR}/framework/include',
+                                             '${MOOSE_DIR}/modules/heat_conduction/include'],
+                                            ['${MOOSE_DIR}/test/tests'])
 
     def testBasic(self):
         """
@@ -42,8 +44,18 @@ class TestClassDatabase(unittest.TestCase):
         Test that named objects with h and C files are located.
         """
         info = self.database['MooseObjectWarehouse']
-        self.assertEqual(info.header, 'framework/include/base/MooseObjectWarehouse.h')
+        self.assertEqual(info.header, 'framework/include/warehouses/MooseObjectWarehouse.h')
         self.assertIsNone(info.source)
+
+class TestClassDatabaseEmptyInput(unittest.TestCase):
+    def testDiffusion(self):
+        database = build_class_database()
+        info = database['Diffusion']
+        self.assertEqual(info.header, 'framework/include/kernels/Diffusion.h')
+        self.assertEqual(info.source, 'framework/src/kernels/Diffusion.C')
+        self.assertIn('modules/heat_conduction/include/kernels/HeatConduction.h', info.children)
+        self.assertIn('test/tests/mesh/named_entities/named_entities_test_xda.i', info.inputs)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

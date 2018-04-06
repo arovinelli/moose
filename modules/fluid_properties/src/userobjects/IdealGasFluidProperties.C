@@ -19,7 +19,6 @@ validParams<IdealGasFluidProperties>()
   InputParameters params = validParams<SinglePhaseFluidProperties>();
   params.addRequiredParam<Real>("gamma", "gamma value (cp/cv)");
   params.addRequiredParam<Real>("R", "Gas constant");
-  params.addParam<Real>("beta", 0, "Coefficient of thermal expansion");
   params.addParam<Real>("mu", 0, "Dynamic viscosity, Pa.s");
   params.addParam<Real>("k", 0, "Thermal conductivity, W/(m-K)");
   params.addClassDescription("Fluid properties for an ideal gas");
@@ -30,7 +29,6 @@ IdealGasFluidProperties::IdealGasFluidProperties(const InputParameters & paramet
   : SinglePhaseFluidProperties(parameters),
     _gamma(getParam<Real>("gamma")),
     _R(getParam<Real>("R")),
-    _beta(getParam<Real>("beta")),
     _mu(getParam<Real>("mu")),
     _k(getParam<Real>("k"))
 {
@@ -228,8 +226,6 @@ IdealGasFluidProperties::e_from_v_h(Real v, Real h, Real & e, Real & de_dv, Real
   de_dh = 1.0 / _gamma;
 }
 
-Real IdealGasFluidProperties::beta_from_p_T(Real, Real) const { return _beta; }
-
 Real
 IdealGasFluidProperties::rho_from_p_T(Real p, Real T) const
 {
@@ -279,6 +275,20 @@ IdealGasFluidProperties::h_from_p_T(Real p, Real T, Real & h, Real & dh_dp, Real
   Real rho = rho_from_p_T(p, T);
   dh_dp = 0.0;
   dh_dT = _cv + p / rho / T;
+}
+
+Real
+IdealGasFluidProperties::e_from_p_T(Real /*p*/, Real T) const
+{
+  return _cv * T;
+}
+
+void
+IdealGasFluidProperties::e_from_p_T(Real p, Real T, Real & e, Real & de_dp, Real & de_dT) const
+{
+  e = e_from_p_T(p, T);
+  de_dp = 0.;
+  de_dT = _cv;
 }
 
 Real

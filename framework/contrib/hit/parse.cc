@@ -61,8 +61,6 @@ trim(const std::string & str)
   return str.substr(first, (last - first + 1));
 }
 
-// toBool converts the given val to a boolean value which is stored in dst.  It returns true if
-// val was successfully converted to a boolean and returns false otherwise.
 bool
 toBool(const std::string & val, bool * dst)
 {
@@ -201,7 +199,7 @@ Node::boolVal()
 {
   valthrow();
 }
-int
+int64_t
 Node::intVal()
 {
   valthrow();
@@ -584,7 +582,7 @@ Field::boolVal()
   toBool(_val, &v);
   return v;
 }
-int
+int64_t
 Field::intVal()
 {
   if (_kind != Kind::Int)
@@ -593,7 +591,7 @@ Field::intVal()
   try
   {
     size_t pos = 0;
-    auto converted_val = std::stoi(_val, &pos);
+    auto converted_val = std::stoll(_val, &pos);
     if (pos != _val.size())
       throw std::invalid_argument("dummy");
     return converted_val;

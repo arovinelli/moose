@@ -21,10 +21,15 @@ validParams<PorousFlowAqueousPreDisChemistry>()
       "List of MOOSE Variables that represent the concentrations of the primary species");
   params.addRequiredParam<unsigned>("num_reactions",
                                     "Number of equations in the system of chemical reactions");
-  params.addRequiredParam<std::vector<Real>>("equilibrium_constants",
-                                             "Equilibrium constant for each equation "
-                                             "(dimensionless) (written in absolute terms, not as a "
-                                             "log10)");
+  params.addParam<bool>("equilibrium_constants_as_log10",
+                        false,
+                        "If true, the equilibrium constants are written in their log10 form, eg, "
+                        "-2.  If false, the equilibrium constants are written in absolute terms, "
+                        "eg, 0.01");
+  params.addRequiredCoupledVar("equilibrium_constants",
+                               "Equilibrium constant for each equation (dimensionless).  If these "
+                               "are temperature dependent AuxVariables, the Jacobian will not be "
+                               "exact");
   params.addRequiredParam<std::vector<Real>>(
       "primary_activity_coefficients",
       "Activity coefficients for the primary species (dimensionless) (one for each)");
@@ -67,6 +72,10 @@ PorousFlowAqueousPreDisChemistry::PorousFlowAqueousPreDisChemistry(
   : PorousFlowMaterialVectorBase(parameters),
     _porosity_old(_nodal_material ? getMaterialPropertyOld<Real>("PorousFlow_porosity_nodal")
                                   : getMaterialPropertyOld<Real>("PorousFlow_porosity_qp")),
+    _aq_ph(_dictator.aqueousPhaseNumber()),
+    _saturation(_nodal_material
+                    ? getMaterialProperty<std::vector<Real>>("PorousFlow_saturation_nodal")
+                    : getMaterialProperty<std::vector<Real>>("PorousFlow_saturation_qp")),
 
     _temperature(_nodal_material ? getMaterialProperty<Real>("PorousFlow_temperature_nodal")
                                  : getMaterialProperty<Real>("PorousFlow_temperature_qp")),
@@ -77,7 +86,9 @@ PorousFlowAqueousPreDisChemistry::PorousFlowAqueousPreDisChemistry(
 
     _num_primary(coupledComponents("primary_concentrations")),
     _num_reactions(getParam<unsigned>("num_reactions")),
-    _equilibrium_constants(getParam<std::vector<Real>>("equilibrium_constants")),
+    _equilibrium_constants_as_log10(getParam<bool>("equilibrium_constants_as_log10")),
+    _num_equilibrium_constants(coupledComponents("equilibrium_constants")),
+    _equilibrium_constants(_num_equilibrium_constants),
     _primary_activity_coefficients(getParam<std::vector<Real>>("primary_activity_coefficients")),
     _reactions(getParam<std::vector<Real>>("reactions")),
 
@@ -108,9 +119,9 @@ PorousFlowAqueousPreDisChemistry::PorousFlowAqueousPreDisChemistry(
     _eta_exponent(isParamValid("eta_exponent") ? getParam<std::vector<Real>>("eta_exponent")
                                                : std::vector<Real>(_num_reactions, 1.0))
 {
-  // only multi-component, single-phase PorousFlow
-  if (_num_phases != 1)
-    mooseError("PorousFlowAqueousPreDisChemistry is designed for single-phase simulations only");
+  if (_dictator.numPhases() < 1)
+    mooseError("PorousFlowAqueousPreDisChemistry: The number of fluid phases must not be zero");
+
   if (_num_primary != _num_components - 1)
     mooseError("PorousFlowAqueousPreDisChemistry: The number of mass_fraction_vars is ",
                _num_components,
@@ -119,9 +130,9 @@ PorousFlowAqueousPreDisChemistry::PorousFlowAqueousPreDisChemistry(
                ")");
 
   // correct number of equilibrium constants
-  if (_equilibrium_constants.size() != _num_reactions)
+  if (_num_equilibrium_constants != _num_reactions)
     mooseError("PorousFlowAqueousPreDisChemistry: The number of equilibrium constants is ",
-               _equilibrium_constants.size(),
+               _num_equilibrium_constants,
                " which must be equal to the number of reactions (",
                _num_reactions,
                ")");
@@ -205,6 +216,10 @@ PorousFlowAqueousPreDisChemistry::PorousFlowAqueousPreDisChemistry(
     _primary[i] = (_nodal_material ? &coupledNodalValue("primary_concentrations", i)
                                    : &coupledValue("primary_concentrations", i));
   }
+
+  for (unsigned i = 0; i < _num_equilibrium_constants; ++i)
+    _equilibrium_constants[i] = (_nodal_material ? &coupledNodalValue("equilibrium_constants", i)
+                                                 : &coupledValue("equilibrium_constants", i));
 }
 
 void
@@ -285,7 +300,9 @@ PorousFlowAqueousPreDisChemistry::computeQpReactionRates()
 {
   for (unsigned r = 0; r < _num_reactions; ++r)
   {
-    _mineral_sat[r] = 1.0 / _equilibrium_constants[r];
+    _mineral_sat[r] =
+        (_equilibrium_constants_as_log10 ? std::pow(10.0, -(*_equilibrium_constants[r])[_qp])
+                                         : 1.0 / (*_equilibrium_constants[r])[_qp]);
     for (unsigned j = 0; j < _num_primary; ++j)
     {
       const Real gamp = _primary_activity_coefficients[j] * (*_primary[j])[_qp];
@@ -323,16 +340,18 @@ PorousFlowAqueousPreDisChemistry::computeQpReactionRates()
      */
 
     // bound the reaction so _sec_conc lies between zero and unity
-    const Real por_times_rr_dt = _porosity_old[_qp] * unbounded_rr * _dt;
+    const Real por_times_rr_dt = _porosity_old[_qp] * _saturation[_qp][_aq_ph] * unbounded_rr * _dt;
     if (_sec_conc_old[_qp][r] + por_times_rr_dt > 1.0)
     {
       _bounded_rate[r] = true;
-      _reaction_rate[_qp][r] = (1.0 - _sec_conc_old[_qp][r]) / _porosity_old[_qp] / _dt;
+      _reaction_rate[_qp][r] =
+          (1.0 - _sec_conc_old[_qp][r]) / _porosity_old[_qp] / _saturation[_qp][_aq_ph] / _dt;
     }
     else if (_sec_conc_old[_qp][r] + por_times_rr_dt < 0.0)
     {
       _bounded_rate[r] = true;
-      _reaction_rate[_qp][r] = -_sec_conc_old[_qp][r] / _porosity_old[_qp] / _dt;
+      _reaction_rate[_qp][r] =
+          -_sec_conc_old[_qp][r] / _porosity_old[_qp] / _saturation[_qp][_aq_ph] / _dt;
     }
     else
     {
@@ -386,7 +405,9 @@ PorousFlowAqueousPreDisChemistry::dQpReactionRate_dprimary(unsigned reaction_num
     // count the number of primary <= 0, and record the one that's zero
     if (zero_count == 1 && stoichiometry(reaction_num, zero_conc_index) == 1.0)
     {
-      Real conc_without_zero = 1.0 / _equilibrium_constants[reaction_num];
+      Real conc_without_zero = (_equilibrium_constants_as_log10
+                                    ? std::pow(10.0, -(*_equilibrium_constants[reaction_num])[_qp])
+                                    : 1.0 / (*_equilibrium_constants[reaction_num])[_qp]);
       for (unsigned i = 0; i < _num_primary; ++i)
       {
         if (i == zero_conc_index)

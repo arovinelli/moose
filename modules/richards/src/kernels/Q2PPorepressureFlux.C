@@ -72,8 +72,8 @@ Q2PPorepressureFlux::prepareNodalValues()
 
   for (unsigned int nodenum = 0; nodenum < _num_nodes; ++nodenum)
   {
-    density = _density.density(_var.nodalValue()[nodenum]);      // fluid density at the node
-    ddensity_dp = _density.ddensity(_var.nodalValue()[nodenum]); // d(fluid density)/dP at the node
+    density = _density.density(_var.dofValues()[nodenum]);      // fluid density at the node
+    ddensity_dp = _density.ddensity(_var.dofValues()[nodenum]); // d(fluid density)/dP at the node
     relperm = _relperm.relperm(_sat[nodenum]); // relative permeability of the fluid at node nodenum
     drelperm_ds = _relperm.drelperm(_sat[nodenum]); // d(relperm)/dsat
 
@@ -106,9 +106,9 @@ Q2PPorepressureFlux::computeJacobian()
 }
 
 void
-Q2PPorepressureFlux::computeOffDiagJacobian(unsigned int jvar)
+Q2PPorepressureFlux::computeOffDiagJacobian(MooseVariableFE & jvar)
 {
-  upwind(false, true, jvar);
+  upwind(false, true, jvar.number());
 }
 
 Real

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import unittest
 import re
 import inspect
@@ -146,9 +146,9 @@ class TestTokens(unittest.TestCase):
             token = tokens.Shortcut(content=u'foo', link=u'link')
         self.assertEqual("The property 'key' is required.", e.exception.message)
 
-        token = tokens.Shortcut(key=u'key', link=u'link', content=u'content')
+        token = tokens.Shortcut(key=u'key', link=u'link')
         self.assertEqual(token.key, 'key')
-        self.assertEqual(token.content, 'content')
+        self.assertEqual(token.link, 'link')
 
     def testShortcutLink(self):
         with self.assertRaises(exceptions.MooseDocsException) as e:

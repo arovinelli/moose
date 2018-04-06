@@ -1,0 +1,65 @@
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
+
+#ifndef VECTORNODALBC_H
+#define VECTORNODALBC_H
+
+#include "NodalBCBase.h"
+#include "MooseVariableInterface.h"
+
+// Forward declarations
+class VectorNodalBC;
+
+template <>
+InputParameters validParams<VectorNodalBC>();
+
+/**
+ * Base class for deriving any boundary condition that works at nodes on vector variables
+ */
+class VectorNodalBC : public NodalBCBase, public MooseVariableInterface<RealVectorValue>
+{
+public:
+  VectorNodalBC(const InputParameters & parameters);
+
+  /**
+   * Gets the variable this BC is active on
+   * @return the variable
+   */
+  virtual VectorMooseVariable & variable() override { return _var; }
+
+  virtual void computeResidual(NumericVector<Number> & residual) override;
+  virtual void computeJacobian() override;
+  virtual void computeOffDiagJacobian(unsigned int jvar) override;
+
+protected:
+  VectorMooseVariable & _var;
+
+  /// current node being processed
+  const Node *& _current_node;
+
+  /// Value of the unknown variable this BC is acting on
+  const RealVectorValue & _u;
+
+  virtual RealVectorValue computeQpResidual() = 0;
+
+  /**
+   * The user can override this function to compute the "on-diagonal"
+   * Jacobian contribution for this VectorNodalBC.  If not overriden,
+   * returns (1, 1, 1).
+   */
+  virtual RealVectorValue computeQpJacobian();
+
+  /**
+   * This is the virtual that derived classes should override for
+   * computing an off-diagonal jacobian component.
+   */
+  virtual Real computeQpOffDiagJacobian(unsigned int jvar);
+};
+
+#endif /* VECTORNODALBC_H */

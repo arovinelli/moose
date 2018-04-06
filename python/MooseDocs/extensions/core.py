@@ -57,6 +57,7 @@ class CoreExtension(components.Extension):
         renderer.add(tokens.Heading, RenderHeading())
         renderer.add(tokens.Code, RenderCode())
         renderer.add(tokens.ShortcutLink, RenderShortcutLink())
+        renderer.add(tokens.Shortcut, RenderShortcut())
         renderer.add(tokens.Monospace, RenderMonospace())
         renderer.add(tokens.Break, RenderBreak())
         renderer.add(tokens.ErrorToken, RenderError())
@@ -211,13 +212,12 @@ class OrderedList(List):
 
 class Shortcut(components.TokenComponent):
     RE = re.compile(r'(?:\A|\n{2,})^\[(?P<key>\w+)\]: ' # shortcut key
-                    r'(?P<link>.*?)'                    # shortcut value
+                    r'(?P<link>.*?)'                    # shortcut link
                     r'(?=\Z|\n{2,})',                   # stop new line or end of file
                     flags=re.MULTILINE|re.DOTALL|re.UNICODE)
 
     def createToken(self, info, parent):
-        tokens.Shortcut(parent, key=info['key'], link=info['link'])
-        #return parent
+        return tokens.Shortcut(parent, key=info['key'], link=info['link'], string=info['key'])
 
 class Paragraph(components.TokenComponent):
     RE = re.compile(r'(?:\A|\n{2,})'   # start of string of empty line
@@ -234,7 +234,19 @@ class EndOfFile(components.TokenComponent):
         return parent
 
 class Link(components.TokenComponent):
-    RE = re.compile(r'\[(?P<inline>.*?)\]'          # link text
+    """
+    Links are defined as: [link text](link address).
+
+    The regex is a bit tricky for this when the line also contains a "shortcut link", as follows:
+
+       [shortcut link] and regular [link text](link address).
+
+    Without the negative lookahead after the first "[" the match would capture the beginning at
+    the shortcut link.
+    """
+
+    RE = re.compile(r'\[(?!\w+?\] )'                # start of link, see note above
+                    r'(?P<inline>.*?)\]'            # link text and end of text
                     r'\((?P<url>.*?)'               # link url
                     r'(?:\s+(?P<settings>.*?))?\)', # settings
                     flags=re.UNICODE)
@@ -243,10 +255,10 @@ class Link(components.TokenComponent):
         return tokens.Link(parent, url=info['url'], **self.attributes)
 
 class ShortcutLink(components.TokenComponent):
-    RE = re.compile(r'\['                         # opening [
-                    r'(?P<key>.+?)'               # key
-                    r'(?:\s+(?P<settings>.*?))?'  # settings
-                    r'\]',                        # closing ]
+    RE = re.compile(r'\['                        # opening [
+                    r'(?P<key>.+?)'              # key
+                    r'(?:\s+(?P<settings>.*?))?' # settings
+                    r'\]',                       # closing ]
                     flags=re.UNICODE)
     def createToken(self, info, parent):
         tokens.ShortcutLink(parent, key=info['key'], **self.attributes)
@@ -351,17 +363,10 @@ class RenderShortcutLink(components.RenderComponent):
 
     def createHTML(self, token, parent):
         a = html.Tag(parent, 'a', **token.attributes)
-
         node = self.getShortcut(token)
-        if node.content is not None:
-            html.String(a, content=node.content)
-        elif node.token:
-            for n in node.token.children:
-                self.translator.renderer.process(n, a)
-        else:
-            html.String(a, content=node.key)
-
         a['href'] = node.link
+        for child in node.children:
+            self.translator.renderer.process(a, child)
         return a
 
     def createMaterialize(self, token, parent):
@@ -396,6 +401,13 @@ class RenderShortcutLink(components.RenderComponent):
 
         msg = "The shortcut link key '{}' was not located in the list of shortcuts."
         raise exceptions.RenderException(token.info, msg, token.key)
+
+class RenderShortcut(components.RenderComponent):
+    def createHTML(self, token, parent):
+        pass
+
+    def createLatex(self, *args):
+        pass
 
 class RenderMonospace(components.RenderComponent):
     def createHTML(self, token, parent): #pylint: disable=no-self-use

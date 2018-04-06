@@ -47,6 +47,9 @@
 []
 
 [AuxVariables]
+  [./eqm_k]
+    initial_condition = 1E2
+  [../]
   [./pressure]
   [../]
 []
@@ -61,9 +64,9 @@
   [../]
   [./massfrac_qp]
     type = PorousFlowMassFractionAqueousEquilibriumChemistry
-    primary_concentrations = 'a b'
+    mass_fraction_vars = 'a b'
     num_reactions = 2
-    equilibrium_constants = '1E2'
+    equilibrium_constants = eqm_k
     primary_activity_coefficients = '1 1'
     secondary_activity_coefficients = '1 1'
     reactions = '2 0

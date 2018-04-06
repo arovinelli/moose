@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #* This file is part of the MOOSE framework
 #* https://www.mooseframework.org
 #*
@@ -18,6 +18,7 @@ class Tests(Testing.PeacockTester):
     def tearDown(self):
         if self.input:
             self.input.MeshViewerPlugin.reset()
+        super(Tests, self).tearDown()
 
     def create_app(self, args):
         self.createPeacockApp(args)
@@ -149,7 +150,7 @@ class Tests(Testing.PeacockTester):
         self.assertEqual(tab.MeshPlugin.isEnabled(), False)
 
     def testBadInput(self):
-        self.create_app(["-i", "../../common/out_transient.e", Testing.find_moose_test_exe()])
+        self.create_app(["-i", "gold/out_transient.e", Testing.find_moose_test_exe()])
         tabs = self.app.main_widget.tab_plugin
         self.check_current_tab(tabs, self.input.tabName())
 

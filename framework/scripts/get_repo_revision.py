@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #* This file is part of the MOOSE framework
 #* https://www.mooseframework.org
 #*
@@ -25,7 +25,7 @@ def shellCommand(command, cwd=None):
         p.wait()
         retcode = p.returncode
         if retcode != 0:
-            raise Exception()
+            raise Exception("Exception raised while running the command: " + command + " in directory: " + cwd)
 
         return p.communicate()[0]
 
@@ -204,7 +204,8 @@ class VersionInfo:
             timestamps_to_modify.append(os.path.join(cdup, '.git', 'index'))
 
             for touch_file in timestamps_to_modify:
-                shellCommand("touch -r " + revision_header + " " + touch_file, repo_location)
+                if os.path.isfile(os.path.join(repo_location, touch_file)):
+                    shellCommand("touch -r " + revision_header + " " + touch_file, repo_location)
 
 
 # Entry point

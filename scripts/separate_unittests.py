@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #* This file is part of the MOOSE framework
 #* https://www.mooseframework.org
 #*
@@ -63,6 +63,6 @@ else:
             cmd.append("-b")
         ret = subprocess.call(cmd)
         if ret != 0:
-            print("%s exited %s" % (t, ret))
+            print("%s exited %s" % (name, ret))
             final_code = 1
     sys.exit(final_code)

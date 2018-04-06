@@ -57,10 +57,11 @@ public:
   e_from_p_rho(Real p, Real rho, Real & e, Real & de_dp, Real & de_drho) const override;
   virtual Real h_from_p_T(Real p, Real T) const override;
   virtual void h_from_p_T(Real p, Real T, Real & h, Real & dh_dp, Real & dh_dT) const override;
+  virtual Real e_from_p_T(Real p, Real T) const override;
+  virtual void e_from_p_T(Real p, Real T, Real & e, Real & de_dp, Real & de_dT) const override;
   virtual Real p_from_h_s(Real h, Real s) const override;
   virtual void p_from_h_s(Real h, Real s, Real & p, Real & dp_dh, Real & dp_ds) const override;
   virtual Real g_from_v_e(Real v, Real e) const override;
-  virtual Real beta_from_p_T(Real p, Real T) const override;
 
 protected:
   Real _gamma;
@@ -68,7 +69,6 @@ protected:
   Real _cv;
   Real _cp;
 
-  Real _beta;
   Real _mu;
   Real _k;
 };

@@ -3,6 +3,7 @@ import os
 import multiprocessing
 import logging
 import subprocess
+import shutil
 
 import anytree
 import livereload
@@ -27,12 +28,14 @@ def command_line_options(subparser, parent):
                         help="Create a local live server.")
     parser.add_argument('--dump', action='store_true',
                         help="Show page tree to the screen.")
-    parser.add_argument('--grammer', action='store_true',
+    parser.add_argument('--grammar', action='store_true',
                         help='Show the lexer components in order.')
     parser.add_argument('--num-threads', '-j', type=int, default=multiprocessing.cpu_count(),
                         help="Specify the number of threads to build pages with.")
     parser.add_argument('--port', default='8000', type=str,
                         help="The local host port for live web server (default: %(default)s).")
+    parser.add_argument('--clean', action='store_true',
+                        help="Clean the destination directory.")
 
 class MooseDocsWatcher(livereload.watcher.Watcher):
     """
@@ -95,7 +98,7 @@ def _init_large_media():
     """Check submodule for large_media."""
     log = logging.getLogger('MooseDocs._init_large_media')
     status = common.submodule_status()
-    large_media = os.path.realpath(os.path.join(MooseDocs.ROOT_DIR, 'large_media'))
+    large_media = os.path.realpath(os.path.join(MooseDocs.MOOSE_DIR, 'large_media'))
     for submodule, status in status.iteritems():
         if ((os.path.realpath(os.path.join(MooseDocs.MOOSE_DIR, submodule)) == large_media)
                 and (status == '-')):
@@ -122,8 +125,13 @@ def main(options):
     if options.dump:
         print translator.root
 
+    # Clean
+    if options.clean:
+        shutil.rmtree(options.destination)
+
     # Perform build
     translator.execute(options.num_threads)
+
     if options.serve:
         watcher = MooseDocsWatcher(translator, options)
         server = livereload.Server(watcher=watcher)

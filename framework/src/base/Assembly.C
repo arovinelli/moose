@@ -868,12 +868,6 @@ Assembly::reinit(const Node * node)
 }
 
 void
-Assembly::reinitNodeNeighbor(const Node * node)
-{
-  _current_neighbor_node = node;
-}
-
-void
 Assembly::reinitElemAndNeighbor(const Elem * elem,
                                 unsigned int side,
                                 const Elem * neighbor,
@@ -2211,4 +2205,40 @@ Assembly::feSecondPhiFaceNeighbor<VectorValue<Real>>(FEType type)
   _need_second_derivative_neighbor[type] = true;
   buildVectorFaceNeighborFE(type);
   return _vector_fe_shape_data_face_neighbor[type]->_second_phi;
+}
+
+template <>
+const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
+Assembly::feCurlPhi<VectorValue<Real>>(FEType type)
+{
+  _need_curl[type] = true;
+  buildVectorFE(type);
+  return _vector_fe_shape_data[type]->_curl_phi;
+}
+
+template <>
+const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
+Assembly::feCurlPhiFace<VectorValue<Real>>(FEType type)
+{
+  _need_curl[type] = true;
+  buildVectorFaceFE(type);
+  return _vector_fe_shape_data_face[type]->_curl_phi;
+}
+
+template <>
+const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
+Assembly::feCurlPhiNeighbor<VectorValue<Real>>(FEType type)
+{
+  _need_curl[type] = true;
+  buildVectorNeighborFE(type);
+  return _vector_fe_shape_data_neighbor[type]->_curl_phi;
+}
+
+template <>
+const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
+Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type)
+{
+  _need_curl[type] = true;
+  buildVectorFaceNeighborFE(type);
+  return _vector_fe_shape_data_face_neighbor[type]->_curl_phi;
 }
