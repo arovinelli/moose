@@ -1,14 +1,17 @@
-/****************************************************************/
-/* MOOSE - Multiphysics Object Oriented Simulation Environment  */
-/*                                                              */
-/*          All contents are licensed under LGPL V2.1           */
-/*             See LICENSE for full restrictions                */
-/****************************************************************/
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "DisplacementJumpBasedCohesiveInterfaceMaterial.h"
 #include "Assembly.h"
 #include "MooseMesh.h"
-#include "TractionSeparationUOBase.h"
+// #include "TractionSeparationUOBase.h"
+// #include "DisplacementJumpCohesiveInterface.h"
 #include "RotationMatrix.h"
 
 registerMooseObject("TensorMechanicsApp", DisplacementJumpBasedCohesiveInterfaceMaterial);
@@ -18,42 +21,20 @@ InputParameters
 validParams<DisplacementJumpBasedCohesiveInterfaceMaterial>()
 {
   InputParameters params = validParams<Material>();
-  params.addRequiredCoupledVar("disp_x",
-                               "variable containing the X component of"
-                               "the dispalcement on the master side");
-  params.addRequiredCoupledVar("disp_x_neighbor",
-                               "variable containing the X component"
-                               " of the dispalcement on the slave side");
-  params.addCoupledVar("disp_y",
-                       "variable containing the Y component of"
-                       "the dispalcement on the master side");
-  params.addCoupledVar("disp_y_neighbor",
-                       "variable containing the Y "
-                       "component of the dispalcement on the slave side");
-  params.addCoupledVar("disp_z",
-                       "variable containing the Z component of"
-                       "the dispalcement on the master side");
-  params.addCoupledVar("disp_z_neighbor",
-                       "variable containing the Z "
-                       "component of the dispalcement on the slave side");
 
   params.addRequiredParam<UserObjectName>(
       "uo_TractionSeparationLaw",
       "the name of the user object including the traction separation law");
+  params.addRequiredParam<UserObjectName>(
+      "uo_CohesiveInterface", "the name of the user object implemnting the cohesive interface");
   params.addClassDescription("this material class is used when defining a "
-                             "cohesive zone model");
+                             "cohesive zone model to store stafeul properties");
   return params;
 }
 
 DisplacementJumpBasedCohesiveInterfaceMaterial::DisplacementJumpBasedCohesiveInterfaceMaterial(
     const InputParameters & parameters)
   : Material(parameters),
-    _disp_x(coupledValue("disp_x")),
-    _disp_x_neighbor(coupledNeighborValue("disp_x_neighbor")),
-    _disp_y(_mesh.dimension() >= 2 ? coupledValue("disp_y") : _zero),
-    _disp_y_neighbor(_mesh.dimension() >= 2 ? coupledNeighborValue("disp_y_neighbor") : _zero),
-    _disp_z(_mesh.dimension() >= 3 ? coupledValue("disp_z") : _zero),
-    _disp_z_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z_neighbor") : _zero),
 
     _normals(_assembly.normals()),
 
@@ -72,6 +53,8 @@ DisplacementJumpBasedCohesiveInterfaceMaterial::DisplacementJumpBasedCohesiveInt
   // assign user object
   _uo_tractionSeparation = &getUserObjectByName<TractionSeparationUOBase>(
       parameters.get<UserObjectName>("uo_TractionSeparationLaw"));
+  _uo_CohesiveInterface = &getUserObjectByName<DisplacementJumpCohesiveInterface>(
+      parameters.get<UserObjectName>("uo_CohesiveInterface"));
 
   // get stateful material property number and names
   _uo_tractionSeparation->statefulMaterialPropertyNames(_materialPropertyNames);
@@ -97,10 +80,8 @@ DisplacementJumpBasedCohesiveInterfaceMaterial::DisplacementJumpBasedCohesiveInt
 void
 DisplacementJumpBasedCohesiveInterfaceMaterial::computeQpProperties()
 {
-  // compute the jump on the interface in global coordinates
-  _Jump[_qp](0) = _disp_x_neighbor[_qp] - _disp_x[_qp];
-  _Jump[_qp](1) = _disp_y_neighbor[_qp] - _disp_y[_qp];
-  _Jump[_qp](2) = _disp_z_neighbor[_qp] - _disp_z[_qp];
+
+  _Jump[_qp] = _uo_CohesiveInterface->computeDisplacementJump(_current_elem->id(), _current_side);
 
   // transform from global to loval cooridnates
   moveToLocalFrame();

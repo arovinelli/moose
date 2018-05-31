@@ -1,5 +1,4 @@
 [Mesh]
-  # Comment
   type = CohesiveZoneMeshSplit
   file = coh3D_3Blocks.e
   displacements = 'disp_x disp_y disp_z'
@@ -222,20 +221,19 @@
   [../]
 []
 
- [Preconditioning]
-   [./SMP]
-     type = SMP
-     full = true
-   [../]
- []
+[Preconditioning]
+  [./SMP]
+    type = SMP
+    full = true
+  [../]
+[]
 
 [Executioner]
-  # Preconditisoned JFNK (default)
+
   type = Transient
 
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
-  # petsc_options_value = 'hypre     boomerang'
 
   solve_type = newton
   nl_abs_tol = 1e-8
