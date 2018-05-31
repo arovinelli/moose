@@ -1,17 +1,11 @@
-
-/****************************************************************/
-/*               DO NOT MODIFY THIS HEADER                      */
-/* MOOSE - Multiphysics Object Oriented Simulation Environment  */
-/*                                                              */
-/*           (c) 2010 Battelle Energy Alliance, LLC             */
-/*                   ALL RIGHTS RESERVED                        */
-/*                                                              */
-/*          Prepared by Battelle Energy Alliance, LLC           */
-/*            Under Contract No. DE-AC07-05ID14517              */
-/*            With the U. S. Department of Energy               */
-/*                                                              */
-/*            See COPYRIGHT for full restrictions               */
-/****************************************************************/
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "DisplacementJumpBasedCohesiveInterfaceKernel.h"
 
@@ -90,15 +84,15 @@ DisplacementJumpBasedCohesiveInterfaceKernel::DisplacementJumpBasedCohesiveInter
                " you must specify a boundary where it will live.");
   }
 
-  _ResidualMP = &getMaterialProperty<RealVectorValue>(_residual);
-  _JacobianMP = &getMaterialProperty<RankTwoTensor>(_jacobian);
+  _residual_MP = &getMaterialProperty<RealVectorValue>(_residual);
+  _jacobian_MP = &getMaterialProperty<RankTwoTensor>(_jacobian);
 }
 
 Real
 DisplacementJumpBasedCohesiveInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 {
 
-  Real r = (*_ResidualMP)[_qp](_disp_index);
+  Real r = (*_residual_MP)[_qp](_disp_index);
 
   switch (type)
   {
@@ -121,7 +115,7 @@ DisplacementJumpBasedCohesiveInterfaceKernel::computeQpJacobian(Moose::DGJacobia
 {
   // retrieve the diagonal jacobain coefficient dependning on the disaplcement
   // component (_disp_index) this kernel is working on
-  Real jac = (*_JacobianMP)[_qp](_disp_index, _disp_index);
+  Real jac = (*_jacobian_MP)[_qp](_disp_index, _disp_index);
 
   switch (type)
   {
@@ -196,7 +190,7 @@ DisplacementJumpBasedCohesiveInterfaceKernel::computeQpOffDiagJacobian(Moose::DG
     mooseError("cannot determine the proper OffDiagIndex");
   }
 
-  Real jac = (*_JacobianMP)[_qp](_disp_index, OffDiagIndex);
+  Real jac = (*_jacobian_MP)[_qp](_disp_index, OffDiagIndex);
 
   switch (type)
   {

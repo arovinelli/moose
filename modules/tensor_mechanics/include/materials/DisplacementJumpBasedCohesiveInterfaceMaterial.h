@@ -1,15 +1,18 @@
-/****************************************************************/
-/* MOOSE - Multiphysics Object Oriented Simulation Environment  */
-/*                                                              */
-/*          All contents are licensed under LGPL V2.1           */
-/*             See LICENSE for full restrictions                */
-/****************************************************************/
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef DISPALCEMENTJUMPBASEDCOHESIVEINTERFACEMATERIAL_H
-#define DISPALCEMENTJUMPBASEDCOHESIVEINTERFACEMATERIAL_H
+#ifndef DISPLACEMENTJUMPBASEDCOHESIVEINTERFACEMATERIAL_H
+#define DISPLACEMENTJUMPBASEDCOHESIVEINTERFACEMATERIAL_H
 
 #include "Material.h"
 #include "TractionSeparationUOBase.h"
+#include "DisplacementJumpCohesiveInterface.h"
 
 class DisplacementJumpBasedCohesiveInterfaceMaterial;
 
@@ -28,17 +31,13 @@ protected:
   virtual void computeQpProperties() override;
   virtual void initQpStatefulProperties() override;
 
-  const VariableValue & _disp_x;
-  const VariableValue & _disp_x_neighbor;
-  const VariableValue & _disp_y;
-  const VariableValue & _disp_y_neighbor;
-  const VariableValue & _disp_z;
-  const VariableValue & _disp_z_neighbor;
-
   const MooseArray<Point> & _normals;
 
-  /// User objects that define the slip rate
+  /// User objects defining the traction separation law
   const TractionSeparationUOBase * _uo_tractionSeparation;
+
+  /// User objects computing the displacement jump
+  const DisplacementJumpCohesiveInterface * _uo_CohesiveInterface;
 
   std::vector<std::string> _materialPropertyNames;
   unsigned int _num_stateful_material_properties;
@@ -76,4 +75,4 @@ protected:
   virtual void moveBackToGlobalFrame();
 };
 
-#endif // DISPALCEMENTJUMPBASEDCOHESIVEINTERFACEMATERIAL_H
+#endif // DISPLACEMENTJUMPBASEDCOHESIVEINTERFACEMATERIAL_H

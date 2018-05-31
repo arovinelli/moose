@@ -146,6 +146,14 @@
     DeltaU0 = '1 0.5'
     MaxAllowableTraction = '1e2 5e1'
   [../]
+  [./DisplacementJump]
+    type = DisplacementJumpCohesiveInterface
+    boundary = 100
+    disp_x = disp_x
+    disp_x_neighbor = disp_x
+    disp_y = disp_y
+    disp_y_neighbor = disp_y
+  [../]
 []
 
 [Materials]
@@ -168,10 +176,8 @@
     type = DisplacementJumpBasedCohesiveInterfaceMaterial
     boundary = 100
     uo_TractionSeparationLaw = 'TractionSeparationTest'
-    disp_x = disp_x
-    disp_x_neighbor = disp_x
-    disp_y = disp_y
-    disp_y_neighbor = disp_y
+    uo_CohesiveInterface = 'DisplacementJump'
+
   [../]
 []
 
