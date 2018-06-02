@@ -13,14 +13,12 @@
     order = FIRST
     family = LAGRANGE
   [../]
-
 []
 
 
 
 
 [AuxVariables]
-
   [./sxx]
     order = CONSTANT
     family = MONOMIAL
@@ -33,7 +31,6 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-
 []
 
 [AuxKernels]
@@ -85,18 +82,6 @@
     value = 0.0
   [../]
 
-  [./LEFT_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 3
-    value = 0.0
-  [../]
-  [./RIGHT_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 2
-    value = 0.0
-  [../]
 
   [./top_x]
     type = DirichletBC
@@ -140,19 +125,21 @@
 []
 
 [UserObjects]
-  [./TractionSeparationTest]
-    type = CohesiveLaw_3DC
-    boundary = 100
-    DeltaU0 = '1 0.5'
-    MaxAllowableTraction = '1e2 5e1'
-  [../]
+  # [./TractionSeparationTest]
+  #   type = CohesiveLaw_3DC
+  #   boundary = 100
+  #   DeltaU0 = '1 0.5'
+  #   MaxAllowableTraction = '1e2 5e1'
+  # [../]
   [./DisplacementJump]
     type = DisplacementJumpCohesiveInterface
-    boundary = 100
+    # boundary = 100
+
     disp_x = disp_x
     disp_x_neighbor = disp_x
     disp_y = disp_y
     disp_y_neighbor = disp_y
+    execute_on = 'LINEAR'
   [../]
 []
 
@@ -175,7 +162,7 @@
   [./gap]
     type = DisplacementJumpBasedCohesiveInterfaceMaterial
     boundary = 100
-    uo_TractionSeparationLaw = 'TractionSeparationTest'
+    # uo_TractionSeparationLaw = 'TractionSeparationTest'
     uo_CohesiveInterface = 'DisplacementJump'
 
   [../]
@@ -189,13 +176,13 @@
  []
 
 [Executioner]
-  # Preconditisoned JFNK (default)
   type = Transient
 
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
+  # petsc_options = '-snes_linesearch_monitor -snes_monitor -ksp_monitor_true_residual -snes_converged_reason -ksp_converged_reason nes_grid_sequence'
+  petsc_options_iname = '-pc_type '
+  petsc_options_value = 'lu '
 
-  solve_type = newton
+  solve_type = NEWTON
   nl_abs_tol = 1e-8
   nl_rel_tol = 1e-6
   nl_max_its = 50
@@ -203,7 +190,7 @@
   l_max_its = 50
   start_time = 0.0
   dt = 10
-  num_steps = 20
+  num_steps = 1
 
 []
 
