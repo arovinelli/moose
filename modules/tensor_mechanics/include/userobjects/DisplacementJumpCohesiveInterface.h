@@ -11,15 +11,14 @@
 #define DISPLACEMENTJUMPCOHESIVEINTERFACE_H
 
 #include "InternalSideUserObject.h"
-#include "BoundaryRestrictableRequired.h"
+#include "BoundaryRestrictable.h"
 
 class DisplacementJumpCohesiveInterface;
 
 template <>
 InputParameters validParams<DisplacementJumpCohesiveInterface>();
 
-class DisplacementJumpCohesiveInterface : public InternalSideUserObject,
-                                          public BoundaryRestrictableRequired
+class DisplacementJumpCohesiveInterface : public InternalSideUserObject
 {
 public:
   DisplacementJumpCohesiveInterface(const InputParameters & parameters);
@@ -28,11 +27,18 @@ public:
   virtual void initialize() override;
   virtual void execute() override;
   virtual void finalize() override;
-  virtual void threadJoin(const UserObject &) override final;
+  virtual void threadJoin(const UserObject &) override;
 
-  std::map<std::pair<dof_id_type, unsigned int>, std::vector<RealVectorValue>> _map_values;
+  void computeResidaulAndJacobianCoefficients(dof_id_type /*elem*/,
+                                              unsigned int /*side*/,
+                                              unsigned int /*qp*/,
+                                              RealVectorValue & /*Traction*/,
+                                              RankTwoTensor & /*TractionSpatialDerivative*/) const;
 
 protected:
+  std::map<std::pair<dof_id_type, unsigned int>, std::vector<std::vector<RealVectorValue>>>
+      _map_values;
+
   const VariableValue & _disp_x;
   const VariableValue & _disp_x_neighbor;
   const VariableValue & _disp_y;
@@ -40,8 +46,24 @@ protected:
   const VariableValue & _disp_z;
   const VariableValue & _disp_z_neighbor;
 
-private:
-  virtual RealVectorValue computeDisplacementJump();
+  void moveToLocalFrame(RealVectorValue & /*Jump*/,
+                        RealVectorValue & /*JumpLocal*/,
+                        RealVectorValue & /*normals*/,
+                        RealTensorValue & /*RotationGlobal2Local*/) const;
+
+  void moveBackToGlobalFrame(RealVectorValue & /*TractionLocal*/,
+                             RankTwoTensor & /*TractionSpatialDerivativeLocal*/,
+                             RealVectorValue & /*Traction*/,
+                             RankTwoTensor & /*TractionSpatialDerivative*/,
+                             RealTensorValue & /*RotationGlobal2Local*/) const;
+
+  virtual RealVectorValue computeDisplacementJump(unsigned int /*qp*/);
+
+  virtual void computeTractionLocal(RealVectorValue & _JumpLocal,
+                                    RealVectorValue & TractionLocal) const;
+
+  virtual void computeTractionSpatialDerivativeLocal(RealVectorValue & _JumpLocal,
+                                                     RankTwoTensor & TractionDerivativeLocal) const;
 };
 
 #endif // DISPLACEMENTJUMPCOHESIVEINTERFACE_H
