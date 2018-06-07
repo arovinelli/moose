@@ -1,6 +1,6 @@
 [Mesh]
   type = CohesiveZoneMeshSplit
-  file = 4ElementJunction.e
+  file = czm2Blocks.e
   displacements = 'disp_x disp_y '
 []
 
@@ -41,7 +41,7 @@
     index_i = 0
     index_j = 0
     variable = sxx
-    block = '1 2 3 4'
+    block = '1 2'
   []
   [./syy]
     type = RankTwoAux
@@ -49,7 +49,7 @@
     index_i = 1
     index_j = 1
     variable = syy
-    block = '1 2 3 4'
+    block = '1 2'
   []
   [./sxy]
     type = RankTwoAux
@@ -57,7 +57,7 @@
     index_i = 0
     index_j = 1
     variable = sxy
-    block = '1 2 3 4'
+    block = '1 2'
   []
 
 []
@@ -86,13 +86,13 @@
   [./top_x]
     type = DirichletBC
     variable = disp_x
-    boundary = 4
+    boundary = 2
     value = 0.0
   [../]
   [./top_y]
     type = FunctionDirichletBC
     variable = disp_y
-    boundary = 4
+    boundary = 2
     function = 0.01*t
   [../]
 
@@ -146,18 +146,18 @@
 [Materials]
   [./Elasticity_tensor]
     type = ComputeElasticityTensor
-    block = '1 2 3 4'
+    block = '1 2'
     fill_method = symmetric_isotropic
     C_ijkl = '0.3 0.5e8'
   [../]
   [./strain]
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y '
-    block = '1 2 3 4'
+    block = '1 2'
   [../]
   [./stress]
     type = ComputeLinearElasticStress
-    block = '1 2 3 4'
+    block = '1 2'
   [../]
   [./gap]
     type = DisplacementJumpBasedCohesiveInterfaceMaterial
@@ -178,20 +178,21 @@
 [Executioner]
   type = Transient
 
-  petsc_options = '-snes_linesearch_monitor' # -snes_monitor -ksp_monitor_true_residual -snes_converged_reason -ksp_converged_reason nes_grid_sequence'
+  # petsc_options = '-snes_linesearch_monitor -snes_monitor -ksp_monitor_true_residual -snes_converged_reason -ksp_converged_reason nes_grid_sequence'
   petsc_options_iname = '-pc_type '
   petsc_options_value = 'lu '
-  # line_search = none
 
   solve_type = NEWTON
-  nl_abs_tol = 1e-8
-  nl_rel_tol = 1e-6
+  nl_abs_tol = 1e-6
+  nl_rel_tol = 1e-8
   nl_max_its = 50
   l_tol = 1e-10
+  # line_search = none
   l_max_its = 50
   start_time = 0.0
-  dt = 50
-  num_steps = 3
+  dt = 100
+  num_steps = 1
+  # end_time = 1000
 
 []
 
