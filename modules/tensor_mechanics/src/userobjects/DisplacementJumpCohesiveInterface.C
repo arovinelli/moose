@@ -9,6 +9,7 @@
 
 #include "DisplacementJumpCohesiveInterface.h"
 #include "MooseError.h"
+#include "Assembly.h"
 // #include "RankTwoTensor.h"
 #include "RotationMatrix.h"
 
@@ -146,6 +147,9 @@ DisplacementJumpCohesiveInterface::execute()
   {
     // std::cout << " EL_ID " << _current_elem->id() << std::endl;
     // std::cout << "    SIDE " << _current_side << std::endl;
+    // std::cout << "NEIGHBOR " << _neighbor_elem->id() << std::endl;
+    // std::cout << "    SIDE " << _current_neighbor_side << std::endl;
+
     auto & vec = _map_values[std::make_pair(_current_elem->id(), _current_side)];
     vec.resize(_qrule->n_points());
     for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)

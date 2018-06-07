@@ -167,7 +167,8 @@ CohesiveZoneMeshSplit::tearElements()
 
       if (imat == ref_mat)
         continue;
-      // if material is different then we ne need to duplicate the node and store the boundary pair
+      // if material is different then we ne need to duplicate the node and store the boundary
+      // pair
 
       // 1 -----> store boundary pair by block ID
       std::pair<subdomain_id_type, subdomain_id_type> materials_pair;

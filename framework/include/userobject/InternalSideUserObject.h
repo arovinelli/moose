@@ -57,6 +57,8 @@ protected:
 
   /// The neighboring element
   const Elem *& _neighbor_elem;
+  /// current side of the neighbor element
+  unsigned int & _current_neighbor_side;
 
   /// The volume (or length) of the current neighbor
   const Real & getNeighborElemVolume();
