@@ -116,7 +116,8 @@ public:
                          const std::vector<std::shared_ptr<Material>> & mats,
                          unsigned int n_qpoints,
                          const Elem & elem,
-                         unsigned int side = 0);
+                         unsigned int side = 0,
+                         bool isNeighborOnInterface = false);
 
   /**
    * Shift the material properties in time.
@@ -276,7 +277,8 @@ private:
   void initProps(MaterialData & material_data,
                  const Elem & elem,
                  unsigned int side,
-                 unsigned int n_qpoints);
+                 unsigned int n_qpoints,
+                 bool isNeighborOnInterface = false);
 };
 
 template <>

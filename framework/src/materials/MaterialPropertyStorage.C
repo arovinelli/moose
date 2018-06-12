@@ -221,12 +221,13 @@ MaterialPropertyStorage::initStatefulProps(MaterialData & material_data,
                                            const std::vector<std::shared_ptr<Material>> & mats,
                                            unsigned int n_qpoints,
                                            const Elem & elem,
-                                           unsigned int side /* = 0*/)
+                                           unsigned int side /* = 0*/,
+                                           bool isNeighborOnInterface)
 {
   // NOTE: since materials are storing their computed properties in MaterialData class, we need to
   // juggle the memory between MaterialData and MaterialProperyStorage classes
 
-  initProps(material_data, elem, side, n_qpoints);
+  initProps(material_data, elem, side, n_qpoints, isNeighborOnInterface);
 
   // copy from storage to material data
   swap(material_data, elem, side);
@@ -246,19 +247,39 @@ MaterialPropertyStorage::initStatefulProps(MaterialData & material_data,
   // getMaterialProperty[Old/Older] can potentially trigger a material to
   // become stateful that previously wasn't.  This needs to go after the
   // swapBack.
-  initProps(material_data, elem, side, n_qpoints);
+  initProps(material_data, elem, side, n_qpoints, isNeighborOnInterface);
 
   // Copy the properties to Old and Older as needed
   for (unsigned int i = 0; i < _stateful_prop_id_to_prop_id.size(); ++i)
   {
-    auto curr = props(&elem, side)[i];
-    auto old = propsOld(&elem, side)[i];
-    auto older = propsOlder(&elem, side)[i];
-    for (unsigned int qp = 0; qp < n_qpoints; ++qp)
+    if (!isNeighborOnInterface)
     {
-      old->qpCopy(qp, curr, qp);
-      if (hasOlderProperties())
-        older->qpCopy(qp, curr, qp);
+
+      auto curr = props(&elem, side)[i];
+      auto old = propsOld(&elem, side)[i];
+      auto older = propsOlder(&elem, side)[i];
+      for (unsigned int qp = 0; qp < n_qpoints; ++qp)
+      {
+        old->qpCopy(qp, curr, qp);
+        if (hasOlderProperties())
+          older->qpCopy(qp, curr, qp);
+      }
+    }
+    else
+    {
+      // if we are in the neighbor element we need to check that the property has not a null pointer
+      if (props(&elem, side)[i] != nullptr)
+      {
+        auto curr = props(&elem, side)[i];
+        auto old = propsOld(&elem, side)[i];
+        auto older = propsOlder(&elem, side)[i];
+        for (unsigned int qp = 0; qp < n_qpoints; ++qp)
+        {
+          old->qpCopy(qp, curr, qp);
+          if (hasOlderProperties())
+            older->qpCopy(qp, curr, qp);
+        }
+      }
     }
   }
 }
@@ -385,8 +406,12 @@ void
 MaterialPropertyStorage::initProps(MaterialData & material_data,
                                    const Elem & elem,
                                    unsigned int side,
-                                   unsigned int n_qpoints)
+                                   unsigned int n_qpoints,
+                                   bool isNeighborOnInterface)
 {
+  // TODO _stateful_prop_id_to_prop_id contains the stateful properties belonging to the master
+  // blockRestricted a more smart way to solve the issue we have is to create a proper
+  // _stateful_prop_id_to_prop_id for the nieghbor block
   material_data.resize(n_qpoints);
   auto n = _stateful_prop_id_to_prop_id.size();
 
@@ -400,15 +425,36 @@ MaterialPropertyStorage::initProps(MaterialData & material_data,
   // init properties (allocate memory. etc)
   for (unsigned int i = 0; i < n; i++)
   {
+
     auto prop_id = _stateful_prop_id_to_prop_id[i];
+
     // duplicate the stateful property in property storage (all three states - we will reuse the
     // allocated memory there)
     // also allocating the right amount of memory, so we do not have to resize, etc.
-    if (props(&elem, side)[i] == nullptr)
-      props(&elem, side)[i] = material_data.props()[prop_id]->init(n_qpoints);
-    if (propsOld(&elem, side)[i] == nullptr)
-      propsOld(&elem, side)[i] = material_data.propsOld()[prop_id]->init(n_qpoints);
-    if (hasOlderProperties() && propsOlder(&elem, side)[i] == nullptr)
-      propsOlder(&elem, side)[i] = material_data.propsOlder()[prop_id]->init(n_qpoints);
+    if (!isNeighborOnInterface) // check if the call is originating from a neighboring element
+    {
+      if (props(&elem, side)[i] == nullptr)
+        props(&elem, side)[i] = material_data.props()[prop_id]->init(n_qpoints);
+
+      if (propsOld(&elem, side)[i] == nullptr)
+        propsOld(&elem, side)[i] = material_data.propsOld()[prop_id]->init(n_qpoints);
+
+      if (hasOlderProperties() && propsOlder(&elem, side)[i] == nullptr)
+        propsOlder(&elem, side)[i] = material_data.propsOlder()[prop_id]->init(n_qpoints);
+    }
+    else // if so we need check wich material property exist in the current element
+    {
+      if (props(&elem, side)[i] == nullptr && prop_id < props(&elem, side).size() &&
+          material_data.props()[prop_id] != nullptr)
+        props(&elem, side)[i] = material_data.props()[prop_id]->init(n_qpoints);
+
+      if (propsOld(&elem, side)[i] == nullptr && prop_id < propsOld(&elem, side).size() &&
+          material_data.props()[prop_id] != nullptr)
+        propsOld(&elem, side)[i] = material_data.propsOld()[prop_id]->init(n_qpoints);
+
+      if (hasOlderProperties() && propsOlder(&elem, side)[i] == nullptr &&
+          prop_id < propsOlder(&elem, side).size() && material_data.props()[prop_id] != nullptr)
+        propsOlder(&elem, side)[i] = material_data.propsOlder()[prop_id]->init(n_qpoints);
+    }
   }
 }
