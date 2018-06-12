@@ -1,0 +1,13 @@
+[Tests]
+  [./interface_UO_test]
+    type = 'Exodiff'
+    input = 'interface_user_object.i'
+    exodiff = 'interface_user_object_out.e'
+    requirement = "Testing the implementation of the InterfaceUO."
+               "It make sure that the average material property jump accross"
+               "the interface is 7 and the average jump of the field variable u"
+               "accross the interface is 0."
+    design = 'InterfaceUserObject.md InterfaceUO.md'
+    issues = '#11647'
+  [../]
+[]
