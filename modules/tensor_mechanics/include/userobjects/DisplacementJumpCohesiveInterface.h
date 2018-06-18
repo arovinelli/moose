@@ -10,24 +10,29 @@
 #ifndef DISPLACEMENTJUMPCOHESIVEINTERFACE_H
 #define DISPLACEMENTJUMPCOHESIVEINTERFACE_H
 
-#include "InternalSideUserObject.h"
-#include "BoundaryRestrictable.h"
+#include "InterfaceUserObject.h"
 
 class DisplacementJumpCohesiveInterface;
 
 template <>
 InputParameters validParams<DisplacementJumpCohesiveInterface>();
 
-class DisplacementJumpCohesiveInterface : public InternalSideUserObject
+class DisplacementJumpCohesiveInterface : public InterfaceUserObject
 {
 public:
   DisplacementJumpCohesiveInterface(const InputParameters & parameters);
+  virtual ~DisplacementJumpCohesiveInterface();
+
+  virtual void initialize();
+  virtual void execute();
+  virtual void finalize();
+  virtual void threadJoin(const UserObject & uo);
 
   /// @{ Block all methods that are not used in explicitly called UOs
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void finalize() override;
-  virtual void threadJoin(const UserObject &) override;
+  // virtual void initialize() override;
+  // virtual void execute() override;
+  // virtual void finalize() override;
+  // virtual void threadJoin(const UserObject &) override;
 
   void computeResidaulAndJacobianCoefficients(dof_id_type /*elem*/,
                                               unsigned int /*side*/,
@@ -59,11 +64,17 @@ protected:
 
   virtual RealVectorValue computeDisplacementJump(unsigned int /*qp*/);
 
-  virtual void computeTractionLocal(RealVectorValue & _JumpLocal,
-                                    RealVectorValue & TractionLocal) const;
+  virtual void computeTractionLocal(RealVectorValue & /*_JumpLocal*/,
+                                    RealVectorValue & /*TractionLocal*/) const;
 
-  virtual void computeTractionSpatialDerivativeLocal(RealVectorValue & _JumpLocal,
-                                                     RankTwoTensor & TractionDerivativeLocal) const;
+  virtual void
+  computeTractionSpatialDerivativeLocal(RealVectorValue & /*_JumpLocal*/,
+                                        RankTwoTensor & /*TractionDerivativeLocal*/) const;
+
+private:
+  // cohesive law paramters
+  const std::vector<Real> _deltaU0;
+  const std::vector<Real> _maxAllowableTraction;
 };
 
 #endif // DISPLACEMENTJUMPCOHESIVEINTERFACE_H
