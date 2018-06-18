@@ -1,6 +1,6 @@
 [Mesh]
   type = CohesiveZoneMeshSplit
-  file = czm2Blocks.e
+  file = 4ElementJunction.e
   displacements = 'disp_x disp_y '
 []
 
@@ -41,7 +41,7 @@
     index_i = 0
     index_j = 0
     variable = sxx
-    block = '1 2'
+    block = '1 2 3 4'
   []
   [./syy]
     type = RankTwoAux
@@ -49,7 +49,7 @@
     index_i = 1
     index_j = 1
     variable = syy
-    block = '1 2'
+    block = '1 2 3 4'
   []
   [./sxy]
     type = RankTwoAux
@@ -57,7 +57,7 @@
     index_i = 0
     index_j = 1
     variable = sxy
-    block = '1 2'
+    block = '1 2 3 4'
   []
 
 []
@@ -86,13 +86,13 @@
   [./top_x]
     type = DirichletBC
     variable = disp_x
-    boundary = 2
+    boundary = 4
     value = 0.0
   [../]
   [./top_y]
     type = FunctionDirichletBC
     variable = disp_y
-    boundary = 2
+    boundary = 4
     function = 0.01*t
   [../]
 
@@ -133,31 +133,32 @@
   # [../]
   [./DisplacementJump]
     type = DisplacementJumpCohesiveInterface
-    # boundary = 100
-
+    boundary = 100
+    DeltaU0 = '1 0.5'
+    MaxAllowableTraction = '2e2 5e1'
     disp_x = disp_x
     disp_x_neighbor = disp_x
     disp_y = disp_y
     disp_y_neighbor = disp_y
-    execute_on = 'LINEAR'
+    execute_on = 'initial LINEAR'
   [../]
 []
 
 [Materials]
   [./Elasticity_tensor]
     type = ComputeElasticityTensor
-    block = '1 2'
+    block = '1 2 3 4'
     fill_method = symmetric_isotropic
     C_ijkl = '0.3 0.5e8'
   [../]
   [./strain]
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y '
-    block = '1 2'
+    block = '1 2 3 4'
   [../]
   [./stress]
     type = ComputeLinearElasticStress
-    block = '1 2'
+    block = '1 2 3 4'
   [../]
   [./gap]
     type = DisplacementJumpBasedCohesiveInterfaceMaterial
@@ -187,11 +188,11 @@
   nl_rel_tol = 1e-8
   nl_max_its = 50
   l_tol = 1e-10
-  # line_search = none
+  line_search = none
   l_max_its = 50
   start_time = 0.0
-  dt = 100
-  num_steps = 1
+  dt = 25
+  num_steps = 20
   # end_time = 1000
 
 []

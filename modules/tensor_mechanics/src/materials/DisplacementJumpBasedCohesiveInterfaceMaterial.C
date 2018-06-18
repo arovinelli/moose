@@ -85,8 +85,12 @@ DisplacementJumpBasedCohesiveInterfaceMaterial::computeQpProperties()
   RealVectorValue traction_temp;
   RankTwoTensor traction_spatial_derivative_temp;
 
+  std::cout << "computeQpProperties" << std::endl;
+
   _uo_CohesiveInterface.computeResidaulAndJacobianCoefficients(
       _current_elem->id(), _current_side, _qp, traction_temp, traction_spatial_derivative_temp);
+
+  std::cout << "save values" << std::endl;
 
   _Traction[_qp] = traction_temp;
   _TractionSpatialDerivative[_qp] = traction_spatial_derivative_temp;
@@ -102,11 +106,14 @@ DisplacementJumpBasedCohesiveInterfaceMaterial::computeQpProperties()
 
   // // move results back to global coordinates
   // moveBackToGlobalFrame();
+  std::cout << "finished computeQpProperties" << std::endl;
 }
 
 void
 DisplacementJumpBasedCohesiveInterfaceMaterial::initQpStatefulProperties()
 {
+
+  std::cout << "initQpStatefulProperties" << std::endl;
 
   // if (_num_stateful_material_properties > 0)
   // {

@@ -19,7 +19,7 @@ template <>
 InputParameters
 validParams<DisplacementJumpCohesiveInterface>()
 {
-  InputParameters params = validParams<InternalSideUserObject>();
+  InputParameters params = validParams<InterfaceUserObject>();
 
   params.addClassDescription("Compute the dispalcment jump across a cohesive interface");
   params.addRequiredCoupledVar("disp_x",
@@ -40,20 +40,45 @@ validParams<DisplacementJumpCohesiveInterface>()
   params.addCoupledVar("disp_z_neighbor",
                        "variable containing the Z "
                        "component of the displacement on the slave side");
+  params.addRequiredParam<std::vector<Real>>(
+      "DeltaU0",
+      "a vector containing the displacement value at which maximum"
+      " traction occurs for the normal(1st) and tangential(2nd) "
+      " direction.");
+  params.addRequiredParam<std::vector<Real>>("MaxAllowableTraction",
+                                             "a vector containing the maximum allowed traction"
+                                             "for the normal(1st) and tangential(2nd) direction.");
 
   return params;
 }
 
 DisplacementJumpCohesiveInterface::DisplacementJumpCohesiveInterface(const InputParameters & params)
-  : InternalSideUserObject(params),
+  : InterfaceUserObject(params),
     _disp_x(coupledValue("disp_x")),
     _disp_x_neighbor(coupledNeighborValue("disp_x_neighbor")),
     _disp_y(_mesh.dimension() >= 2 ? coupledValue("disp_y") : _zero),
     _disp_y_neighbor(_mesh.dimension() >= 2 ? coupledNeighborValue("disp_y_neighbor") : _zero),
     _disp_z(_mesh.dimension() >= 3 ? coupledValue("disp_z") : _zero),
-    _disp_z_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z_neighbor") : _zero)
+    _disp_z_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z_neighbor") : _zero),
+    _deltaU0(getParam<std::vector<Real>>("DeltaU0")),
+    _maxAllowableTraction(getParam<std::vector<Real>>("MaxAllowableTraction"))
 {
+  // check inputs
+  if (_deltaU0.size() != 2)
+    mooseError("CohesiveLaw_3DC: the parameter DeltaU0 requires 2 components, " +
+               std::to_string(_deltaU0.size()) + " provided.");
+  if (_maxAllowableTraction.size() != 2)
+    mooseError("CohesiveLaw_3DC: the parameter MaxAllowableTraction"
+               "requires 2 components," +
+               std::to_string(_maxAllowableTraction.size()) + " provided.");
+
+  // copying component 2 of _deltaU0 and _maxAllowableTraction to ease
+  // calculations
+  const_cast<std::vector<Real> &>(_deltaU0).push_back(_deltaU0[1]);
+  const_cast<std::vector<Real> &>(_maxAllowableTraction).push_back(_maxAllowableTraction[1]);
 }
+
+DisplacementJumpCohesiveInterface::~DisplacementJumpCohesiveInterface() {}
 
 void
 DisplacementJumpCohesiveInterface::computeResidaulAndJacobianCoefficients(
@@ -70,24 +95,33 @@ DisplacementJumpCohesiveInterface::computeResidaulAndJacobianCoefficients(
   RealTensorValue RotationGlobal2Local;
   RankTwoTensor TractionSpatialDerivativeLocal;
 
-  // std::cout << "RetrieveDisplacementJump UO" << std::endl;
+  std::cout << "computeResidaulAndJacobianCoefficients UO" << std::endl;
   auto data = _map_values.find(std::make_pair(elem, side));
   if (data != _map_values.end())
   {
+    std::cout << "start retrieving Jump and side_normal  UO" << std::endl;
+
     Jump = data->second[qp][0];
+    std::cout << "Jump done  UO" << std::endl;
+
     side_normal = data->second[qp][1];
+    std::cout << "side_normal done  UO" << std::endl;
 
     moveToLocalFrame(Jump, JumpLocal, side_normal, RotationGlobal2Local);
+    std::cout << "moveToLocalFrame UO" << std::endl;
 
     computeTractionLocal(JumpLocal, TractionLocal);
+    std::cout << "computeTractionLocal UO" << std::endl;
 
     computeTractionSpatialDerivativeLocal(JumpLocal, TractionSpatialDerivativeLocal);
+    std::cout << "computeTractionSpatialDerivativeLocal UO" << std::endl;
 
     moveBackToGlobalFrame(TractionLocal,
                           TractionSpatialDerivativeLocal,
                           Traction,
                           TractionSpatialDerivative,
                           RotationGlobal2Local);
+    std::cout << "moveBackToGlobalFrame UO" << std::endl;
   }
   else
   {
@@ -99,6 +133,7 @@ RealVectorValue
 DisplacementJumpCohesiveInterface::computeDisplacementJump(unsigned int qp)
 {
   RealVectorValue Jump;
+  std::cout << "compute Jump" << std::endl;
 
   Jump(0) = _disp_x_neighbor[qp] - _disp_x[qp];
   Jump(1) = _disp_y_neighbor[qp] - _disp_y[qp];
@@ -112,42 +147,48 @@ void
 DisplacementJumpCohesiveInterface::initialize()
 {
 
-  // std::cout << "init UO" << std::endl;
+  std::cout << "init UO" << std::endl;
 
-  std::vector<dof_id_type> el;
-  std::vector<unsigned short int> sl;
-  std::vector<boundary_id_type> il;
+  std::vector<std::tuple<dof_id_type, unsigned short int, boundary_id_type>> elem_side_bid;
 
-  std::set<BoundaryID> boundaryList;
-  boundaryList.insert(100);
-  /*boundaryIDs()*/;
+  // std::vector<dof_id_type> el;
+  // std::vector<unsigned short int> sl;
+  // std::vector<boundary_id_type> il;
 
-  _mesh.buildSideList(el, sl, il);
+  std::set<BoundaryID> boundaryList = boundaryIDs();
+  // boundaryList.insert(100);
+  // /*boundaryIDs()*/;
+
+  // _mesh.buildSideList(el, sl, il);
+  elem_side_bid = _mesh.buildSideList();
+
   _map_values.clear();
 
   // std::cout << "boundary list created" << std::endl;
-  for (unsigned int i = 0; i < il.size(); i++)
+  for (unsigned int i = 0; i < elem_side_bid.size(); i++)
   {
-    if (boundaryList.find(il[i]) != boundaryList.end())
+    if (boundaryList.find(std::get<2>(elem_side_bid[i])) != boundaryList.end())
     {
-      std::pair<dof_id_type, unsigned int> elem_side_pair = std::make_pair(el[i], sl[i]);
+      std::pair<dof_id_type, unsigned int> elem_side_pair =
+          std::make_pair(std::get<0>(elem_side_bid[i]), std::get<1>(elem_side_bid[i]));
       std::vector<std::vector<RealVectorValue>> var_values(0, std::vector<RealVectorValue>(2));
       _map_values[elem_side_pair] = var_values;
     }
   }
-  // std::cout << "init UO completed" << std::endl;
+  std::cout << "init UO completed" << std::endl;
 }
 
 void
 DisplacementJumpCohesiveInterface::execute()
 {
+  std::cout << "start execute UO " << std::endl;
 
   auto it = _map_values.find(std::make_pair(_current_elem->id(), _current_side));
   if (it != _map_values.end())
   {
-    // std::cout << " EL_ID " << _current_elem->id() << std::endl;
-    // std::cout << "    SIDE " << _current_side << std::endl;
-    // std::cout << "NEIGHBOR " << _neighbor_elem->id() << std::endl;
+    std::cout << " EL_ID " << _current_elem->id() << std::endl;
+    std::cout << "    SIDE " << _current_side << std::endl;
+    std::cout << "NEIGHBOR " << _neighbor_elem->id() << std::endl;
     // std::cout << "    SIDE " << _current_neighbor_side << std::endl;
 
     auto & vec = _map_values[std::make_pair(_current_elem->id(), _current_side)];
@@ -160,12 +201,13 @@ DisplacementJumpCohesiveInterface::execute()
       vec[qp][0] = computeDisplacementJump(qp);
       vec[qp][1] = _normals[qp];
 
-      // std::cout << "              Jump: " << vec[qp][0](0) << " " << vec[qp][0](1) << " "
-      //           << vec[qp][0](2) << std::endl;
-      // std::cout << "              Normal: " << vec[qp][1](0) << " " << vec[qp][1](1) << " "
-      //           << vec[qp][1](2) << std::endl;
+      std::cout << "              Jump: " << vec[qp][0](0) << " " << vec[qp][0](1) << " "
+                << vec[qp][0](2) << std::endl;
+      std::cout << "              Normal: " << vec[qp][1](0) << " " << vec[qp][1](1) << " "
+                << vec[qp][1](2) << std::endl;
     }
   }
+  std::cout << "finished execute UO " << std::endl;
 }
 
 void
@@ -228,15 +270,6 @@ void
 DisplacementJumpCohesiveInterface::computeTractionLocal(RealVectorValue & _JumpLocal,
                                                         RealVectorValue & TractionLocal) const
 {
-  std::vector<Real> _deltaU0(3, 0);
-  _deltaU0[0] = 1;
-  _deltaU0[1] = 0.5;
-  _deltaU0[2] = 0.5;
-
-  std::vector<Real> _maxAllowableTraction(3, 0);
-  _maxAllowableTraction[0] = 100;
-  _maxAllowableTraction[1] = 50;
-  _maxAllowableTraction[2] = 50;
 
   // convention N, T, S
   Real temp, X, expX, A_i, B_i;
@@ -279,16 +312,6 @@ void
 DisplacementJumpCohesiveInterface::computeTractionSpatialDerivativeLocal(
     RealVectorValue & _JumpLocal, RankTwoTensor & TractionDerivativeLocal) const
 {
-
-  std::vector<Real> _deltaU0(3, 0);
-  _deltaU0[0] = 1;
-  _deltaU0[1] = 0.5;
-  _deltaU0[2] = 0.5;
-
-  std::vector<Real> _maxAllowableTraction(3, 0);
-  _maxAllowableTraction[0] = 100;
-  _maxAllowableTraction[1] = 50;
-  _maxAllowableTraction[2] = 50;
 
   // this function compute partial derivates of Tn[0][:], Tt[1][:], Ts[2][:]
   // w.r.t. dun, dut, dus
