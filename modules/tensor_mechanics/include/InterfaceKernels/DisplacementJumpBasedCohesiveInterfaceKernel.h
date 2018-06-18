@@ -54,8 +54,8 @@ protected:
   const std::string _jacobian;
 
   // values of the residual's and jacobian's cofficients
-  const MaterialProperty<RealVectorValue> * _residual_MP;
-  const MaterialProperty<RankTwoTensor> * _jacobian_MP;
+  const MaterialProperty<RealVectorValue> & _residual_MP;
+  const MaterialProperty<RankTwoTensor> & _jacobian_MP;
 };
 
 #endif // DISPLACMENTJUMPBASEDCOHESIVEINTERFACEKERNEL_H

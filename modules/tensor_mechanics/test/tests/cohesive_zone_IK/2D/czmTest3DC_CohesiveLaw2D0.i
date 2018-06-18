@@ -140,7 +140,7 @@
     disp_x_neighbor = disp_x
     disp_y = disp_y
     disp_y_neighbor = disp_y
-    execute_on = 'initial LINEAR'
+    execute_on = 'LINEAR'
   [../]
 []
 

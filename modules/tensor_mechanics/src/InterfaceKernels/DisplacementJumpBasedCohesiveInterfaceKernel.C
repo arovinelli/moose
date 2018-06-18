@@ -75,7 +75,9 @@ DisplacementJumpBasedCohesiveInterfaceKernel::DisplacementJumpBasedCohesiveInter
     // residual and jacobian coefficients are material properties and represents
     // the residual and jacobain of the traction sepration law wrt the displacement jump.
     _residual(getParam<std::string>("residual")),
-    _jacobian(getParam<std::string>("jacobian"))
+    _jacobian(getParam<std::string>("jacobian")),
+    _residual_MP(getMaterialProperty<RealVectorValue>(_residual)),
+    _jacobian_MP(getMaterialProperty<RankTwoTensor>(_jacobian))
 
 {
   if (!parameters.isParamValid("boundary"))
@@ -83,16 +85,13 @@ DisplacementJumpBasedCohesiveInterfaceKernel::DisplacementJumpBasedCohesiveInter
     mooseError("In order to use  DisplacementJumpBasedCohesiveInterfaceKernel ,"
                " you must specify a boundary where it will live.");
   }
-
-  _residual_MP = &getMaterialProperty<RealVectorValue>(_residual);
-  _jacobian_MP = &getMaterialProperty<RankTwoTensor>(_jacobian);
 }
 
 Real
 DisplacementJumpBasedCohesiveInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 {
 
-  Real r = (*_residual_MP)[_qp](_disp_index);
+  Real r = _residual_MP[_qp](_disp_index);
 
   switch (type)
   {
@@ -115,7 +114,7 @@ DisplacementJumpBasedCohesiveInterfaceKernel::computeQpJacobian(Moose::DGJacobia
 {
   // retrieve the diagonal jacobain coefficient dependning on the disaplcement
   // component (_disp_index) this kernel is working on
-  Real jac = (*_jacobian_MP)[_qp](_disp_index, _disp_index);
+  Real jac = _jacobian_MP[_qp](_disp_index, _disp_index);
 
   switch (type)
   {
@@ -190,7 +189,7 @@ DisplacementJumpBasedCohesiveInterfaceKernel::computeQpOffDiagJacobian(Moose::DG
     mooseError("cannot determine the proper OffDiagIndex");
   }
 
-  Real jac = (*_jacobian_MP)[_qp](_disp_index, OffDiagIndex);
+  Real jac = _jacobian_MP[_qp](_disp_index, OffDiagIndex);
 
   switch (type)
   {
