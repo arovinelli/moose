@@ -53,6 +53,7 @@ protected:
 
   /// the value of the Traction in global coordiantes
   MaterialProperty<RealVectorValue> & _Traction;
+  const MaterialProperty<RealVectorValue> & _Traction_old;
 
   /// the value of the Traction in natural element coordiantes
   // MaterialProperty<RealVectorValue> * _TractionLocal;
