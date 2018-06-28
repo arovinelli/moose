@@ -182,7 +182,6 @@
   # petsc_options = '-snes_linesearch_monitor -snes_monitor -ksp_monitor_true_residual -snes_converged_reason -ksp_converged_reason nes_grid_sequence'
   petsc_options_iname = '-pc_type '
   petsc_options_value = 'lu '
-
   solve_type = NEWTON
   nl_abs_tol = 1e-6
   nl_rel_tol = 1e-8

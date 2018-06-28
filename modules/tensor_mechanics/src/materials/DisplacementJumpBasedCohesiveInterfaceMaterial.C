@@ -43,6 +43,7 @@ DisplacementJumpBasedCohesiveInterfaceMaterial::DisplacementJumpBasedCohesiveInt
     // _Jump(declareProperty<RealVectorValue>("Jump")),
     // _JumpLocal(declareProperty<RealVectorValue>("JumpLocal")),
     _Traction(declareProperty<RealVectorValue>("Traction")),
+    _Traction_old(getMaterialPropertyOld<RealVectorValue>("Traction")),
     // _TractionLocal(&declareProperty<RealVectorValue>("TractionLocal")),
     _TractionSpatialDerivative(declareProperty<RankTwoTensor>("TractionSpatialDerivative"))
 // _TractionSpatialDerivativeLocal(
@@ -113,30 +114,8 @@ void
 DisplacementJumpBasedCohesiveInterfaceMaterial::initQpStatefulProperties()
 {
 
-  std::cout << "initQpStatefulProperties" << std::endl;
-
-  // if (_num_stateful_material_properties > 0)
-  // {
-  //   // initialize stateful material material properties
-  //   for (unsigned int i = 0; i < _num_stateful_material_properties; i++)
-  //   {
-  //     // resize material properties
-  //     (*_materialPropertyValues[i])[_qp].resize(
-  //         _uo_tractionSeparation->statefulMaterialPropertySize(i));
-  //
-  //     // resize old state
-  //     // TODO: remove this nasty const_cast if you can figure out how
-  //     const_cast<MaterialProperty<std::vector<Real>> &>(*_materialPropertyValues_old[i])[_qp]
-  //         .resize(_uo_tractionSeparation->statefulMaterialPropertySize(i));
-  //
-  //     // fill in intial values
-  //     _uo_tractionSeparation->initStatefulMaterialProperty(i,
-  //     (*_materialPropertyValues[i])[_qp]);
-  //     // TODO: remove this nasty const_cast if you can figure out how
-  //     const_cast<MaterialProperty<std::vector<Real>> &>(*_materialPropertyValues_old[i])[_qp] =
-  //         (*_materialPropertyValues[i])[_qp];
-  //   }
-  // }
+  for (unsigned int i = 0; i < 3; i++)
+    _Traction[_qp](i) = -1;
 }
 
 // void
