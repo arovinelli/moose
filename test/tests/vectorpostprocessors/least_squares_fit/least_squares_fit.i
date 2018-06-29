@@ -58,6 +58,7 @@
     end_point = '1 0.5 0'
     num_points = 11
     sort_by = id
+    outputs = none
   [../]
   [./least_squares_fit_sample]
     type = LeastSquaresFit

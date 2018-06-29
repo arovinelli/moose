@@ -19,7 +19,7 @@ validParams<InterfaceUOMaterial>()
   InputParameters params = validParams<Material>();
 
   params.addRequiredParam<UserObjectName>(
-      "interface_uo", "the name of the ucomputing material property across an interface");
+      "interface_uo_qp", "the name of the ucomputing material property across an interface");
   params.addClassDescription("this material class is used when defining a "
                              "cohesive zone model to store stafeul properties");
   return params;
@@ -27,10 +27,12 @@ validParams<InterfaceUOMaterial>()
 
 InterfaceUOMaterial::InterfaceUOMaterial(const InputParameters & parameters)
   : Material(parameters),
-    _interface_uo(getUserObject<InterfaceUO>("interface_uo")),
+    _interface_uo_qp(getUserObject<InterfaceUO_QP>("interface_uo_qp")),
 
     _material_property_average(declareProperty<Real>("material_property_average")),
-    _variable_jump(declareProperty<Real>("variable_jump"))
+    _variable_jump(declareProperty<Real>("variable_jump")),
+    _boundary_property(declareProperty<Real>("boundary_property"))
+
 {
 }
 
@@ -38,11 +40,8 @@ void
 InterfaceUOMaterial::computeQpProperties()
 {
 
-  _material_property_average[_qp] = _interface_uo.getMeanMatProp();
-  _variable_jump[_qp] = _interface_uo.getMeanVarJump();
+  _material_property_average[_qp] =
+      _interface_uo_qp.getMeanMatProp(_current_elem->id(), _current_side, _qp);
+  _variable_jump[_qp] = _interface_uo_qp.getVarJump(_current_elem->id(), _current_side, _qp);
+  _boundary_property[_qp] = (_material_property_average[_qp] + _variable_jump[_qp]) / 2;
 }
-
-// void
-// InterfaceUOMaterial::initQpStatefulProperties()
-// {
-// }

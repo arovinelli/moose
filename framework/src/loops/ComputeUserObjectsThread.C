@@ -201,7 +201,6 @@ ComputeUserObjectsThread::onInternalSide(const Elem * elem, unsigned int side)
 void
 ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, BoundaryID bnd_id)
 {
-
   // Pointer to the neighbor we are currently working on.
   const Elem * neighbor = elem->neighbor_ptr(side);
 
@@ -220,14 +219,21 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   }
 
   _fe_problem.prepareFace(elem, _tid);
-  _fe_problem.reinitElemFace(elem, side, bnd_id, _tid);
   _fe_problem.reinitNeighbor(elem, side, _tid);
 
   // Set up Sentinels so that, even if one of the reinitMaterialsXXX() calls throws, we
   // still remember to swap back during stack unwinding.
   SwapBackSentinel face_sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
   _fe_problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
-  _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
+
+  // default swap_stateful value
+  bool swap_stateful = true;
+  // needed to prevent updating interface material
+  bool prevent_update_interface_materials = true;
+
+  // reinit boundary materiasl property
+  _fe_problem.reinitMaterialsBoundary(
+      bnd_id, _tid, swap_stateful, prevent_update_interface_materials);
 
   SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
   _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
@@ -237,6 +243,8 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   {
     uo->execute();
   }
+  SwapBackSentinel sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
+  _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
 }
 
 void
