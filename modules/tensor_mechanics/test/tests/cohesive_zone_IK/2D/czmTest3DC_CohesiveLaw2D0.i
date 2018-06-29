@@ -125,16 +125,11 @@
 []
 
 [UserObjects]
-  # [./TractionSeparationTest]
-  #   type = CohesiveLaw_3DC
-  #   boundary = 100
-  #   DeltaU0 = '1 0.5'
-  #   MaxAllowableTraction = '1e2 5e1'
-  # [../]
+
   [./DisplacementJump]
     type = DisplacementJumpCohesiveInterface
     boundary = 100
-    DeltaU0 = '1 0.5'
+    DeltaU0 = '0.1 0.05'
     MaxAllowableTraction = '2e2 5e1'
     disp_x = disp_x
     disp_x_neighbor = disp_x
@@ -163,7 +158,7 @@
   [./gap]
     type = DisplacementJumpBasedCohesiveInterfaceMaterial
     boundary = 100
-    # uo_TractionSeparationLaw = 'TractionSeparationTest'
+    is_interface_material = true
     uo_CohesiveInterface = 'DisplacementJump'
 
   [../]
@@ -190,7 +185,7 @@
   line_search = none
   l_max_its = 50
   start_time = 0.0
-  dt = 25
+  dt = 2.5
   num_steps = 20
   # end_time = 1000
 
