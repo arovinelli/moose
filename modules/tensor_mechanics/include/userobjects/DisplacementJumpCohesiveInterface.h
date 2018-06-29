@@ -10,14 +10,14 @@
 #ifndef DISPLACEMENTJUMPCOHESIVEINTERFACE_H
 #define DISPLACEMENTJUMPCOHESIVEINTERFACE_H
 
-#include "InternalSideUserObject.h"
+#include "InterfaceUserObject.h"
 
 class DisplacementJumpCohesiveInterface;
 
 template <>
 InputParameters validParams<DisplacementJumpCohesiveInterface>();
 
-class DisplacementJumpCohesiveInterface : public InternalSideUserObject
+class DisplacementJumpCohesiveInterface : public InterfaceUserObject
 {
 public:
   DisplacementJumpCohesiveInterface(const InputParameters & parameters);

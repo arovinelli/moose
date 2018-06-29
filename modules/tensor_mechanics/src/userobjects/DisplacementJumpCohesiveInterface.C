@@ -19,7 +19,7 @@ template <>
 InputParameters
 validParams<DisplacementJumpCohesiveInterface>()
 {
-  InputParameters params = validParams<InternalSideUserObject>();
+  InputParameters params = validParams<InterfaceUserObject>();
 
   params.addClassDescription("Compute the dispalcment jump across a cohesive interface");
   params.addRequiredCoupledVar("disp_x",
@@ -53,7 +53,7 @@ validParams<DisplacementJumpCohesiveInterface>()
 }
 
 DisplacementJumpCohesiveInterface::DisplacementJumpCohesiveInterface(const InputParameters & params)
-  : InternalSideUserObject(params),
+  : InterfaceUserObject(params),
     _disp_x(coupledValue("disp_x")),
     _disp_x_neighbor(coupledNeighborValue("disp_x_neighbor")),
     _disp_y(_mesh.dimension() >= 2 ? coupledValue("disp_y") : _zero),
@@ -155,8 +155,8 @@ DisplacementJumpCohesiveInterface::initialize()
   // std::vector<unsigned short int> sl;
   // std::vector<boundary_id_type> il;
 
-  std::set<BoundaryID> boundaryList; // = boundaryIDs();
-  boundaryList.insert(100);
+  std::set<BoundaryID> boundaryList = boundaryIDs();
+  // boundaryList.insert(100);
   /*boundaryIDs()*/;
 
   // _mesh.buildSideList(el, sl, il);

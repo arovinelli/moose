@@ -2433,7 +2433,10 @@ FEProblemBase::reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool s
 }
 
 void
-FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bool swap_stateful)
+FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id,
+                                       THREAD_ID tid,
+                                       bool swap_stateful,
+                                       bool prevent_update_interface_materials)
 {
   if (hasActiveMaterialProperties(tid))
   {
@@ -2450,7 +2453,8 @@ FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bo
           _discrete_materials.getActiveBoundaryObjects(boundary_id, tid));
 
     if (_materials.hasActiveBoundaryObjects(boundary_id, tid))
-      _bnd_material_data[tid]->reinit(_materials.getActiveBoundaryObjects(boundary_id, tid));
+      _bnd_material_data[tid]->reinit(_materials.getActiveBoundaryObjects(boundary_id, tid),
+                                      prevent_update_interface_materials);
   }
 }
 
@@ -5389,13 +5393,15 @@ FEProblemBase::needBoundaryMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid)
 }
 
 bool
-FEProblemBase::needBoundaryMaterialOnInterafce(BoundaryID bnd_id, THREAD_ID tid)
+FEProblemBase::needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid)
 {
   if (_bnd_mat_interface_cache[tid].find(bnd_id) == _bnd_mat_interface_cache[tid].end())
   {
     _bnd_mat_interface_cache[tid][bnd_id] = false;
 
-    if (_interface_user_objects.hasActiveBoundaryObjects(bnd_id, tid))
+    if (_nl->needBoundaryMaterialOnInterface(bnd_id, tid))
+      _bnd_mat_interface_cache[tid][bnd_id] = true;
+    else if (_interface_user_objects.hasActiveBoundaryObjects(bnd_id, tid))
       _bnd_mat_interface_cache[tid][bnd_id] = true;
   }
 

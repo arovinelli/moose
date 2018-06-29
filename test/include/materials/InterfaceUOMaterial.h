@@ -11,7 +11,7 @@
 #define INTERFACEUOMATERIAL_H
 
 #include "Material.h"
-#include "InterfaceUO.h"
+#include "InterfaceUO_QP.h"
 
 class InterfaceUOMaterial;
 
@@ -28,15 +28,16 @@ public:
 
 protected:
   virtual void computeQpProperties() override;
-  // virtual void initQpStatefulProperties() override;
 
   /// User objects computing the displacement jump
-  const InterfaceUO & _interface_uo;
+  const InterfaceUO_QP & _interface_uo_qp;
 
   /// the average value of the material property on the interface
   MaterialProperty<Real> & _material_property_average;
   /// the jump in the variable value accros teh interface
   MaterialProperty<Real> & _variable_jump;
+
+  MaterialProperty<Real> & _boundary_property;
 };
 
 #endif // INTERFACEUOMATERIAL_H
