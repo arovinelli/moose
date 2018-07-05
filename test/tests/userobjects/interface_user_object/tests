@@ -26,7 +26,6 @@
     type = 'Exodiff'
     input = 'interface_user_object_QP_stateful.i'
     exodiff = 'interface_user_object_QP_stateful_out.e'
-    recover = false
     requirement = "same as interface_UO_QP_test but test the ability of the "
                   "interface UO to work with a stateful material property"
     design = 'InterfaceUserObject.md InterfaceUO.md'

@@ -1302,8 +1302,8 @@ public:
   /**
    * These methods are used to determine whether stateful material properties need to be stored on
    * internal sides.  There are five situations where this may be the case: 1) DGKernels
-   * 2) IntegratedBCs 3)InternalSideUserObjects 4)ElementalAuxBCs 5)InterfaceUserObject )6 Interface
-   * Kernels
+   * 2) IntegratedBCs 3)InternalSideUserObjects 4)ElementalAuxBCs 5)InterfaceUserObject
+   * 6)InterfaceKernel
    *
    * Method 1:
    * @param bnd_id the boundary id for which to see if stateful material properties need to be

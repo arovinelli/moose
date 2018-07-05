@@ -208,15 +208,11 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   const dof_id_type elem_id = elem->id(), neighbor_id = neighbor->id();
 
   if (!_interface_user_objects.hasActiveBoundaryObjects(bnd_id, _tid))
-  {
     return;
-  }
 
   if (!((neighbor->active() && (neighbor->level() == elem->level()) && (elem_id < neighbor_id)) ||
         (neighbor->level() < elem->level())))
-  {
     return;
-  }
 
   _fe_problem.prepareFace(elem, _tid);
   _fe_problem.reinitNeighbor(elem, side, _tid);
@@ -226,24 +222,17 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   SwapBackSentinel face_sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
   _fe_problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
 
-  // default swap_stateful value
-  bool swap_stateful = true;
-  // needed to prevent updating interface material
-  bool prevent_update_interface_materials = true;
-
-  // reinit boundary materiasl property
+  // reinit boundary materials property
   _fe_problem.reinitMaterialsBoundary(
-      bnd_id, _tid, swap_stateful, prevent_update_interface_materials);
+      bnd_id, _tid, /*swap_stateful=*/true, /*prevent_update_interface_materials=*/true);
 
   SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
   _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
 
   const auto & objects = _interface_user_objects.getActiveBoundaryObjects(bnd_id, _tid);
   for (const auto & uo : objects)
-  {
     uo->execute();
-  }
-  SwapBackSentinel sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
+
   _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
 }
 
