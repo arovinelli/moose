@@ -70,6 +70,7 @@
 [Outputs]
   exodus = true
   checkpoint = true
+  xdr = true
 []
 
 [Problem]

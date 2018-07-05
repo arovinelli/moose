@@ -1,0 +1,69 @@
+[Tests]
+## all the tests have the attribute 'recover = false' because
+## by modyfing the number of nodes the --recover option fails (expected).
+## Furthermore, all the tests have the attribute 'mesh_mode = REPLICATED' because
+## the distributed mesh option has not been implemented (it might take a while)
+
+### single interface tests
+[./2D4ElementJunctionBreakMeshManual_test]
+  ###  compare manual mesh split to gold
+  type = 'Exodiff'
+  input = 'TestBreakMesh_2DJunction_Manual.i'
+  cli_args = '--mesh-only TestBreakMesh_2DJunction_Manual_in.e'
+  exodiff = 'TestBreakMesh_2DJunction_Manual_in.e'
+  mesh_mode = REPLICATED
+  recover = false
+[../]
+
+[./2D4ElementJunctionBreakMeshAuto_test]
+  ###  compare automatic mesh split to gold
+  type = 'Exodiff'
+  input = 'TestBreakMesh_2DJunction_Auto.i'
+  cli_args = '--mesh-only TestBreakMesh_2DJunction_Auto_in.e'
+  exodiff = 'TestBreakMesh_2DJunction_Auto_in.e'
+  mesh_mode = REPLICATED
+  recover = false
+[../]
+
+[./2D4ElementJunctionBreakMeshtingCompare_test]
+  ###  compare manual vs automatic mesh split
+  type = 'Exodiff'
+  input = 'TestBreakMesh_2DJunction_Auto.i'
+  cli_args = '--mesh-only TestBreakMesh_2DJunction_ManualAuto_Comparison.e'
+  exodiff = 'TestBreakMesh_2DJunction_ManualAuto_Comparison.e'
+  mesh_mode = REPLICATED
+  recover = false
+[../]
+
+## multiple interface tests
+[./2D4ElementJunctionBreakMeshManualSplitInterface_test]
+  ###  compare manual mesh split to gold
+  type = 'Exodiff'
+  input = 'TestBreakMesh_2DJunction_splitTrue_Manual.i'
+  cli_args = '--mesh-only TestBreakMesh_2DJunction_splitTrue_Manual_in.e'
+  exodiff = 'TestBreakMesh_2DJunction_splitTrue_Manual_in.e'
+  mesh_mode = REPLICATED
+  recover = false
+[../]
+
+[./2D4ElementJunctionBreakMeshAutoSplitInterface_test]
+  ###  compare automatic mesh split to gold
+  type = 'Exodiff'
+  input = 'TestBreakMesh_2DJunction_splitTrue_Auto.i'
+  cli_args = '--mesh-only TestBreakMesh_2DJunction_splitTrue_Auto_in.e'
+  exodiff = 'TestBreakMesh_2DJunction_splitTrue_Auto_in.e'
+  mesh_mode = REPLICATED
+  recover = false
+[../]
+
+[./2D4ElementJunctionBreakMeshSplitInterfaceCompare_test]
+  ###  compare manual vs automatic mesh split
+  type = 'Exodiff'
+  input = 'TestBreakMesh_2DJunction_splitTrue_Auto.i'
+  cli_args = '--mesh-only TestBreakMesh_2DJunction_splitTrue_ManualAuto_Comparison.e'
+  exodiff = 'TestBreakMesh_2DJunction_splitTrue_ManualAuto_Comparison.e'
+  mesh_mode = REPLICATED
+  recover = false
+[../]
+
+[]
