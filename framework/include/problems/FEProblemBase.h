@@ -1181,6 +1181,10 @@ public:
    */
   const MaterialPropertyStorage & getMaterialPropertyStorage() { return _material_props; }
   const MaterialPropertyStorage & getBndMaterialPropertyStorage() { return _bnd_material_props; }
+  const MaterialPropertyStorage & getNeighborMaterialPropertyStorage()
+  {
+    return _neighbor_material_props;
+  }
   ///@}
 
   ///@{
@@ -1531,6 +1535,7 @@ protected:
   // material properties
   MaterialPropertyStorage & _material_props;
   MaterialPropertyStorage & _bnd_material_props;
+  MaterialPropertyStorage & _neighbor_material_props;
 
   std::vector<std::shared_ptr<MaterialData>> _material_data;
   std::vector<std::shared_ptr<MaterialData>> _bnd_material_data;

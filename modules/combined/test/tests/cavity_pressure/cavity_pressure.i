@@ -35,16 +35,13 @@
 
 [GlobalParams]
   displacements = 'disp_x disp_y disp_z'
+  volumetric_locking_correction = true
   order = FIRST
   family = LAGRANGE
 []
 
 [Mesh]
   file = cavity_pressure.e
-[]
-
-[GlobalParams]
-  volumetric_locking_correction=true
 []
 
 [Functions]
