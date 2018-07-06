@@ -7,17 +7,16 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "DisplacementJumpCohesiveInterface.h"
+#include "DispJumpAcrossInterface.h"
 #include "MooseError.h"
 #include "Assembly.h"
-// #include "RankTwoTensor.h"
 #include "RotationMatrix.h"
 
-registerMooseObject("TensorMechanicsApp", DisplacementJumpCohesiveInterface);
+registerMooseObject("TensorMechanicsApp", DispJumpAcrossInterface);
 
 template <>
 InputParameters
-validParams<DisplacementJumpCohesiveInterface>()
+validParams<DispJumpAcrossInterface>()
 {
   InputParameters params = validParams<InterfaceUserObject>();
 
@@ -52,7 +51,7 @@ validParams<DisplacementJumpCohesiveInterface>()
   return params;
 }
 
-DisplacementJumpCohesiveInterface::DisplacementJumpCohesiveInterface(const InputParameters & params)
+DispJumpAcrossInterface::DispJumpAcrossInterface(const InputParameters & params)
   : InterfaceUserObject(params),
     _disp_x(coupledValue("disp_x")),
     _disp_x_neighbor(coupledNeighborValue("disp_x_neighbor")),
@@ -78,10 +77,10 @@ DisplacementJumpCohesiveInterface::DisplacementJumpCohesiveInterface(const Input
   const_cast<std::vector<Real> &>(_maxAllowableTraction).push_back(_maxAllowableTraction[1]);
 }
 
-DisplacementJumpCohesiveInterface::~DisplacementJumpCohesiveInterface() {}
+DispJumpAcrossInterface::~DispJumpAcrossInterface() {}
 
 void
-DisplacementJumpCohesiveInterface::computeResidaulAndJacobianCoefficients(
+DispJumpAcrossInterface::computeResidaulAndJacobianCoefficients(
     dof_id_type elem,
     unsigned int side,
     unsigned int qp,
@@ -130,7 +129,7 @@ DisplacementJumpCohesiveInterface::computeResidaulAndJacobianCoefficients(
 }
 
 RealVectorValue
-DisplacementJumpCohesiveInterface::computeDisplacementJump(unsigned int qp)
+DispJumpAcrossInterface::computeDisplacementJump(unsigned int qp)
 {
   RealVectorValue Jump;
   std::cout << "compute Jump" << std::endl;
@@ -144,7 +143,7 @@ DisplacementJumpCohesiveInterface::computeDisplacementJump(unsigned int qp)
 
 // ovverride standard UO functions
 void
-DisplacementJumpCohesiveInterface::initialize()
+DispJumpAcrossInterface::initialize()
 {
 
   std::cout << "init UO" << std::endl;
@@ -179,7 +178,7 @@ DisplacementJumpCohesiveInterface::initialize()
 }
 
 void
-DisplacementJumpCohesiveInterface::execute()
+DispJumpAcrossInterface::execute()
 {
   std::cout << "start execute UO " << std::endl;
 
@@ -211,17 +210,17 @@ DisplacementJumpCohesiveInterface::execute()
 }
 
 void
-DisplacementJumpCohesiveInterface::finalize()
+DispJumpAcrossInterface::finalize()
 {
 }
 
 void
-DisplacementJumpCohesiveInterface::threadJoin(const UserObject &)
+DispJumpAcrossInterface::threadJoin(const UserObject &)
 {
 }
 
 void
-DisplacementJumpCohesiveInterface::moveToLocalFrame(RealVectorValue & Jump,
+DispJumpAcrossInterface::moveToLocalFrame(RealVectorValue & Jump,
                                                     RealVectorValue & JumpLocal,
                                                     RealVectorValue & normals,
                                                     RealTensorValue & RotationGlobal2Local) const
@@ -242,7 +241,7 @@ DisplacementJumpCohesiveInterface::moveToLocalFrame(RealVectorValue & Jump,
 }
 
 void
-DisplacementJumpCohesiveInterface::moveBackToGlobalFrame(
+DispJumpAcrossInterface::moveBackToGlobalFrame(
     RealVectorValue & TractionLocal,
     RankTwoTensor & TractionSpatialDerivativeLocal,
     RealVectorValue & Traction,
@@ -267,7 +266,7 @@ DisplacementJumpCohesiveInterface::moveBackToGlobalFrame(
 }
 
 void
-DisplacementJumpCohesiveInterface::computeTractionLocal(RealVectorValue & _JumpLocal,
+DispJumpAcrossInterface::computeTractionLocal(RealVectorValue & _JumpLocal,
                                                         RealVectorValue & TractionLocal) const
 {
 
@@ -309,7 +308,7 @@ DisplacementJumpCohesiveInterface::computeTractionLocal(RealVectorValue & _JumpL
 }
 
 void
-DisplacementJumpCohesiveInterface::computeTractionSpatialDerivativeLocal(
+DispJumpAcrossInterface::computeTractionSpatialDerivativeLocal(
     RealVectorValue & _JumpLocal, RankTwoTensor & TractionDerivativeLocal) const
 {
 

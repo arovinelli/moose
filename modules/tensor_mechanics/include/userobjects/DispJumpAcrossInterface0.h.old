@@ -7,21 +7,21 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef DISPLACEMENTJUMPCOHESIVEINTERFACE_H
-#define DISPLACEMENTJUMPCOHESIVEINTERFACE_H
+#ifndef DISPJUMPACROSSINTERFACE_H
+#define DISPJUMPACROSSINTERFACE_H
 
 #include "InterfaceUserObject.h"
 
-class DisplacementJumpCohesiveInterface;
+class DispJumpAcrossInterface;
 
 template <>
-InputParameters validParams<DisplacementJumpCohesiveInterface>();
+InputParameters validParams<DispJumpAcrossInterface>();
 
-class DisplacementJumpCohesiveInterface : public InterfaceUserObject
+class DispJumpAcrossInterface : public InterfaceUserObject
 {
 public:
-  DisplacementJumpCohesiveInterface(const InputParameters & parameters);
-  virtual ~DisplacementJumpCohesiveInterface();
+  DispJumpAcrossInterface(const InputParameters & parameters);
+  virtual ~DispJumpAcrossInterface();
 
   virtual void initialize();
   virtual void execute();
@@ -77,4 +77,4 @@ private:
   const std::vector<Real> _maxAllowableTraction;
 };
 
-#endif // DISPLACEMENTJUMPCOHESIVEINTERFACE_H
+#endif // DISPJUMPACROSSINTERFACE_H

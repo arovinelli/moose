@@ -1,6 +1,14 @@
 [Mesh]
-  type = CohesiveZoneMeshSplit
   file = 4ElementJunction.e
+[]
+
+[MeshModifiers]
+  [./meshsplit]
+    type = BreakMeshByBlock
+  []
+[]
+
+[GlobalParams]
   displacements = 'disp_x disp_y '
 []
 
