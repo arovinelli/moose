@@ -1,0 +1,37 @@
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
+
+#ifndef DISCRETEELEMENTRETURNINGMP_H
+#define DISCRETEELEMENTRETURNINGMP_H
+
+#include "DiscreteElementUserObject.h"
+
+class DiscreteElementReturningMP;
+
+template <>
+InputParameters validParams<DiscreteElementReturningMP>();
+
+/**
+ * Crystal plasticity system userobject base class.
+ */
+class DiscreteElementReturningMP : public DiscreteElementUserObject
+{
+public:
+  /// Returns Material Properties Sizes
+  virtual std::vector<unsigned int> getMaterialPropertySizes() const;
+
+  /// Returns the Material Properties Names
+  virtual std::vector<std::string> getMaterialPropertyNames() const;
+
+protected:
+  const std::vector<std::string> _MP_names;
+  const std::vector<unsigned int> _MP_sizes;
+};
+
+#endif // DISCRETEELEMENTRETURNINGMP_H

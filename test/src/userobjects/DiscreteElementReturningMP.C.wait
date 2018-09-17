@@ -1,0 +1,43 @@
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
+
+#include "DiscreteElementReturningMP.h"
+
+registerMooseObject("MooseTestApp", DiscreteElementReturningMP);
+
+template <>
+InputParameters
+validParams<DiscreteElementReturningMP>()
+{
+  InputParameters params = validParams<DiscreteElementUserObject>();
+  params.addRequiredParam<std::vectot<std::string>>("MP_names", "The MP's name to use");
+  params.addRequiredParam<std::vectot<unsigned int>>("MP_sizes", "The MP's size");
+  params.addClassDescription("Discrete Element UO returning the updated value of a MP");
+
+  return params;
+}
+
+DiscreteElementReturningMP::DiscreteElementReturningMP(const InputParameters & parameters)
+  : DiscreteElementUserObject(parameters),
+    _MP_names(getParam<std::vectot<std::string>>("MP_names")),
+    _MP_sizes(getParam<std::vectot<unsigned int>>("MP_sizes"))
+{
+}
+
+std::vectot<std::string>
+DiscreteElementReturningMP::getMaterialPropertyNames() const
+{
+  return _MP_names;
+}
+
+std::vectot<unsigned int>
+DiscreteElementReturningMP::getMaterialPropertySizes() const
+{
+  return _MP_sizes;
+}
