@@ -107,6 +107,7 @@ InterfaceKernel::InterfaceKernel(const InputParameters & parameters)
     _test(_var.phiFace()),
     _grad_test(_var.gradPhiFace()),
     _normals(_var.normals()),
+    _neighbor_normals(_assembly.neighborNormals()),
     _neighbor_var(*getVar("neighbor_var", 0)),
     _neighbor_value(_neighbor_var.slnNeighbor()),
     _grad_neighbor_value(_neighbor_var.gradSlnNeighbor()),

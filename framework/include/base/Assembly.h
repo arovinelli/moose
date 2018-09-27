@@ -34,7 +34,7 @@ template <typename T>
 class NumericVector;
 template <typename T>
 class SparseMatrix;
-}
+} // namespace libMesh
 
 // MOOSE Forward Declares
 class MooseMesh;
@@ -260,6 +260,12 @@ public:
    * @return A _reference_.  Make sure to store this as a reference!
    */
   const MooseArray<Point> & normals() { return _current_normals; }
+
+  /**
+   * Returns the array of normals for quadrature points on a neighbor side
+   * @return A _reference_.  Make sure to store this as a reference!
+   */
+  const MooseArray<Point> & neighborNormals() { return _current_neighbor_normals; }
 
   /**
    * Return the current element
@@ -1105,6 +1111,8 @@ protected:
   MooseArray<Real> _current_JxW_face;
   /// The current Normal vectors at the quadrature points.
   MooseArray<Point> _current_normals;
+  /// The current Neighbor Normal vectors at the quadrature points.
+  MooseArray<Point> _current_neighbor_normals;
   /// Holds face qrules for each dimension
   std::map<unsigned int, QBase *> _holder_qrule_face;
   /// Holds arbitrary face qrules for each dimension

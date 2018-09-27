@@ -31,6 +31,16 @@ PenaltyInterfaceDiffusion::computeQpResidual(Moose::DGResidualType type)
 {
   Real r = 0;
 
+  std::cout << "Normal Elem: ";
+  for (unsigned int i = 0; i < 3; i++)
+    std::cout << _normals[_qp](i) << " ";
+  std::cout << std::endl;
+
+  std::cout << "Normal Neig: ";
+  for (unsigned int i = 0; i < 3; i++)
+    std::cout << _neighbor_normals[_qp](i) << " ";
+  std::cout << std::endl;
+
   switch (type)
   {
     case Moose::Element:

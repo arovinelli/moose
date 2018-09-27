@@ -177,6 +177,8 @@ protected:
   const VariableTestGradient & _grad_test;
   /// Normal vectors at the quadrature points
   const MooseArray<Point> & _normals;
+  /// Normal vectors at the neighbor quadrature points
+  const MooseArray<Point> & _neighbor_normals;
 
   /// Coupled neighbor variable
   MooseVariable & _neighbor_var;
