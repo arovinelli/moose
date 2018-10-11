@@ -26,9 +26,10 @@ validParams<LowerDBlockFromSideset>()
   params.addRequiredParam<SubdomainID>("new_block_id", "The lower dimensional block id to create");
   params.addParam<SubdomainName>("new_block_name",
                                  "The lower dimensional block name to create (optional)");
-  params.addRequiredParam<std::vector<BoundaryID>>(
-      "sidesets", "The sidesets from which to create the new block");
-
+  params.addParam<std::vector<BoundaryID>>("sidesets",
+                                           "The sidesets from which to create the new block");
+  params.addParam<std::vector<BoundaryName>>(
+      "sidesets_name", "The sidesets name from which to create the new block");
   params.addClassDescription("Adds lower dimensional elements on the specified sidesets.");
   return params;
 }
@@ -36,7 +37,8 @@ validParams<LowerDBlockFromSideset>()
 LowerDBlockFromSideset::LowerDBlockFromSideset(const InputParameters & parameters)
   : MeshModifier(parameters),
     _new_block_id(getParam<SubdomainID>("new_block_id")),
-    _sidesets(getParam<std::vector<BoundaryID>>("sidesets"))
+    _sidesets(getParam<std::vector<BoundaryID>>("sidesets")),
+    _sidesets_name(getParam<std::vector<BoundaryName>>("sidesets_name"))
 {
 }
 
@@ -57,6 +59,19 @@ LowerDBlockFromSideset::modify()
   bool distributed = dynamic_cast<DistributedMesh *>(&mesh);
   if (distributed)
     _mesh_ptr->needsPrepareForUse();
+
+  if (_pars.isParamSetByUser("sidesets_name"))
+  {
+    // std::cout << "sidesets_name.size " << _sidesets_name.size() << std::endl;
+    // for (unsigned int i = 0; i < _sidesets_name.size(); i++)
+    //   std::cout << "sidesets_name " << _sidesets_name[i] << std::endl;
+
+    std::vector<BoundaryID> bid = _mesh_ptr->getBoundaryIDs(_sidesets_name);
+    _sidesets.resize(_sidesets_name.size());
+    for (unsigned int i = 0; i < _sidesets_name.size(); i++)
+      _sidesets[i] = bid[i];
+    // std::cout << "sidesets_id " << _sidesets[i] << std::endl;
+  }
 
   auto side_list = mesh.get_boundary_info().build_side_list();
   std::sort(side_list.begin(),
