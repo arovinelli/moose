@@ -32,6 +32,7 @@ protected:
   const SubdomainID _new_block_id;
   /// The sidesets on which to create the lower dimensional elements
   std::vector<BoundaryID> _sidesets;
+  /// The sidesets name on which to create the lower dimensional elements
   std::vector<BoundaryName> _sidesets_name;
 };
 

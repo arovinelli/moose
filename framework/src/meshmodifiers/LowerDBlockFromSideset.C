@@ -62,15 +62,11 @@ LowerDBlockFromSideset::modify()
 
   if (_pars.isParamSetByUser("sidesets_name"))
   {
-    // std::cout << "sidesets_name.size " << _sidesets_name.size() << std::endl;
-    // for (unsigned int i = 0; i < _sidesets_name.size(); i++)
-    //   std::cout << "sidesets_name " << _sidesets_name[i] << std::endl;
 
     std::vector<BoundaryID> bid = _mesh_ptr->getBoundaryIDs(_sidesets_name);
     _sidesets.resize(_sidesets_name.size());
     for (unsigned int i = 0; i < _sidesets_name.size(); i++)
       _sidesets[i] = bid[i];
-    // std::cout << "sidesets_id " << _sidesets[i] << std::endl;
   }
 
   auto side_list = mesh.get_boundary_info().build_side_list();
