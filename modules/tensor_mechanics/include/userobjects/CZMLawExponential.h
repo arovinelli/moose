@@ -33,15 +33,12 @@ public:
   std::vector<Real> getNewNonStatefulMaterialProperty(unsigned int qp,
                                                       unsigned int mp_index) const override;
 
-  Real getEffectiveJump(unsigned int /*qp*/) const override;
-
-  unsigned int checkLoadUnload(unsigned int /*qp*/) const override;
-
 protected:
   // cohesive law parameters
   const Real _displacement_jump_peak;
   const Real _traction_peak;
   const Real _beta;
+  const Real _compression_multiplier;
 
   const MaterialProperty<std::vector<Real>> & _effective_jump;
   const MaterialProperty<std::vector<Real>> & _effective_jump_old;
@@ -51,7 +48,9 @@ protected:
   const MaterialProperty<std::vector<Real>> & _weighted_displacement_jump;
   const MaterialProperty<std::vector<Real>> & _effective_traction;
 
+  Real getEffectiveJump(unsigned int /*qp*/) const override;
   Real getEffectiveTraction(unsigned int /*qp*/) const;
+  unsigned int checkLoadUnload(unsigned int /*qp*/) const override;
   // Real getEffectiveTractionLinear(unsigned int /*qp*/) const;
   // std::vector<Real> getTractionNonLinear(unsigned int /*qp*/) const;
   // std::vector<Real> getTractionLinear(unsigned int /*qp*/) const;

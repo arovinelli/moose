@@ -81,7 +81,7 @@
   [./right_x]
     type = DirichletBC
     variable = disp_y
-    boundary = 'right_n1'
+    boundary = 'right_n1 right_n2'
     value = 0.0
   [../]
   [./right_y]
@@ -97,12 +97,42 @@
     value = 0.0
   [../]
 []
-
+# [ICs]
+#   [./ic_x]
+#     type = RandomIC
+#     variable = disp_x
+#     boundary = 'interface'
+#     seed = 0
+#     min = -0.1
+#     max =  0.00
+#     legacy_generator = false
+#   [../]
+#   [./ic_y]
+#     type = RandomIC
+#     variable = disp_y
+#     boundary = 'interface'
+#     min = -0.1
+#     max =  0.00
+#     seed = 0
+#     legacy_generator = false
+#   [../]
+#   [./ic_z]
+#     type = RandomIC
+#     variable = disp_z
+#     boundary = 'interface'
+#     min = -0.1
+#     max =  0.00
+#     seed = 0
+#     legacy_generator = false
+#   [../]
+# []
 [Functions]
   [./loadUnloadFunction]
     type = PiecewiseLinear
-    x = '0 4      8  14     21      32    42   67   92 142'
-    y = '0 0.002  0  0.012  -0.002   0.02   0    0.05   0   0.1'
+    x = '0 4      8  14     20  21     32    42   67   92 142'
+    y = '0 0.000002  0  0.000012  0   -0.00002   0.0002   0    0.0005   0   0.01'
+    # x = '0 4    '
+    # y = '0 -0.002'
   [../]
 []
 [InterfaceKernels]
@@ -147,20 +177,28 @@
     disp_y = disp_y
     disp_z = disp_z
     boundary = 'interface'
-    execute_on = 'initial LINEAR timestep_end'
+    execute_on = 'initial LINEAR NONLINEAR timestep_end'
   [../]
+
   [./cohesive_law_exponential]
     type = CZMLawExponential
-    displacement_jump_peak = 0.01
+    displacement_jump_peak = 0.00001
     traction_peak = 150
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
+    compression_multiplier = 1e3
   [../]
-  [./cohesive_law_unload_linear]
-    type = CZMUnloadLinear
-    displacement_jump_mp_name = 'displacement_jump_local'
-    boundary = 'interface'
-  [../]
+  # [./cohesive_law_unload_linear]
+  #   type = CZMUnloadLinear
+  #   displacement_jump_mp_name = 'displacement_jump_local'
+  #   boundary = 'interface'
+  # [../]
+  # [./cohesive_law_copenetration]
+  #   type = CZMCopenetrationPenalty
+  #   displacement_jump_mp_name = 'displacement_jump_local'
+  #   boundary = 'interface'
+  #   copenetration_penalty_stiffness = 2e7
+  # [../]
 []
 
 
@@ -169,7 +207,7 @@
   [./Elasticity_tensor]
     type = ComputeElasticityTensor
     fill_method = symmetric_isotropic
-    C_ijkl = '0.3 0.5e8'
+    C_ijkl = '0.3 2e5'
   [../]
   [./stress]
     type = ComputeLinearElasticStress
@@ -180,8 +218,9 @@
     boundary = 'interface'
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
-    unload_traction_separation_UO = 'cohesive_law_unload_linear'
-    coopenetration_penalty = 100
+    # unload_traction_separation_UO = 'cohesive_law_unload_linear'
+    # coopenetration_penalty_UO = 'cohesive_law_copenetration'
+    # coopenetration_penalty = 100
   [../]
 []
  [Preconditioning]
@@ -197,14 +236,14 @@
   petsc_options_value = 'lu        superlu_dist'
   # petsc_options_value = 'hypre     boomerang'
   solve_type = NEWTON
-  nl_abs_tol = 1e-4
-  nl_rel_tol = 1e-6
-  nl_max_its = 50
-  l_tol = 1e-10
-  l_max_its = 5
+  nl_abs_tol = 1e-6
+  nl_rel_tol = 1e-8
+  # nl_max_its = 20
+  # l_tol = 1e-15
+  # l_max_its = 10
   start_time = 0.0
   dt = 1
-  dtmin = 0.1
+  # dtmin = 0.01
   end_time = 142
   line_search = none
 []

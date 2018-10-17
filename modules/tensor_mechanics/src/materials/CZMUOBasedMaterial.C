@@ -21,12 +21,12 @@ validParams<CZMUOBasedMaterial>()
   params.addRequiredParam<UserObjectName>(
       "traction_separation_UO",
       "the name of the user object including the traction separation law");
-  params.addParam<UserObjectName>(
-      "unload_traction_separation_UO",
-      "the name of the user object including the traction separation law");
-  params.addParam<UserObjectName>(
-      "coopenetration_penalty_UO",
-      "the name of the user object including the traction separation law");
+  // params.addParam<UserObjectName>(
+  //     "unload_traction_separation_UO",
+  //     "the name of the user object including the traction separation law");
+  // params.addParam<UserObjectName>(
+  //     "coopenetration_penalty_UO",
+  //     "the name of the user object including the traction separation law");
   params.addRequiredParam<UserObjectName>(
       "displacement_jump_UO",
       "the name of the UO collecting bulk material property across an interface");
@@ -40,16 +40,16 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
   : Material(parameters),
     _displacement_jump_UO(getUserObject<DispJumpUO_QP>("displacement_jump_UO")),
     _traction_separation_UO(getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
-    _unload_traction_separation_UO(
-        parameters.isParamSetByUser("unload_traction_separation_UO")
-            ? getUserObject<CZMTractionSeparationUOBase>("unload_traction_separation_UO")
-            : _traction_separation_UO),
-    _coopenetration_penalty_UO(
-        parameters.isParamSetByUser("coopenetration_penalty_UO")
-            ? getUserObject<CZMTractionSeparationUOBase>("coopenetration_penalty_UO")
-            : _traction_separation_UO),
-    _coopenetration_penalty(getParam<Real>("coopenetration_penalty")),
-    _selected_CZM_UO(&_unload_traction_separation_UO),
+    // _unload_traction_separation_UO(
+    //     parameters.isParamSetByUser("unload_traction_separation_UO")
+    //         ? getUserObject<CZMTractionSeparationUOBase>("unload_traction_separation_UO")
+    //         : _traction_separation_UO),
+    // _coopenetration_penalty_UO(
+    //     parameters.isParamSetByUser("coopenetration_penalty_UO")
+    //         ? getUserObject<CZMTractionSeparationUOBase>("coopenetration_penalty_UO")
+    //         : _traction_separation_UO),
+    // _coopenetration_penalty(getParam<Real>("coopenetration_penalty")),
+    // _selected_CZM_UO(&_unload_traction_separation_UO),
     _displacement_jump(declareProperty<RealVectorValue>("displacement_jump")),
     _displacement_jump_local(declareProperty<RealVectorValue>("displacement_jump_local")),
     _displacement_jump_local_old(
@@ -63,7 +63,7 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     _czm_jacobian(declareProperty<std::vector<std::vector<Real>>>("czm_jacobian")),
     _normals_average(declareProperty<RealVectorValue>("normals_average")),
 
-    _uo_id(0),
+    // _uo_id(0),
     _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties()),
     _n_non_stateful_uo_czm_properties(
         _traction_separation_UO.getNumberNonStatefulMaterialProperties())
@@ -131,19 +131,19 @@ CZMUOBasedMaterial::computeQpProperties()
       (*_uo_non_stateful_czm_properties[mp_index])[_qp] =
           _traction_separation_UO.getNewNonStatefulMaterialProperty(_qp, mp_index);
 
-  selectCzmUO();
+  // selectCzmUO();
 
-  _traction_local[_qp] = _selected_CZM_UO->computeTractionLocal(_qp);
+  _traction_local[_qp] = _traction_separation_UO.computeTractionLocal(_qp);
   //
   _traction_spatial_derivatives_local[_qp] =
-      _selected_CZM_UO->computeTractionSpatialDerivativeLocal(_qp);
+      _traction_separation_UO.computeTractionSpatialDerivativeLocal(_qp);
 
-  if (_displacement_jump_local[_qp](0) < 0)
-  {
-    _traction_local[_qp](0) *= _coopenetration_penalty;
-    for (unsigned int i = 0; i < 3; i++)
-      _traction_spatial_derivatives_local[_qp](i, 0) *= _coopenetration_penalty;
-  }
+  // if (_displacement_jump_local[_qp](0) < 0)
+  // {
+  //   _traction_local[_qp](0) *= _coopenetration_penalty;
+  //   for (unsigned int i = 0; i < 3; i++)
+  //     _traction_spatial_derivatives_local[_qp](i, 0) *= _coopenetration_penalty;
+  // }
 
   _traction[_qp] = rotateVector(_traction_local[_qp], RotationGlobal2Local, /*inverse =*/true);
   _traction_spatial_derivatives[_qp] = rotateTensor2(
@@ -212,28 +212,28 @@ CZMUOBasedMaterial::rotateTensor2(const RankTwoTensor T,
   return trot;
 }
 
-void
-CZMUOBasedMaterial::selectCzmUO()
-{
-  if (_n_uo_czm_properties > 0)
-  {
-    unsigned int _uo_id = _traction_separation_UO.checkLoadUnload(_qp);
-
-    switch (_uo_id)
-    {
-      case (unsigned int)0:
-        _selected_CZM_UO = &_traction_separation_UO;
-        break;
-      case (unsigned int)1:
-        _selected_CZM_UO = &_unload_traction_separation_UO;
-        break;
-      case (unsigned int)2:
-        _selected_CZM_UO = &_coopenetration_penalty_UO;
-        break;
-      default:
-        mooseError("CZMUOBasedMaterial:: something is wrong, selecting wrong UO");
-    }
-  }
-  else
-    _selected_CZM_UO = &_traction_separation_UO;
-}
+// void
+// CZMUOBasedMaterial::selectCzmUO()
+// {
+//   if (_n_uo_czm_properties > 0)
+//   {
+//     unsigned int _uo_id = _traction_separation_UO.checkLoadUnload(_qp);
+//
+//     switch (_uo_id)
+//     {
+//       case (unsigned int)0:
+//         _selected_CZM_UO = &_traction_separation_UO;
+//         break;
+//       case (unsigned int)1:
+//         _selected_CZM_UO = &_unload_traction_separation_UO;
+//         break;
+//       case (unsigned int)2:
+//         _selected_CZM_UO = &_coopenetration_penalty_UO;
+//         break;
+//       default:
+//         mooseError("CZMUOBasedMaterial:: something is wrong, selecting wrong UO");
+//     }
+//   }
+//   else
+//     _selected_CZM_UO = &_traction_separation_UO;
+// }

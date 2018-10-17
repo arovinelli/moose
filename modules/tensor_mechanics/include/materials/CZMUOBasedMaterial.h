@@ -34,15 +34,15 @@ protected:
   /// User objectets defining the traction separation law
   /// non linear TS law
   const CZMTractionSeparationUOBase & _traction_separation_UO;
-  /// unloading behavior for stateful laws
-  const CZMTractionSeparationUOBase & _unload_traction_separation_UO;
-  /// penalty for copentration behavior
-  const CZMTractionSeparationUOBase & _coopenetration_penalty_UO;
+  // /// unloading behavior for stateful laws
+  // const CZMTractionSeparationUOBase & _unload_traction_separation_UO;
+  // /// penalty for copentration behavior
+  // const CZMTractionSeparationUOBase & _coopenetration_penalty_UO;
 
-  const Real _coopenetration_penalty;
+  // const Real _coopenetration_penalty;
 
   /// penalty for copentration behavior
-  const CZMTractionSeparationUOBase * _selected_CZM_UO;
+  // const CZMTractionSeparationUOBase * _selected_CZM_UO;
 
   /// the disaplcement jump in global coordiantes
   MaterialProperty<RealVectorValue> & _displacement_jump;
@@ -74,7 +74,7 @@ protected:
   // MaterialProperty<RealVectorValue> & _normals_neighbor_MP;
   MaterialProperty<RealVectorValue> & _normals_average;
 
-  unsigned int _uo_id;
+  // unsigned int _uo_id;
 
   const unsigned int _n_uo_czm_properties;
   const unsigned int _n_non_stateful_uo_czm_properties;
@@ -82,8 +82,8 @@ protected:
   std::vector<const MaterialProperty<std::vector<Real>> *> _uo_czm_properties_old;
   std::vector<MaterialProperty<std::vector<Real>> *> _uo_non_stateful_czm_properties;
 
-  /// method selecting proper UO depending on laoding state
-  void selectCzmUO();
+  // /// method selecting proper UO depending on laoding state
+  // void selectCzmUO();
 
   /// Rotate a vector "T" via the rotation matrix "R".
   /// inverse rotation is achieved by setting "inverse" = true

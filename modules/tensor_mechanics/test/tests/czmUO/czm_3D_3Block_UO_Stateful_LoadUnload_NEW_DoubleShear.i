@@ -71,8 +71,8 @@
 [Functions]
   [./loadUnloadFunction]
     type = PiecewiseLinear
-    x = '0 4       8  10       12     20       28    30'
-    y = '0 0.0002  0  -0.0001  0      0.0004   0    -0.0001'
+    x = '0 10 20 220'
+    y = '0 1.41421356237  0  -28.2842712475'
     # x = '0 1    2 '
     # y = '0 -0.2 0 '
   [../]
@@ -105,22 +105,22 @@
     value = 0.0
   [../]
   [./top2_x]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = disp_x
     boundary = top_2
-    value = 0.0
+    function = loadUnloadFunction
   [../]
   [./top2_y]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = disp_y
     boundary = top_2
-    value = 0.0
+    function = loadUnloadFunction
   [../]
   [./top2_z]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = disp_z
     boundary = top_2
-    function = loadUnloadFunction
+    value = 0.0
   [../]
   # [./top2_z]
   #   type = DirichletBC
@@ -193,21 +193,12 @@
   [../]
   [./cohesive_law_exponential]
     type = CZMLawExponential
-    displacement_jump_peak = 0.0001
-    traction_peak = 150
+    displacement_jump_peak = 1
+    traction_peak = 100
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
-  [../]
-  [./cohesive_law_unload_linear]
-    type = CZMUnloadLinear
-    displacement_jump_mp_name = 'displacement_jump_local'
-    boundary = 'interface'
-  [../]
-  [./cohesive_law_copenetration]
-    type = CZMCopenetrationPenalty
-    displacement_jump_mp_name = 'displacement_jump_local'
-    boundary = 'interface'
-    copenetration_penalty_stiffness = 1e9
+    compression_multiplier = 1e3
+    beta = 0.5
   [../]
 []
 
@@ -228,8 +219,8 @@
     boundary = 'interface'
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
-    unload_traction_separation_UO  = 'cohesive_law_unload_linear'
-    coopenetration_penalty_UO = 'cohesive_law_copenetration'
+    # unload_traction_separation_UO  = 'cohesive_law_unload_linear'
+    # coopenetration_penalty_UO = 'cohesive_law_copenetration'
     # coopenetration_penalty = 1e3
   [../]
 []
@@ -253,7 +244,7 @@
   l_max_its = 50
   start_time = 0.0
   dt = 1
-  end_time = 30
+  end_time = 220
   # dtmin = 1
   line_search = none
 []
@@ -306,44 +297,75 @@
   #   block = 3
   # [../]
   [./sxx_2G]
-    type = ElementAverageValue
+    type = SideAverageValue
     variable = stress_xx
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_2'
   [../]
   [./syy_2G]
-    type = ElementAverageValue
+    type = SideAverageValue
     variable = stress_yy
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_2'
   [../]
   [./szz_2G]
-    type = ElementAverageValue
+    type = SideAverageValue
     variable = stress_zz
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_2'
   [../]
   [./syz_2G]
-    type = ElementAverageValue
+    type = SideAverageValue
     variable = stress_yz
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_2'
   [../]
   [./sxz_2G]
-    type = ElementAverageValue
+    type = SideAverageValue
     variable = stress_xz
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_2'
   [../]
   [./sxy_2G]
-    type = ElementAverageValue
+    type = SideAverageValue
     variable = stress_xy
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_2'
+  [../]
+
+  [./F_interface_x]
+    type = SideAverageValue
+    variable = F_x
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
+  [../]
+  [./F_interface_y]
+    type = SideAverageValue
+    variable = F_y
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
+  [../]
+  [./F_interface_z]
+    type = SideAverageValue
+    variable = F_z
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
   [./disp_top2_z]
     type = SideAverageValue
     variable = disp_z
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
+  [../]
+  [./disp_top2_y]
+    type = SideAverageValue
+    variable = disp_y
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
+  [../]
+  [./disp_top2_x]
+    type = SideAverageValue
+    variable = disp_x
     execute_on = 'initial timestep_end'
     boundary = 'top_2'
   [../]
