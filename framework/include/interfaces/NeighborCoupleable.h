@@ -30,6 +30,10 @@ public:
   virtual ~NeighborCoupleable();
 
   // neighbor
+
+  virtual const VariableValue & coupledNeighborValueDot(const std::string & var_name,
+                                                        unsigned int comp = 0);
+
   virtual const VariableValue & coupledNeighborValue(const std::string & var_name,
                                                      unsigned int comp = 0);
   virtual const VariableValue & coupledNeighborValueOld(const std::string & var_name,
