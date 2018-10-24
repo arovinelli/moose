@@ -38,7 +38,13 @@ DispJumpUO_QP::DispJumpUO_QP(const InputParameters & parameters)
     _uy(_mesh.dimension() >= 2 ? coupledValue("disp_y") : _zero),
     _uy_neighbor(_mesh.dimension() >= 2 ? coupledNeighborValue("disp_y") : _zero),
     _uz(_mesh.dimension() >= 3 ? coupledValue("disp_z") : _zero),
-    _uz_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z") : _zero)
+    _uz_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z") : _zero),
+    _ux_dot(coupledDot("disp_x")),
+    _ux_neighbor_dot(coupledNeighborValueDot("disp_x")),
+    _uy_dot(_mesh.dimension() >= 2 ? coupledDot("disp_y") : _zero),
+    _uy_neighbor_dot(_mesh.dimension() >= 2 ? coupledNeighborValueDot("disp_y") : _zero),
+    _uz_dot(_mesh.dimension() >= 3 ? coupledDot("disp_z") : _zero),
+    _uz_neighbor_dot(_mesh.dimension() >= 3 ? coupledNeighborValueDot("disp_z") : _zero)
 {
 }
 
@@ -70,7 +76,7 @@ DispJumpUO_QP::initialize()
       std::pair<dof_id_type, unsigned int> elem_side_pair =
           std::make_pair(std::get<0>(elem_side_bid[i]), std::get<1>(elem_side_bid[i]));
       // initialize map elemenet
-      std::vector<RealVectorValue> var_values(0);
+      std::vector<std::vector<RealVectorValue>> var_values(0, std::vector<RealVectorValue>(0));
 
       // add entry to the value map
       _map_values[elem_side_pair] = var_values;
@@ -94,12 +100,17 @@ DispJumpUO_QP::execute()
     // loop over qps and do stuff
     for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)
     {
-      // vec[qp].resize(3, 0);
+      vec[qp].resize(2, 0);
 
       // compute displacement jump
-      vec[qp](0) = _ux_neighbor[qp] - _ux[qp];
-      vec[qp](1) = _uy_neighbor[qp] - _uy[qp];
-      vec[qp](2) = _uz_neighbor[qp] - _uz[qp];
+      vec[qp][0](0) = _ux_neighbor[qp] - _ux[qp];
+      vec[qp][0](1) = _uy_neighbor[qp] - _uy[qp];
+      vec[qp][0](2) = _uz_neighbor[qp] - _uz[qp];
+
+      // compute displacement jump velocity
+      vec[qp][1](0) = _ux_neighbor_dot[qp] - _ux_dot[qp];
+      vec[qp][1](1) = _uy_neighbor_dot[qp] - _uy_dot[qp];
+      vec[qp][1](2) = _uz_neighbor_dot[qp] - _uz_dot[qp];
     }
   }
   else
@@ -111,9 +122,19 @@ DispJumpUO_QP::getDisplacementJump(dof_id_type elem, unsigned int side, unsigned
 {
   auto dispJump = _map_values.find(std::make_pair(elem, side));
   if (dispJump != _map_values.end())
-  {
-    return dispJump->second[qp];
-  }
+    return dispJump->second[qp][0];
+  else
+    mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
+}
+
+RealVectorValue
+DispJumpUO_QP::getDisplacementJumpVelocity(dof_id_type elem,
+                                           unsigned int side,
+                                           unsigned int qp) const
+{
+  auto dispJump = _map_values.find(std::make_pair(elem, side));
+  if (dispJump != _map_values.end())
+    return dispJump->second[qp][1];
   else
     mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
 }

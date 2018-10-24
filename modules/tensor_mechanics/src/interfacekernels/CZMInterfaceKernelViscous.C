@@ -96,13 +96,13 @@ CZMInterfaceKernelViscous::CZMInterfaceKernelViscous(const InputParameters & par
 Real
 CZMInterfaceKernelViscous::computeQpResidual(Moose::DGResidualType type)
 {
-  // RealVectorValue velocity(_u_dot[_qp] - _neighbor_value_dot[_qp],
+  // RealVectorValue velocity( _neighbor_value_dot[_qp] - _u_dot[_qp],
   //                          _disp_1_dot_neighbor[_qp] - _disp_1_dot[_qp],
   //                          _disp_2_dot_neighbor[_qp] - _disp_2_dot[_qp]);
 
   // Real r = _ResidualMP[_qp](_disp_index);
 
-  Real r = (_u_dot[_qp] - _neighbor_value_dot[_qp]) * _viscosity_coefficient;
+  Real r = (_neighbor_value_dot[_qp] - _u_dot[_qp]) * _viscosity_coefficient;
 
   // if (std::abs(velocity(_disp_index)) > 1e-6)
   // {
@@ -150,19 +150,19 @@ CZMInterfaceKernelViscous::computeQpJacobian(Moose::DGJacobianType type)
     // master variables to make the code easier to understand the trailing + and - signs are
     // inherited directly from the reidual equation
     case Moose::ElementElement:
-      jac *= -_test[_i][_qp] * _phi[_j][_qp] * (-1);
+      jac *= -_test[_i][_qp] * _phi[_j][_qp] * (-1) * _du_dot_du[_qp];
       break;
 
     case Moose::ElementNeighbor:
-      jac *= -_test[_i][_qp] * _phi_neighbor[_j][_qp] * (1);
+      jac *= -_test[_i][_qp] * _phi_neighbor[_j][_qp] * (1) * _dneighbor_value_dot_du[_qp];
       break;
 
     case Moose::NeighborElement:
-      jac *= _test_neighbor[_i][_qp] * _phi[_j][_qp] * (-1);
+      jac *= _test_neighbor[_i][_qp] * _phi[_j][_qp] * (-1) * _dneighbor_value_dot_du[_qp];
       break;
 
     case Moose::NeighborNeighbor:
-      jac *= _test_neighbor[_i][_qp] * _phi_neighbor[_j][_qp] * (1);
+      jac *= _test_neighbor[_i][_qp] * _phi_neighbor[_j][_qp] * (1) * _du_dot_du[_qp];
       break;
   }
 

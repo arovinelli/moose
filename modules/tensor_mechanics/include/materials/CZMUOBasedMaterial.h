@@ -44,11 +44,18 @@ protected:
   /// penalty for copentration behavior
   // const CZMTractionSeparationUOBase * _selected_CZM_UO;
 
-  /// the disaplcement jump in global coordiantes
+  /// the dispalcement jump in global coordiantes
   MaterialProperty<RealVectorValue> & _displacement_jump;
+
+  /// the dispalcement jump in global coordiantes
+  MaterialProperty<RealVectorValue> & _displacement_jump_dot;
 
   /// the disaplcement jump in natural element coordiantes
   MaterialProperty<RealVectorValue> & _displacement_jump_local;
+
+  /// the disaplcement jump in natural element coordiantes
+  MaterialProperty<RealVectorValue> & _displacement_jump_dot_local;
+
   /// the disaplcement jump in natural element coordiantes at the previous time step
   const MaterialProperty<RealVectorValue> & _displacement_jump_local_old;
 

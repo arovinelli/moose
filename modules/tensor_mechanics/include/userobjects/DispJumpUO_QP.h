@@ -32,17 +32,26 @@ public:
   virtual void threadJoin(const UserObject & /*uo*/) { return; };
 
   RealVectorValue getDisplacementJump(dof_id_type elem, unsigned int side, unsigned int qp) const;
+  RealVectorValue
+  getDisplacementJumpVelocity(dof_id_type elem, unsigned int side, unsigned int qp) const;
 
 protected:
   /// this map is used for storing data at QPs.
   /// keys<element_id, side_id>, values<vector (1 elem_per_QP)<vector<Real (_mean_mat_prop, _var_jump)>>>
-  std::map<std::pair<dof_id_type, unsigned int>, std::vector<RealVectorValue>> _map_values;
+  std::map<std::pair<dof_id_type, unsigned int>, std::vector<std::vector<RealVectorValue>>>
+      _map_values;
   const VariableValue & _ux;
   const VariableValue & _ux_neighbor;
   const VariableValue & _uy;
   const VariableValue & _uy_neighbor;
   const VariableValue & _uz;
   const VariableValue & _uz_neighbor;
+  const VariableValue & _ux_dot;
+  const VariableValue & _ux_neighbor_dot;
+  const VariableValue & _uy_dot;
+  const VariableValue & _uy_neighbor_dot;
+  const VariableValue & _uz_dot;
+  const VariableValue & _uz_neighbor_dot;
 };
 
 #endif // DISPJUMPUO_QP_H

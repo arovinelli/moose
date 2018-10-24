@@ -51,7 +51,9 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     // _coopenetration_penalty(getParam<Real>("coopenetration_penalty")),
     // _selected_CZM_UO(&_unload_traction_separation_UO),
     _displacement_jump(declareProperty<RealVectorValue>("displacement_jump")),
+    _displacement_jump_dot(declareProperty<RealVectorValue>("displacement_jump_dot")),
     _displacement_jump_local(declareProperty<RealVectorValue>("displacement_jump_local")),
+    _displacement_jump_dot_local(declareProperty<RealVectorValue>("displacement_jump_dot_local")),
     _displacement_jump_local_old(
         getMaterialPropertyOld<RealVectorValue>("displacement_jump_local")),
     _traction(declareProperty<RealVectorValue>("traction")),
@@ -122,6 +124,12 @@ CZMUOBasedMaterial::computeQpProperties()
 
   _displacement_jump_local[_qp] = rotateVector(_displacement_jump[_qp], RotationGlobal2Local);
 
+  _displacement_jump_dot[_qp] =
+      _displacement_jump_UO.getDisplacementJumpVelocity(_current_elem->id(), _current_side, _qp);
+
+  _displacement_jump_dot_local[_qp] =
+      rotateVector(_displacement_jump_dot[_qp], RotationGlobal2Local);
+
   if (_n_uo_czm_properties > 0)
     for (unsigned int mp_index = 0; mp_index < _n_uo_czm_properties; mp_index++)
       (*_uo_czm_properties[mp_index])[_qp] =
@@ -131,19 +139,10 @@ CZMUOBasedMaterial::computeQpProperties()
       (*_uo_non_stateful_czm_properties[mp_index])[_qp] =
           _traction_separation_UO.getNewNonStatefulMaterialProperty(_qp, mp_index);
 
-  // selectCzmUO();
-
   _traction_local[_qp] = _traction_separation_UO.computeTractionLocal(_qp);
   //
   _traction_spatial_derivatives_local[_qp] =
       _traction_separation_UO.computeTractionSpatialDerivativeLocal(_qp);
-
-  // if (_displacement_jump_local[_qp](0) < 0)
-  // {
-  //   _traction_local[_qp](0) *= _coopenetration_penalty;
-  //   for (unsigned int i = 0; i < 3; i++)
-  //     _traction_spatial_derivatives_local[_qp](i, 0) *= _coopenetration_penalty;
-  // }
 
   _traction[_qp] = rotateVector(_traction_local[_qp], RotationGlobal2Local, /*inverse =*/true);
   _traction_spatial_derivatives[_qp] = rotateTensor2(
@@ -211,29 +210,3 @@ CZMUOBasedMaterial::rotateTensor2(const RankTwoTensor T,
   trot.rotate(R_loc);
   return trot;
 }
-
-// void
-// CZMUOBasedMaterial::selectCzmUO()
-// {
-//   if (_n_uo_czm_properties > 0)
-//   {
-//     unsigned int _uo_id = _traction_separation_UO.checkLoadUnload(_qp);
-//
-//     switch (_uo_id)
-//     {
-//       case (unsigned int)0:
-//         _selected_CZM_UO = &_traction_separation_UO;
-//         break;
-//       case (unsigned int)1:
-//         _selected_CZM_UO = &_unload_traction_separation_UO;
-//         break;
-//       case (unsigned int)2:
-//         _selected_CZM_UO = &_coopenetration_penalty_UO;
-//         break;
-//       default:
-//         mooseError("CZMUOBasedMaterial:: something is wrong, selecting wrong UO");
-//     }
-//   }
-//   else
-//     _selected_CZM_UO = &_traction_separation_UO;
-// }

@@ -15,8 +15,8 @@ validParams<InterfaceTimeKernel>()
 {
   InputParameters params = validParams<InterfaceKernel>();
 
-  params.set<MultiMooseEnum>("vector_tags") = "time";
-  params.set<MultiMooseEnum>("matrix_tags") = "system time";
+  // params.set<MultiMooseEnum>("vector_tags") = "time";
+  // params.set<MultiMooseEnum>("matrix_tags") = "system time";
 
   return params;
 }

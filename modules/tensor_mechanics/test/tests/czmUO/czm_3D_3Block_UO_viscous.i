@@ -124,6 +124,7 @@
     disp_2 = disp_z
     disp_2_neighbor = disp_z
     disp_index = 0
+    viscosity_coefficient = 10
     boundary = 'interface'
   [../]
   [./interface_y]
@@ -136,7 +137,7 @@
     disp_2_neighbor = disp_z
     disp_index = 1
     boundary = 'interface'
-    viscosity_coefficient = 10
+    viscosity_coefficient = 100
   [../]
   [./interface_z]
     type = CZMInterfaceKernelViscous
@@ -148,7 +149,7 @@
     disp_2_neighbor = disp_y
     disp_index = 2
     boundary = 'interface'
-    viscosity_coefficient = 10
+    viscosity_coefficient = 1000
   [../]
 []
 # [UserObjects]
