@@ -15,25 +15,13 @@ template <>
 InputParameters
 validParams<CZMInterfaceKernelViscous>()
 {
-  InputParameters params = validParams<InterfaceKernel>();
+  InputParameters params = validParams<InterfaceTimeKernel>();
   params.addRequiredParam<unsigned int>("disp_index",
                                         "the component of the "
                                         "displacement vector this kernel is working on:"
                                         " disp_index == 0, ==> X"
                                         " disp_index == 1, ==> Y"
                                         " disp_index == 2, ==> Z");
-  params.addCoupledVar("disp_0",
-                       "Name of the variable representing the 2nd "
-                       "displacement to couple on the master side. "
-                       "If disp_index == 0, then disp_1 = disp_y "
-                       "If disp_index == 1, then disp_1 = disp_x "
-                       "If disp_index == 2, then disp_1 = disp_x");
-  params.addCoupledVar("disp_0_neighbor",
-                       "Name of the variable representing "
-                       "the 2nd displacement to couple on the slave side. "
-                       "If disp_index == 0, disp_1_neighbor = disp_y_neighbor "
-                       "If disp_index == 1, disp_1_neighbor = disp_x_neighbor "
-                       "If disp_index == 2, disp_1_neighbor = disp_x_neighbor");
   params.addCoupledVar("disp_1",
                        "Name of the variable representing the 2nd "
                        "displacement to couple on the master side. "
@@ -75,19 +63,15 @@ validParams<CZMInterfaceKernelViscous>()
 }
 
 CZMInterfaceKernelViscous::CZMInterfaceKernelViscous(const InputParameters & parameters)
-  : InterfaceKernel(parameters),
+  : InterfaceTimeKernel(parameters),
 
     _disp_index(getParam<unsigned int>("disp_index")),
-    _disp_0_dot(coupledDot("disp_0")),
-    _disp_0_dot_neighbor(coupledNeighborValueDot("disp_0_neighbor")),
     _disp_1_dot(_mesh.dimension() >= 2 ? coupledDot("disp_1") : _zero),
     _disp_1_dot_neighbor(_mesh.dimension() >= 2 ? coupledNeighborValueDot("disp_1_neighbor")
                                                 : _zero),
     _disp_2_dot(_mesh.dimension() >= 3 ? coupledDot("disp_2") : _zero),
     _disp_2_dot_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValueDot("disp_2_neighbor")
                                                 : _zero),
-    _disp_0_var(coupled("disp_0")),
-    _disp_0_neighbor_var(coupled("disp_0_neighbor")),
     _disp_1_var(coupled("disp_1")),
     _disp_1_neighbor_var(coupled("disp_1_neighbor")),
     _disp_2_var(coupled("disp_2")),
@@ -112,13 +96,13 @@ CZMInterfaceKernelViscous::CZMInterfaceKernelViscous(const InputParameters & par
 Real
 CZMInterfaceKernelViscous::computeQpResidual(Moose::DGResidualType type)
 {
-  RealVectorValue velocity(_disp_0_dot_neighbor[_qp] - _disp_0_dot[_qp],
-                           _disp_1_dot_neighbor[_qp] - _disp_1_dot[_qp],
-                           _disp_2_dot_neighbor[_qp] - _disp_2_dot[_qp]);
+  // RealVectorValue velocity(_u_dot[_qp] - _neighbor_value_dot[_qp],
+  //                          _disp_1_dot_neighbor[_qp] - _disp_1_dot[_qp],
+  //                          _disp_2_dot_neighbor[_qp] - _disp_2_dot[_qp]);
 
   // Real r = _ResidualMP[_qp](_disp_index);
 
-  Real r = velocity(0) * _viscosity_coefficient;
+  Real r = (_u_dot[_qp] - _neighbor_value_dot[_qp]) * _viscosity_coefficient;
 
   // if (std::abs(velocity(_disp_index)) > 1e-6)
   // {

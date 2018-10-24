@@ -10,7 +10,7 @@
 #ifndef CZMINTERFACEKERNELVISCOUS_H
 #define CZMINTERFACEKERNELVISCOUS_H
 
-#include "InterfaceKernel.h"
+#include "InterfaceTimeKernel.h"
 
 /// Forward Declarations
 class CZMInterfaceKernelViscous;
@@ -21,7 +21,7 @@ InputParameters validParams<CZMInterfaceKernelViscous>();
 /// DG kernel implementing CZM for a 3D traction sepration law based on
 /// the displacement jump. This kernel operates only on a single displacement
 /// compenent. One kernel is needed for each dispalcement jump component
-class CZMInterfaceKernelViscous : public InterfaceKernel
+class CZMInterfaceKernelViscous : public InterfaceTimeKernel
 {
 public:
   CZMInterfaceKernelViscous(const InputParameters & parameters);
@@ -35,16 +35,16 @@ protected:
   const unsigned int _disp_index;
 
   /// coupled displacement componenets values
-  const VariableValue & _disp_0_dot;
-  const VariableValue & _disp_0_dot_neighbor;
+  // const VariableValue & _disp_0_dot;
+  // const VariableValue & _disp_0_dot_neighbor;
   const VariableValue & _disp_1_dot;
   const VariableValue & _disp_1_dot_neighbor;
   const VariableValue & _disp_2_dot;
   const VariableValue & _disp_2_dot_neighbor;
 
   /// coupled displacement componenets variables ID
-  unsigned int _disp_0_var;
-  unsigned int _disp_0_neighbor_var;
+  // unsigned int _disp_0_var;
+  // unsigned int _disp_0_neighbor_var;
   unsigned int _disp_1_var;
   unsigned int _disp_1_neighbor_var;
   unsigned int _disp_2_var;

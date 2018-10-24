@@ -6,7 +6,6 @@
 [MeshModifiers]
   [./breakmesh]
     type = BreakMeshByBlock
-    # split_interface = false
   [../]
 
   [./bottom_block_1]
@@ -120,8 +119,6 @@
     type = CZMInterfaceKernelViscous
     variable = disp_x
     neighbor_var = disp_x
-    disp_0 = disp_x
-    disp_0_neighbor = disp_x
     disp_1 = disp_y
     disp_1_neighbor = disp_y
     disp_2 = disp_z
@@ -133,8 +130,6 @@
     type = CZMInterfaceKernelViscous
     variable = disp_y
     neighbor_var = disp_y
-    disp_0 = disp_y
-    disp_0_neighbor = disp_y
     disp_1 = disp_x
     disp_1_neighbor = disp_x
     disp_2 = disp_z
@@ -147,8 +142,6 @@
     type = CZMInterfaceKernelViscous
     variable = disp_z
     neighbor_var = disp_z
-    disp_0 = disp_z
-    disp_0_neighbor = disp_z
     disp_1 = disp_x
     disp_1_neighbor = disp_x
     disp_2 = disp_y
