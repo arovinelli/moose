@@ -79,7 +79,7 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_2
-    function = loadFunction2
+    function = loadFunction3
   [../]
   [./top3_x]
     type = DirichletBC
@@ -104,13 +104,13 @@
 [Functions]
   [./loadFunction3]
     type = PiecewiseLinear
-    x = '0 1  2 5'
-    y = '0 1  4 4'
+    x = '0 1  2 5 8 15'
+    y = '0 1  4 4 7 0'
   [../]
   [./loadFunction2]
     type = PiecewiseLinear
-    x = '0 1  2 5'
-    y = '0 0.5  2 2'
+    x = '0 1    2 5 8 15'
+    y = '0 0.5  2 2 7  0'
   [../]
 []
 
@@ -137,7 +137,7 @@
     disp_2_neighbor = disp_z
     disp_index = 1
     boundary = 'interface'
-    viscosity_coefficient = 100
+    viscosity_coefficient = 10
   [../]
   [./interface_z]
     type = CZMInterfaceKernelViscous
@@ -149,7 +149,7 @@
     disp_2_neighbor = disp_y
     disp_index = 2
     boundary = 'interface'
-    viscosity_coefficient = 1000
+    viscosity_coefficient = 10
   [../]
 []
 # [UserObjects]
@@ -198,8 +198,8 @@
 [Executioner]
   # Preconditisoned JFNK (default)
   type = Transient
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
+  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+  petsc_options_value = 'lu        superlu_dist'
   # petsc_options_value = 'hypre     boomerang'
   solve_type = NEWTON
   nl_abs_tol = 1e-8
@@ -209,7 +209,7 @@
   l_max_its = 50
   start_time = 0.0
   dt = 1
-  end_time = 5
+  end_time = 15
   dtmin = 0.2
   line_search = none
   # num_steps = 1
