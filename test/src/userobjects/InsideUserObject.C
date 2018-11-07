@@ -53,16 +53,21 @@ InsideUserObject::initialize()
 void
 InsideUserObject::execute()
 {
-  for (unsigned int qp = 0; qp < _q_point.size(); ++qp)
-    _value += std::pow(_u[qp] - _u_neighbor[qp], 2) +
-              (_diffusivity_prop[qp] + _neighbor_diffusivity_prop[qp]) / 2;
+  std::cout << "Elem: " << _current_elem->id() << std::endl;
+  std::cout << "NeighnorElem: " << _neighbor_elem->id() << std::endl;
+  std::cout << "Elem Volume: " << _current_side_volume << std::endl;
+  std::cout << "Neighbor Volume: " << getNeighborElemVolume() << std::endl;
+  _value += _current_side_volume + getNeighborElemVolume();
+  // for (unsigned int qp = 0; qp < _q_point.size(); ++qp)
+  //   _value += std::pow(_u[qp] - _u_neighbor[qp], 2) +
+  //             (_diffusivity_prop[qp] + _neighbor_diffusivity_prop[qp]) / 2;
 }
 
 void
 InsideUserObject::finalize()
 {
   gatherSum(_value);
-  _value = std::sqrt(_value);
+  // _value = std::sqrt(_value);
 }
 
 void
