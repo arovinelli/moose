@@ -357,7 +357,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
 
   _block_mat_side_cache.resize(n_threads);
   _bnd_mat_side_cache.resize(n_threads);
-  // _bnd_mat_interface_cache.resize(n_threads);
+  _bnd_mat_interface_cache.resize(n_threads);
 
   _resurrector = libmesh_make_unique<Resurrector>(*this);
 
@@ -5801,28 +5801,28 @@ FEProblemBase::needBoundaryMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid)
   return _bnd_mat_side_cache[tid][bnd_id];
 }
 
-// bool
-// FEProblemBase::needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid)
-// {
-//   if (_bnd_mat_interface_cache[tid].find(bnd_id) == _bnd_mat_interface_cache[tid].end())
-//   {
-//     _bnd_mat_interface_cache[tid][bnd_id] = false;
-//
-//     // if (_nl->needBoundaryMaterialOnInterface(bnd_id, tid))
-//     //   _bnd_mat_interface_cache[tid][bnd_id] = true;
-//     // else if (_interface_user_objects.hasActiveBoundaryObjects(bnd_id, tid))
-//     //   _bnd_mat_interface_cache[tid][bnd_id] = true;
-//     if (theWarehouse() // THIS DOES NOT WORK AND I CAN'T FIGURE OUT WHY
-//             .query()
-//             .condition<AttribThread>(tid)
-//             .condition<AttribInterfaces>(Interfaces::InterfaceUserObject)
-//             .condition<AttribBoundaries>(bnd_id)
-//             .count() > 0)
-//       _bnd_mat_interface_cache[tid][bnd_id] = true;
-//   }
-//
-//   return _bnd_mat_interface_cache[tid][bnd_id];
-// }
+bool
+FEProblemBase::needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid)
+{
+  if (_bnd_mat_interface_cache[tid].find(bnd_id) == _bnd_mat_interface_cache[tid].end())
+  {
+    _bnd_mat_interface_cache[tid][bnd_id] = false;
+
+    // if (_nl->needBoundaryMaterialOnInterface(bnd_id, tid))
+    //   _bnd_mat_interface_cache[tid][bnd_id] = true;
+    // else if (_interface_user_objects.hasActiveBoundaryObjects(bnd_id, tid))
+    //   _bnd_mat_interface_cache[tid][bnd_id] = true;
+    if (theWarehouse() // THIS DOES NOT WORK AND I CAN'T FIGURE OUT WHY
+            .query()
+            .condition<AttribThread>(tid)
+            .condition<AttribInterfaces>(Interfaces::InterfaceUserObject)
+            .condition<AttribBoundaries>(bnd_id)
+            .count() > 0)
+      _bnd_mat_interface_cache[tid][bnd_id] = true;
+  }
+
+  return _bnd_mat_interface_cache[tid][bnd_id];
+}
 
 bool
 FEProblemBase::needSubdomainMaterialOnSide(SubdomainID subdomain_id, THREAD_ID tid)

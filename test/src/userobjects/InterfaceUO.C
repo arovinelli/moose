@@ -57,9 +57,17 @@ void
 InterfaceUO::execute()
 {
   std::cout << "InterfaceUO::execute" << std::endl;
+  std::cout << "_current_elem " << _current_elem->id() << std::endl;
+  std::cout << "_current_side " << _current_side << std::endl;
+  std::cout << "_current_side_elem " << _current_side_elem->id() << std::endl;
+  std::cout << "_neighbor_elem " << _neighbor_elem->id() << std::endl;
+  std::cout << "_current_side_volume " << _current_side_volume << std::endl;
+  std::cout << "_neighbor_side_volume " << getNeighborElemVolume() << std::endl;
+  _total_volume += (_current_side_volume + getNeighborElemVolume()) / 2;
   for (unsigned int qp = 0; qp < _q_point.size(); ++qp)
   {
-    _total_volume += (_current_side_volume + getNeighborElemVolume()) / 2;
+    std::cout << "  QP " << qp << std::endl;
+
     std::cout << "  _diffusivity_prop[qp] " << _diffusivity_prop[qp] << std::endl;
     std::cout << "  _neighbor_diffusivity_prop[qp] " << _neighbor_diffusivity_prop[qp] << std::endl;
     _mean_mat_prop += (_diffusivity_prop[qp] + _neighbor_diffusivity_prop[qp]) / 2;

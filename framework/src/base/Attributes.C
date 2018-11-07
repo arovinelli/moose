@@ -325,7 +325,7 @@ AttribInterfaces::initFrom(const MooseObject * obj)
   _val |= (unsigned int)Interfaces::ElementUserObject         * (dynamic_cast<const ElementUserObject *>(obj) != nullptr);
   _val |= (unsigned int)Interfaces::SideUserObject            * (dynamic_cast<const SideUserObject *>(obj) != nullptr);
   _val |= (unsigned int)Interfaces::InternalSideUserObject    * (dynamic_cast<const InternalSideUserObject *>(obj) != nullptr);
-  _val |= (unsigned int)Interfaces::InterfaceUserObject    * (dynamic_cast<const InterfaceUserObject *>(obj) != nullptr);
+  _val |= (unsigned int)Interfaces::InterfaceUserObject       * (dynamic_cast<const InterfaceUserObject *>(obj) != nullptr);
   _val |= (unsigned int)Interfaces::NodalUserObject           * (dynamic_cast<const NodalUserObject *>(obj) != nullptr);
   _val |= (unsigned int)Interfaces::GeneralUserObject         * (dynamic_cast<const GeneralUserObject *>(obj) != nullptr);
   _val |= (unsigned int)Interfaces::ThreadedGeneralUserObject * (dynamic_cast<const ThreadedGeneralUserObject *>(obj) != nullptr);

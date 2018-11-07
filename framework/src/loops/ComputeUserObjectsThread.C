@@ -16,6 +16,7 @@
 #include "InterfaceUserObject.h"
 #include "ShapeSideUserObject.h"
 #include "InternalSideUserObject.h"
+#include "InterfaceUserObject.h"
 #include "NodalUserObject.h"
 #include "SwapBackSentinel.h"
 #include "FEProblem.h"
@@ -42,7 +43,9 @@ ComputeUserObjectsThread::subdomainChanged()
 {
   // for the current thread get block objects for the current subdomain and *all* side objects
   std::vector<UserObject *> objs;
-  querySubdomain(Interfaces::ElementUserObject | Interfaces::InternalSideUserObject, objs);
+  querySubdomain(Interfaces::ElementUserObject | Interfaces::InternalSideUserObject |
+                     Interfaces::InterfaceUserObject,
+                 objs);
 
   std::vector<UserObject *> side_objs;
   _query.clone()
@@ -192,15 +195,15 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
 {
   std::cout << "ComputeUserObjectsThread::onInterface" << std::endl;
   // Pointer to the neighbor we are currently working on.
-  const Elem * neighbor = elem->neighbor_ptr(side);
-
-  // Get the global id of the element and the neighbor
-  const dof_id_type elem_id = elem->id(), neighbor_id = neighbor->id();
-
   std::vector<UserObject *> userobjs;
   queryBoundary(Interfaces::InterfaceUserObject, bnd_id, userobjs);
   if (userobjs.size() == 0)
     return;
+
+  const Elem * neighbor = elem->neighbor_ptr(side);
+
+  // Get the global id of the element and the neighbor
+  const dof_id_type elem_id = elem->id(), neighbor_id = neighbor->id();
 
   if (!((neighbor->active() && (neighbor->level() == elem->level()) && (elem_id < neighbor_id)) ||
         (neighbor->level() < elem->level())))
@@ -217,7 +220,7 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
   _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
 
-  for (const auto & uo : userobjs)
+  for (const auto & uo : _interface_user_objects)
   {
     std::cout << "ComputeUserObjectsThread::onInterface->execute " << std::endl;
     uo->execute();

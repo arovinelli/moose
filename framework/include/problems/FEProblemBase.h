@@ -1358,7 +1358,7 @@ public:
    * @return Boolean indicating whether material properties need to be stored
    */
   bool needBoundaryMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid);
-  // bool needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid);
+  bool needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid);
   bool needSubdomainMaterialOnSide(SubdomainID subdomain_id, THREAD_ID tid);
   ///@}
 
@@ -1724,8 +1724,8 @@ protected:
   /// Cache for calculating materials on side
   std::vector<std::unordered_map<BoundaryID, bool>> _bnd_mat_side_cache;
 
-  // /// Cache for calculating materials on interface
-  // std::vector<std::unordered_map<BoundaryID, bool>> _bnd_mat_interface_cache;
+  /// Cache for calculating materials on interface
+  std::vector<std::unordered_map<BoundaryID, bool>> _bnd_mat_interface_cache;
 
   /// Objects to be notified when the mesh changes
   std::vector<MeshChangedInterface *> _notify_when_mesh_changes;

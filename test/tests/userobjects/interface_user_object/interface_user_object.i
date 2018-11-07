@@ -45,6 +45,7 @@
     variable = u
     mpName = diffusivity
     boundary = 'interface'
+    use_old_prop = false
     execute_on = 'initial timestep_end'
   [../]
 
