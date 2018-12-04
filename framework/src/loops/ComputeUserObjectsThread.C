@@ -193,7 +193,7 @@ ComputeUserObjectsThread::onInternalSide(const Elem * elem, unsigned int side)
 void
 ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, BoundaryID bnd_id)
 {
-  std::cout << "ComputeUserObjectsThread::onInterface" << std::endl;
+  // std::cout << "ComputeUserObjectsThread::onInterface" << std::endl;
   // Pointer to the neighbor we are currently working on.
   std::vector<UserObject *> userobjs;
   queryBoundary(Interfaces::InterfaceUserObject, bnd_id, userobjs);
@@ -217,16 +217,20 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   SwapBackSentinel face_sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
   _fe_problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
 
+  // reinit boundary materials property
+  _fe_problem.reinitMaterialsBoundary(
+      bnd_id, _tid, /*swap_stateful=*/true, /*prevent_update_interface_materials=*/true);
+
   SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
   _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
 
   for (const auto & uo : _interface_user_objects)
   {
-    std::cout << "ComputeUserObjectsThread::onInterface->execute " << std::endl;
+    // std::cout << "ComputeUserObjectsThread::onInterface->execute " << std::endl;
     uo->execute();
   }
 
-  // _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
+  _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
 }
 
 void

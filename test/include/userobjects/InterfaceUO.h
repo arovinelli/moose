@@ -44,6 +44,7 @@ protected:
 
   const MaterialProperty<Real> & _diffusivity_prop;
   const MaterialProperty<Real> & _neighbor_diffusivity_prop;
+  const Real & _current_neighbor_volume;
 };
 
 #endif // INTERFACEUO_H

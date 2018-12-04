@@ -52,7 +52,7 @@
     variable = u
     diffusivity = diffusivity
     boundary = 'interface_01 interface_02'
-    execute_on = 'initial LINEAR'
+    execute_on = 'INITIAL LINEAR'
   [../]
 
 []
@@ -103,13 +103,60 @@
     block = 2
     initial_diffusivity = 7
   [../]
-  # [./interface_material]
-  #   type = InterfaceUOMaterial
-  #   boundary = 'interface_01 interface_02'
-  #   interface_uo_qp = interface_uo_qp
-  # [../]
+  [./interface_material]
+    type = InterfaceUOMaterial
+    is_interface_material = true
+    boundary = 'interface_01 interface_02'
+    interface_uo_qp = interface_uo_qp
+  [../]
 []
 
+[AuxVariables]
+  [./ujump_01]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./ujump_02]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./boundary_property_01]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./boundary_property_02]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+[]
+
+
+[AuxKernels]
+  [./ujump_01]
+    type = MaterialRealAux
+    property = variable_jump
+    variable = ujump_01
+    boundary = 'interface_01'
+  [../]
+  [./ujump_02]
+    type = MaterialRealAux
+    property = variable_jump
+    variable = ujump_02
+    boundary = 'interface_02'
+  [../]
+  [./boundary_property_01]
+    type = MaterialRealAux
+    property = boundary_property
+    variable = boundary_property_01
+    boundary = 'interface_01'
+  [../]
+  [./boundary_property_02]
+    type = MaterialRealAux
+    property = boundary_property
+    variable = boundary_property_02
+    boundary = 'interface_02'
+  [../]
+[]
 
 [Executioner]
   type = Steady

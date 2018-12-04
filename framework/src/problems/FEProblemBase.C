@@ -2586,7 +2586,10 @@ FEProblemBase::reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool s
 }
 
 void
-FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bool swap_stateful)
+FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id,
+                                       THREAD_ID tid,
+                                       bool swap_stateful,
+                                       bool prevent_update_interface_materials)
 {
   if (hasActiveMaterialProperties(tid))
   {
@@ -2603,7 +2606,8 @@ FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bo
           _discrete_materials.getActiveBoundaryObjects(boundary_id, tid));
 
     if (_materials.hasActiveBoundaryObjects(boundary_id, tid))
-      _bnd_material_data[tid]->reinit(_materials.getActiveBoundaryObjects(boundary_id, tid));
+      _bnd_material_data[tid]->reinit(_materials.getActiveBoundaryObjects(boundary_id, tid),
+                                      prevent_update_interface_materials);
 
     if (_jacobian_materials.hasActiveBoundaryObjects(boundary_id, tid) &&
         _currently_computing_jacobian)
@@ -3168,7 +3172,6 @@ FEProblemBase::computeUserObjects(const ExecFlagType & type, const Moose::AuxGro
   // Execute Elemental/Side/InternalSide/InterfaceUserObjects
   if (!userobjs.empty())
   {
-    std::cout << "there is one user object" << std::endl;
     // non-nodal user objects have to be run separately before the nodal user objects run
     // because some nodal user objects (NodalNormal related) depend on elemental user objects :-(
     ComputeUserObjectsThread cppt(*this, getNonlinearSystemBase(), query);
@@ -3180,10 +3183,6 @@ FEProblemBase::computeUserObjects(const ExecFlagType & type, const Moose::AuxGro
     joinAndFinalize(query.clone().condition<AttribInterfaces>(Interfaces::InternalSideUserObject));
     joinAndFinalize(query.clone().condition<AttribInterfaces>(Interfaces::ElementUserObject));
     joinAndFinalize(query.clone().condition<AttribInterfaces>(Interfaces::InterfaceUserObject));
-  }
-  else
-  {
-    std::cout << "there is NOT an user object" << std::endl;
   }
 
   // Execute NodalUserObjects

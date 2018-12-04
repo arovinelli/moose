@@ -98,7 +98,7 @@ InterfaceUO_QP::execute()
       vec[qp][0] = (_diffusivity_prop[qp] + _neighbor_diffusivity_prop[qp]) / 2.0;
       // compute variable jump
       vec[qp][1] = _u[qp] - _u_neighbor[qp];
-      vec[qp][2] = vec[qp][0] * (vec[qp][1] + 2);
+      vec[qp][2] = vec[qp][0] * (vec[qp][1] + 1);
     }
   }
   else

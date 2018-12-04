@@ -39,7 +39,8 @@ InterfaceUO::InterfaceUO(const InputParameters & parameters)
                                                      : getMaterialProperty<Real>("mpName")),
     _neighbor_diffusivity_prop(getParam<bool>("use_old_prop")
                                    ? getNeighborMaterialPropertyOld<Real>("mpName")
-                                   : getNeighborMaterialProperty<Real>("mpName"))
+                                   : getNeighborMaterialProperty<Real>("mpName")),
+    _current_neighbor_volume(_assembly.neighborVolume())
 {
 }
 
@@ -56,23 +57,23 @@ InterfaceUO::initialize()
 void
 InterfaceUO::execute()
 {
-  std::cout << "InterfaceUO::execute" << std::endl;
-  std::cout << "_current_elem " << _current_elem->id() << std::endl;
-  std::cout << "_current_side " << _current_side << std::endl;
-  std::cout << "_current_side_elem " << _current_side_elem->id() << std::endl;
-  std::cout << "_neighbor_elem " << _neighbor_elem->id() << std::endl;
-  std::cout << "_current_side_volume " << _current_side_volume << std::endl;
-  std::cout << "_neighbor_side_volume " << getNeighborElemVolume() << std::endl;
-  _total_volume += (_current_side_volume + getNeighborElemVolume()) / 2;
+  // std::cout << "InterfaceUO::execute" << std::endl;
+  // std::cout << "_current_elem " << _current_elem->id() << std::endl;
+  // std::cout << "_current_side " << _current_side << std::endl;
+  // std::cout << "_current_side_elem " << _current_side_elem->id() << std::endl;
+  // std::cout << "_neighbor_elem " << _neighbor_elem->id() << std::endl;
+  // std::cout << "_current_side_volume " << _current_side_volume << std::endl;
+  // std::cout << "_neighbor_side_volume " << _current_neighbor_volume << std::endl;
+  _total_volume += (_current_side_volume + _current_neighbor_volume);
   for (unsigned int qp = 0; qp < _q_point.size(); ++qp)
   {
-    std::cout << "  QP " << qp << std::endl;
-
-    std::cout << "  _diffusivity_prop[qp] " << _diffusivity_prop[qp] << std::endl;
-    std::cout << "  _neighbor_diffusivity_prop[qp] " << _neighbor_diffusivity_prop[qp] << std::endl;
+    // std::cout << "  QP " << qp << std::endl;
+    // std::cout << "  _diffusivity_prop[qp] " << _diffusivity_prop[qp] << std::endl;
+    // std::cout << "  _neighbor_diffusivity_prop[qp] " << _neighbor_diffusivity_prop[qp] <<
+    // std::endl;
     _mean_mat_prop += (_diffusivity_prop[qp] + _neighbor_diffusivity_prop[qp]) / 2;
-    std::cout << "  _u[qp] " << _u[qp] << std::endl;
-    std::cout << "  _u_neighbor[qp] " << _u_neighbor[qp] << std::endl;
+    // std::cout << "  _u[qp] " << _u[qp] << std::endl;
+    // std::cout << "  _u_neighbor[qp] " << _u_neighbor[qp] << std::endl;
     _mean_var_jump += (_u[qp] - _u_neighbor[qp]);
   }
 }
@@ -80,23 +81,23 @@ InterfaceUO::execute()
 void
 InterfaceUO::finalize()
 {
-  std::cout << "InterfaceUO::finalize" << std::endl;
+  // std::cout << "InterfaceUO::finalize" << std::endl;
   gatherSum(_total_volume);
-  std::cout << "_total_volume " << _total_volume << std::endl;
+  // std::cout << "_total_volume " << _total_volume << std::endl;
 
   gatherSum(_mean_mat_prop);
   _mean_mat_prop = _mean_mat_prop / _total_volume;
-  std::cout << "_mean_mat_prop " << _mean_mat_prop << std::endl;
+  // std::cout << "_mean_mat_prop " << _mean_mat_prop << std::endl;
 
   gatherSum(_mean_var_jump);
   _mean_var_jump = _mean_var_jump / _total_volume;
-  std::cout << "_mean_var_jump " << _mean_var_jump << std::endl;
+  // std::cout << "_mean_var_jump " << _mean_var_jump << std::endl;
 }
 
 void
 InterfaceUO::threadJoin(const UserObject & uo)
 {
-  std::cout << "InterfaceUO::threadJoin" << std::endl;
+  // std::cout << "InterfaceUO::threadJoin" << std::endl;
   const InterfaceUO & u = dynamic_cast<const InterfaceUO &>(uo);
   _mean_mat_prop += u._mean_mat_prop;
   _mean_var_jump += u._mean_var_jump;

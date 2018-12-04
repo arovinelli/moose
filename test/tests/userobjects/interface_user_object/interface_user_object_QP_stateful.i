@@ -65,20 +65,49 @@
 []
 
 [AuxVariables]
-  [./boundary_property]
+  [./ujump_01]
     family = MONOMIAL
     order = CONSTANT
-    block = 0
+  [../]
+  [./ujump_02]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./boundary_property_01]
+    family = MONOMIAL
+    order = CONSTANT
+  [../]
+  [./boundary_property_02]
+    family = MONOMIAL
+    order = CONSTANT
   [../]
 []
 
 
 [AuxKernels]
-  [./boundary_property]
+  [./ujump_01]
+    type = MaterialRealAux
+    property = variable_jump
+    variable = ujump_01
+    boundary = 'interface_01'
+  [../]
+  [./ujump_02]
+    type = MaterialRealAux
+    property = variable_jump
+    variable = ujump_02
+    boundary = 'interface_02'
+  [../]
+  [./boundary_property_01]
     type = MaterialRealAux
     property = boundary_property
-    variable = boundary_property
-    boundary = 'interface_01 interface_02'
+    variable = boundary_property_01
+    boundary = 'interface_01'
+  [../]
+  [./boundary_property_02]
+    type = MaterialRealAux
+    property = boundary_property
+    variable = boundary_property_02
+    boundary = 'interface_02'
   [../]
 []
 
@@ -109,22 +138,26 @@
     type = StatefulMaterial
     block = 0
     initial_diffusivity = 5
+    outputs = all
   [../]
   [./stateful2]
     type = StatefulMaterial
     block = 1
     initial_diffusivity = 2
+    outputs = all
   [../]
   [./stateful3]
     type = StatefulMaterial
     block = 2
     initial_diffusivity = 7
+    outputs = all
   [../]
-  # [./interface_material]
-  #   type = InterfaceUOMaterialStateful
-  #   boundary = 'interface_01 interface_02'
-  #   interface_uo_qp = interface_uo_qp
-  # [../]
+  [./interface_material]
+    type = InterfaceUOMaterialStateful
+    is_interface_material = true
+    boundary = 'interface_01 interface_02'
+    interface_uo_qp = interface_uo_qp
+  [../]
 []
 
 
