@@ -66,6 +66,8 @@ class Material : public MooseObject,
 public:
   Material(const InputParameters & parameters);
 
+  virtual bool isInterfaceMaterial() { return _is_interface_material; };
+
   /**
    * Initialize stateful properties (if material has some)
    */
@@ -218,6 +220,7 @@ protected:
 
   bool _bnd;
   bool _neighbor;
+  bool _is_interface_material;
 
   unsigned int _qp;
 

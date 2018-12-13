@@ -16,6 +16,7 @@
 #include "InterfaceUserObject.h"
 #include "ShapeSideUserObject.h"
 #include "InternalSideUserObject.h"
+#include "InterfaceUserObject.h"
 #include "NodalUserObject.h"
 #include "SwapBackSentinel.h"
 #include "FEProblem.h"
@@ -84,6 +85,7 @@ ComputeUserObjectsThread::subdomainChanged()
   querySubdomain(Interfaces::InterfaceUserObject, _interface_user_objects);
   querySubdomain(Interfaces::ElementUserObject, _element_objs);
   querySubdomain(Interfaces::ShapeElementUserObject, _shape_element_objs);
+  querySubdomain(Interfaces::InterfaceUserObject, _interface_user_objects);
 }
 
 void
@@ -210,11 +212,20 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   SwapBackSentinel face_sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
   _fe_problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
 
+  // reinit boundary materials property
+  _fe_problem.reinitMaterialsBoundary(
+      bnd_id, _tid, /*swap_stateful=*/true, /*prevent_update_interface_materials=*/true);
+
   SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
   _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
 
-  for (const auto & uo : userobjs)
+  for (const auto & uo : _interface_user_objects)
+  {
+    // std::cout << "ComputeUserObjectsThread::onInterface->execute " << std::endl;
     uo->execute();
+  }
+
+  _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
 }
 
 void

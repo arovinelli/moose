@@ -524,6 +524,12 @@ public:
   bool needBoundaryMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid) const;
 
   /**
+   * Indicated whether this system needs material properties on an interface.
+   * @return Boolean if InterafceKernels are active
+   */
+  bool needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid) const;
+
+  /**
    * Indicates whether this system needs material properties on internal sides.
    * @return Boolean if DGKernels are active
    */
