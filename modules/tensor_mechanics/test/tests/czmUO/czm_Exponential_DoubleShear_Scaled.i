@@ -1,24 +1,17 @@
 [Mesh]
   file = 3D_3Block_3x3.e
   parallel_type = REPLICATED
-  # type = GeneratedMesh
-  # dim = 3
-  # xmin = 0
-  # xmax = 3
-  # ymin = 0
-  # ymax = 3
-  # zmin = 0
-  # zmax = 3
-  # nx = 2
-  # ny = 2
-  # nz = 2
-  # elem_type = HEX8
 []
 
 [MeshModifiers]
+  [./scale]
+    type = Transform
+    transform = SCALE
+    vector_value = '2 2 1'
+  []
   [./breakmesh]
     type = BreakMeshByBlock
-    # split_interface = false
+    depends_on = scale
   [../]
 
   [./bottom_block_1]
@@ -35,14 +28,6 @@
     new_boundary = 'top_2'
     normal = '0 0 1'
   [../]
-  # [./top_block_3]
-  #   type = SideSetsAroundSubdomain
-  #   depends_on = 'breakmesh'
-  #   block = '3'
-  #   new_boundary = 'top_3'
-  #   normal = '0 0 1'
-  # [../]
-
 []
 
 [GlobalParams]
@@ -54,17 +39,6 @@
     strain = SMALL
     add_variables = true
     generate_output = 'stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy'
-    use_finite_deform_jacobian = FALSE
-    save_in = 'F_x F_y F_z'
-  [../]
-[]
-
-[AuxVariables]
-  [./F_x]
-  [../]
-  [./F_y]
-  [../]
-  [./F_z]
   [../]
 []
 
@@ -73,16 +47,7 @@
     type = PiecewiseLinear
     x = '0 10 20 220'
     y = '0 1.41421356237  0  -28.2842712475'
-    # x = '0 1    2 '
-    # y = '0 -0.2 0 '
   [../]
-  # [./loadUnloadPressure]
-  #   type = PiecewiseLinear
-  #   x = '0 4     8 14     21      32    42   67   92 142'
-  #   y = '0 0.0008  0  0.12  -0.02   0.2   0    0.5   0   1'
-  #   # x = '0 1    2 '
-  #   # y = '0 -0.2 0 '
-  # [../]
 []
 
 [BCs]
@@ -122,31 +87,9 @@
     boundary = top_2
     value = 0.0
   [../]
-  # [./top2_z]
-  #   type = DirichletBC
-  #   variable = disp_z
-  #   boundary = top_2
-  #   value = 0.0
-  # [../]
-  # [./top3_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = top_3
-  #   value = 0.0
-  # [../]
-  # [./top3_y]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = top_3
-  #   value = 0.0
-  # [../]
-  # [./top3_z]
-  #   type = FunctionDirichletBC
-  #   variable = disp_z
-  #   boundary = top_3
-  #   function = loadUnloadFunction
-  # [../]
 []
+
+
 [InterfaceKernels]
   [./interface_x]
     type = CZMInterfaceKernel
@@ -182,6 +125,34 @@
     boundary = 'interface'
   [../]
 []
+
+[AuxVariables]
+  [./Tn_interface]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./Tt_interface]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+[]
+[AuxKernels]
+  [./Tn]
+    type = MaterialRealVectorValueAux
+    component = 0
+    property = traction_local
+    variable = Tn_interface
+    boundary = interface
+  []
+  [./Tt]
+    type = MaterialRealAux
+    property = shear_traction
+    variable = Tt_interface
+    boundary = interface
+  []
+[]
+
+
 [UserObjects]
   [./displacement_jump_uo]
     type = DispJumpUO_QP
@@ -219,83 +190,42 @@
     boundary = 'interface'
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
-    # unload_traction_separation_UO  = 'cohesive_law_unload_linear'
-    # coopenetration_penalty_UO = 'cohesive_law_copenetration'
-    # coopenetration_penalty = 1e3
+    compute_shear_traction = true
   [../]
 []
- [Preconditioning]
+
+[Preconditioning]
    [./SMP]
      type = SMP
      full = true
    [../]
- []
+[]
+
 [Executioner]
-  # Preconditisoned JFNK (default)
   type = Transient
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
-  # petsc_options_value = 'hypre     boomerang'
+
   solve_type = NEWTON
   nl_abs_tol = 1e-8
   nl_rel_tol = 1e-8
   nl_max_its = 5
-  # l_tol = 1e-10
+
   l_max_its = 50
   start_time = 0.0
-  dt = 1
+  dt = 10
   end_time = 220
-  # dtmin = 1
+
   line_search = none
 []
+
 [Outputs]
   [./out]
     type = Exodus
   [../]
 []
+
 [Postprocessors]
-  # [./sxx_3G]
-  #   type = ElementAverageValue
-  #   variable = stress_xx
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
-  # [./syy_3G]
-  #   type = ElementAverageValue
-  #   variable = stress_yy
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
-  # [./szz_3G]
-  #   type = ElementAverageValue
-  #   variable = stress_zz
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
-  # [./syz_3G]
-  #   type = ElementAverageValue
-  #   variable = stress_yz
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
-  # [./sxz_3G]
-  #   type = ElementAverageValue
-  #   variable = stress_xz
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
-  # [./sxy_3G]
-  #   type = ElementAverageValue
-  #   variable = stress_xy
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
-  # [./disp_3Z]
-  #   type = ElementAverageValue
-  #   variable = disp_z
-  #   execute_on = 'initial timestep_end'
-  #   block = 3
-  # [../]
   [./sxx_2G]
     type = SideAverageValue
     variable = stress_xx
@@ -333,24 +263,7 @@
     boundary = 'top_2'
   [../]
 
-  [./F_interface_x]
-    type = SideAverageValue
-    variable = F_x
-    execute_on = 'initial timestep_end'
-    boundary = 'top_2'
-  [../]
-  [./F_interface_y]
-    type = SideAverageValue
-    variable = F_y
-    execute_on = 'initial timestep_end'
-    boundary = 'top_2'
-  [../]
-  [./F_interface_z]
-    type = SideAverageValue
-    variable = F_z
-    execute_on = 'initial timestep_end'
-    boundary = 'top_2'
-  [../]
+
   [./disp_top2_z]
     type = SideAverageValue
     variable = disp_z

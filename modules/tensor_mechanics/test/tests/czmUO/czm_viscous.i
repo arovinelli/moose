@@ -6,7 +6,6 @@
 [MeshModifiers]
   [./breakmesh]
     type = BreakMeshByBlock
-    # split_interface = false
   [../]
 
   [./bottom_block_1]
@@ -30,7 +29,6 @@
     new_boundary = 'top_3'
     normal = '0 0 1'
   [../]
-
 []
 
 [GlobalParams]
@@ -81,7 +79,7 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_2
-    function = 1*t
+    function = loadFunction3
   [../]
   [./top3_x]
     type = DirichletBC
@@ -99,12 +97,26 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_3
-    function = 1*t
+    function = loadFunction3
   [../]
 []
+
+[Functions]
+  [./loadFunction3]
+    type = PiecewiseLinear
+    x = '0 1  2 5 8 15'
+    y = '0 1  4 4 7 0'
+  [../]
+  [./loadFunction2]
+    type = PiecewiseLinear
+    x = '0 1    2 5 8 15'
+    y = '0 0.5  2 2 7  0'
+  [../]
+[]
+
 [InterfaceKernels]
   [./interface_x]
-    type = CZMInterfaceKernel
+    type = CZMInterfaceKernelViscous
     variable = disp_x
     neighbor_var = disp_x
     disp_1 = disp_y
@@ -112,10 +124,11 @@
     disp_2 = disp_z
     disp_2_neighbor = disp_z
     disp_index = 0
+    viscosity_coefficient = 10
     boundary = 'interface'
   [../]
   [./interface_y]
-    type = CZMInterfaceKernel
+    type = CZMInterfaceKernelViscous
     variable = disp_y
     neighbor_var = disp_y
     disp_1 = disp_x
@@ -124,9 +137,10 @@
     disp_2_neighbor = disp_z
     disp_index = 1
     boundary = 'interface'
+    viscosity_coefficient = 10
   [../]
   [./interface_z]
-    type = CZMInterfaceKernel
+    type = CZMInterfaceKernelViscous
     variable = disp_z
     neighbor_var = disp_z
     disp_1 = disp_x
@@ -135,23 +149,7 @@
     disp_2_neighbor = disp_y
     disp_index = 2
     boundary = 'interface'
-  [../]
-[]
-[UserObjects]
-  [./displacement_jump_uo]
-    type = DispJumpUO_QP
-    disp_x = disp_x
-    disp_y = disp_y
-    disp_z = disp_z
-    boundary = 'interface'
-    execute_on = 'initial NONLINEAR LINEAR timestep_end'
-  [../]
-  [./cohesive_law_3DC]
-    type = CZMLaw3DC
-    MaxAllowableTraction = '100 70'
-    DeltaU0 = '1 0.7'
-    displacement_jump_mp_name = 'displacement_jump_local'
-    boundary = 'interface'
+    viscosity_coefficient = 10
   [../]
 []
 
@@ -166,13 +164,6 @@
     type = ComputeFiniteStrainElasticStress
     block = '1 2 3'
   [../]
-  [./gap]
-    type = CZMUOBasedMaterial
-    is_interface_material = true
-    boundary = 'interface'
-    displacement_jump_UO = 'displacement_jump_uo'
-    traction_separation_UO = 'cohesive_law_3DC'
-  [../]
 []
  [Preconditioning]
    [./SMP]
@@ -181,11 +172,9 @@
    [../]
  []
 [Executioner]
-  # Preconditisoned JFNK (default)
   type = Transient
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
-  # petsc_options_value = 'hypre     boomerang'
+  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+  petsc_options_value = 'lu        superlu_dist'
   solve_type = NEWTON
   nl_abs_tol = 1e-8
   nl_rel_tol = 1e-6
@@ -193,11 +182,10 @@
   l_tol = 1e-10
   l_max_its = 50
   start_time = 0.0
-  dt = 0.2
-  end_time = 5
+  dt = 1
+  end_time = 15
   dtmin = 0.2
   line_search = none
-  # num_steps = 1
 []
 [Outputs]
   [./out]

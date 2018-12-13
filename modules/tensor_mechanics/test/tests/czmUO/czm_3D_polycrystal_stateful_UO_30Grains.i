@@ -1,5 +1,5 @@
 [Mesh]
-  file = testTri30.exo
+  file = testTri30.e
   parallel_type = REPLICATED
 []
 
@@ -10,14 +10,14 @@
   [../]
   [./add_side_sets]
      type = SideSetsFromNormals
-     normals = '0  -1  0
+     normals = '0 -1  0
                 0  1  0
                 -1 0  0
                 1  0  0
-                0 0 -1
-                0 0  1'
+                0  0 -1
+                0  0  1'
      fixed_normal = true
-     new_boundary = 'bottom top left right rear front'
+     new_boundary = 'bottom top left right back front'
      depends_on = breakmesh
    [../]
    # [./left_n1]
@@ -60,25 +60,18 @@
 
 
 [BCs]
-  # [./left_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = left
-  #   value = 0.0
-  # [../]
-  # [./left_y]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = left
-  #   value = 0.0
-  # [../]
-  #
-  # [./right_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = right
-  #   value = 0.0
-  # [../]
+  [./left_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = left
+    value = 0.0
+  [../]
+  [./right_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = right
+    value = 0.0
+  [../]
   # [./right_y]
   #   type = DirichletBC
   #   variable = disp_y
@@ -92,12 +85,12 @@
   #   boundary = top
   #   value = 0.0
   # [../]
-  # [./top_y]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = top
-  #   value = 0.0
-  # [../]
+  [./top_y]
+    type = DirichletBC
+    variable = disp_y
+    boundary = top
+    value = 0.0
+  [../]
   #
   # [./bottom_x]
   #   type = DirichletBC
@@ -105,12 +98,12 @@
   #   boundary = bottom
   #   value = 0.0
   # [../]
-  # [./bottom_y]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = bottom
-  #   value = 0.0
-  # [../]
+  [./bottom_y]
+    type = DirichletBC
+    variable = disp_y
+    boundary = bottom
+    value = 0.0
+  [../]
 
   [./front_x]
     type = DirichletBC
@@ -131,22 +124,22 @@
     function = loadUnloadFunction
   [../]
 
-  [./rear_x]
+  [./back_x]
     type = DirichletBC
     variable = disp_x
-    boundary = front
+    boundary = back
     value = 0.0
   [../]
-  [./rear_y]
+  [./back_y]
     type = DirichletBC
     variable = disp_y
-    boundary = front
+    boundary = back
     value = 0.0
   [../]
-  [./rear_z]
+  [./back_z]
     type = DirichletBC
     variable = disp_z
-    boundary = rear
+    boundary = back
     value = 0.0
   [../]
 []
@@ -241,17 +234,7 @@
     boundary = 'interface'
     compression_multiplier = 1e3
   [../]
-  # [./cohesive_law_unload_linear]
-  #   type = CZMUnloadLinear
-  #   displacement_jump_mp_name = 'displacement_jump_local'
-  #   boundary = 'interface'
-  # [../]
-  # [./cohesive_law_copenetration]
-  #   type = CZMCopenetrationPenalty
-  #   displacement_jump_mp_name = 'displacement_jump_local'
-  #   boundary = 'interface'
-  #   copenetration_penalty_stiffness = 2e7
-  # [../]
+
 []
 
 
@@ -293,7 +276,7 @@
   nl_rel_tol = 1e-6
   nl_max_its = 20
   l_tol = 1e-15
-  # l_max_its = 10
+  l_max_its = 5
   start_time = 0.0
   dt = 1
   # dtmin = 0.01

@@ -1,25 +1,27 @@
 [Mesh]
-  file = testTri50.exo
+  file = 3D_3Block_3x3.e
   parallel_type = REPLICATED
 []
 
 [MeshModifiers]
   [./breakmesh]
     type = BreakMeshByBlock
-    # split_interface = false
   [../]
-  [./add_side_sets]
-     type = SideSetsFromNormals
-     normals = '0  -1  0
-                0  1  0
-                -1 0  0
-                1  0  0
-                0 0 -1
-                0 0  1'
-     fixed_normal = true
-     new_boundary = 'bottom top left right back front'
-     depends_on = breakmesh
-   [../]
+
+  [./bottom_block_1]
+    type = SideSetsAroundSubdomain
+    depends_on = 'breakmesh'
+    block = '1'
+    new_boundary = 'bottom_1'
+    normal = '0 0 -1'
+  [../]
+  [./top_block_2]
+    type = SideSetsAroundSubdomain
+    depends_on = 'breakmesh'
+    block = '2'
+    new_boundary = 'top_2'
+    normal = '0 0 1'
+  [../]
 []
 
 [GlobalParams]
@@ -35,106 +37,54 @@
 []
 
 
+[Functions]
+  [./loadUnloadFunction]
+    type = PiecewiseLinear
+    x = '0 10 20 220'
+    y = '0 1.41421356237  0  -28.2842712475'
+  [../]
+[]
+
 [BCs]
-
-  [./front_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = front
-    value = 0.0
-  [../]
-  [./front_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = front
-    value = 0.0
-  [../]
-  [./front_z]
-    type = FunctionDirichletBC
-    variable = disp_z
-    boundary = front
-    function = loadUnloadFunction
-  [../]
-
-  [./left_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = left
-    value = 0.0
-  [../]
-  [./left_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = left
-    value = 0.0
-  [../]
-
-  [./right_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = right
-    value = 0.0
-  [../]
-  [./right_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = right
-    value = 0.0
-  [../]
-
-  [./top_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = top
-    value = 0.0
-  [../]
-  [./top_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = top
-    value = 0.0
-  [../]
-
   [./bottom_x]
     type = DirichletBC
     variable = disp_x
-    boundary = bottom
+    boundary = bottom_1
     value = 0.0
   [../]
   [./bottom_y]
     type = DirichletBC
     variable = disp_y
-    boundary = bottom
+    boundary = bottom_1
     value = 0.0
   [../]
-
-  [./back_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = back
-    value = 0.0
-  [../]
-  [./back_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = back
-    value = 0.0
-  [../]
-  [./back_z]
+  [./bottom_z]
     type = DirichletBC
     variable = disp_z
-    boundary = back
+    boundary = bottom_1
+    value = 0.0
+  [../]
+  [./top2_x]
+    type = FunctionDirichletBC
+    variable = disp_x
+    boundary = top_2
+    function = loadUnloadFunction
+  [../]
+  [./top2_y]
+    type = FunctionDirichletBC
+    variable = disp_y
+    boundary = top_2
+    function = loadUnloadFunction
+  [../]
+  [./top2_z]
+    type = DirichletBC
+    variable = disp_z
+    boundary = top_2
     value = 0.0
   [../]
 []
 
-[Functions]
-  [./loadUnloadFunction]
-    type = PiecewiseLinear
-    x = '0 4        8  14       20  21        32      42   67    72  97      102  142'
-    y = '0 0.00002  0  0.00012  0   -0.0002   0.002   0    0.003 0   0.005   0    0.1'
-  [../]
-[]
+
 [InterfaceKernels]
   [./interface_x]
     type = CZMInterfaceKernel
@@ -171,6 +121,33 @@
   [../]
 []
 
+[AuxVariables]
+  [./Tn_interface]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./Tt_interface]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+[]
+[AuxKernels]
+  [./Tn]
+    type = MaterialRealVectorValueAux
+    component = 0
+    property = traction_local
+    variable = Tn_interface
+    boundary = interface
+  []
+  [./Tt]
+    type = MaterialRealAux
+    property = shear_traction
+    variable = Tt_interface
+    boundary = interface
+  []
+[]
+
+
 [UserObjects]
   [./displacement_jump_uo]
     type = DispJumpUO_QP
@@ -178,29 +155,29 @@
     disp_y = disp_y
     disp_z = disp_z
     boundary = 'interface'
-    execute_on = 'initial LINEAR NONLINEAR timestep_end'
+    execute_on = 'initial LINEAR timestep_end'
   [../]
-
   [./cohesive_law_exponential]
     type = CZMLawExponential
-    displacement_jump_peak = 0.001
-    traction_peak = 150
+    displacement_jump_peak = 1
+    traction_peak = 100
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
     compression_multiplier = 1e3
+    beta = 0.5
   [../]
 []
-
-
 
 [Materials]
   [./Elasticity_tensor]
     type = ComputeElasticityTensor
+    block = '1 2'
     fill_method = symmetric_isotropic
-    C_ijkl = '0.3 2e5'
+    C_ijkl = '0.3 200e3'
   [../]
   [./stress]
     type = ComputeLinearElasticStress
+    block = '1 2'
   [../]
   [./gap]
     type = CZMUOBasedMaterial
@@ -208,72 +185,95 @@
     boundary = 'interface'
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
+    compute_shear_traction = true
   [../]
 []
- [Preconditioning]
+
+[Preconditioning]
    [./SMP]
      type = SMP
      full = true
    [../]
- []
+[]
+
 [Executioner]
-  # Preconditisoned JFNK (default)
   type = Transient
-  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-  petsc_options_value = 'lu        superlu_dist'
-  # petsc_options_value = 'hypre     boomerang'
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'lu'
+
   solve_type = NEWTON
-  nl_abs_tol = 1e-5
-  nl_rel_tol = 1e-6
-  nl_max_its = 20
-  l_tol = 1e-15
-  # l_max_its = 10
+  nl_abs_tol = 1e-8
+  nl_rel_tol = 1e-8
+  nl_max_its = 5
+  # l_tol = 1e-10
+  l_max_its = 50
   start_time = 0.0
-  dt = 1
-  # dtmin = 0.01
-  end_time = 142
+  dt = 10
+  end_time = 220
+  # dtmin = 1
   line_search = none
 []
+
 [Outputs]
   [./out]
     type = Exodus
   [../]
 []
+
 [Postprocessors]
-  [./sxx]
-    type = ElementAverageValue
+  [./sxx_2G]
+    type = SideAverageValue
     variable = stress_xx
     execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
-  [./syy]
-    type = ElementAverageValue
+  [./syy_2G]
+    type = SideAverageValue
     variable = stress_yy
     execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
-  [./szz]
-    type = ElementAverageValue
+  [./szz_2G]
+    type = SideAverageValue
     variable = stress_zz
     execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
-  [./syz]
-    type = ElementAverageValue
+  [./syz_2G]
+    type = SideAverageValue
     variable = stress_yz
     execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
-  [./sxz]
-    type = ElementAverageValue
+  [./sxz_2G]
+    type = SideAverageValue
     variable = stress_xz
     execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
-  [./sxy]
-    type = ElementAverageValue
+  [./sxy_2G]
+    type = SideAverageValue
     variable = stress_xy
     execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
-  [./disp_rightZ]
+
+  [./disp_top2_z]
     type = SideAverageValue
     variable = disp_z
     execute_on = 'initial timestep_end'
-    boundary = 'front'
+    boundary = 'top_2'
+  [../]
+  [./disp_top2_y]
+    type = SideAverageValue
+    variable = disp_y
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
+  [../]
+  [./disp_top2_x]
+    type = SideAverageValue
+    variable = disp_x
+    execute_on = 'initial timestep_end'
+    boundary = 'top_2'
   [../]
 []

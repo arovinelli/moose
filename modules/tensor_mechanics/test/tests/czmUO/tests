@@ -1,0 +1,42 @@
+[Tests]
+  [./test_czm_3DC]
+    type = 'Exodiff'
+    input = 'czm_3DC_load.i'
+    exodiff = 'czm_3DC_load_out.e'
+    requirement = "check that a maximum stress of 100 happens at time 1"
+  [../]
+  [./test_czm_Exponential]
+    type = 'Exodiff'
+    input = 'czm_Exponential_LoadUnloadPenalty.i'
+    exodiff = 'czm_Exponential_LoadUnloadPenalty_out.e'
+    requirement = "Check that the stateful exponential coheisve law works properly:"
+                   "Maximum Load of 100 at interface jump of 1e-3"
+                   "Copenetration penalty kciks in for negative interface jumps"
+  [../]
+  [./test_czm_ExponentialShear]
+    type = 'Exodiff'
+    input = 'czm_Exponential_Shear.i'
+    exodiff = 'czm_Exponential_Shear_out.e'
+    requirement = "Check that the stateful exponential coheisve law works properly:"
+                   "Maximum Load of 100 at interface jump of 2"
+  [../]
+  [./test_czm_ExponentialDoubleShear]
+    type = 'Exodiff'
+    input = 'czm_Exponential_DoubleShear.i'
+    exodiff = 'czm_Exponential_DoubleShear_out.e'
+    requirement = "Check that the stateful exponential coheisve law works properly:"
+                   "Maximum Load of 100 at interface jump magniturde of 2"
+  [../]
+  [./test_czm_ExponentialDoubleShearScaled]
+    type = 'Exodiff'
+    input = 'czm_Exponential_DoubleShear_Scaled.i'
+    exodiff = 'czm_Exponential_DoubleShear_Scaled_out.e'
+    requirement = "Check that interface traction solution is mesh independent"
+  [../]
+  [./test_czm_Viscous]
+    type = 'Exodiff'
+    input = 'czm_viscous.i'
+    exodiff = 'czm_viscous_out.e'
+    requirement = "Check that interface traction solution is mesh independent"
+  [../]
+[]

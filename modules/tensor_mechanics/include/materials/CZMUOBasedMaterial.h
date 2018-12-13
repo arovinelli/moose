@@ -28,6 +28,8 @@ protected:
   virtual void computeQpProperties() override;
   virtual void initQpStatefulProperties() override;
 
+  const bool _compute_shear_traction;
+
   /// User objects computing the displacement jump
   const DispJumpUO_QP & _displacement_jump_UO;
 
@@ -80,6 +82,8 @@ protected:
   // MaterialProperty<RealVectorValue> & _normals_MP;
   // MaterialProperty<RealVectorValue> & _normals_neighbor_MP;
   MaterialProperty<RealVectorValue> & _normals_average;
+
+  MaterialProperty<Real> & _shear_traction;
 
   // unsigned int _uo_id;
 

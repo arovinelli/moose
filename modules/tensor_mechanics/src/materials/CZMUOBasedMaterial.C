@@ -33,11 +33,13 @@ validParams<CZMUOBasedMaterial>()
   params.addParam<Real>("coopenetration_penalty", 1, "copenation penalty factor");
   params.addClassDescription("this material class is used when defining a "
                              "cohesive zone model");
+  params.addParam<bool>("compute_shear_traction", false, "flag to compute the shear traction");
   return params;
 }
 
 CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
   : Material(parameters),
+    _compute_shear_traction(getParam<bool>("compute_shear_traction")),
     _displacement_jump_UO(getUserObject<DispJumpUO_QP>("displacement_jump_UO")),
     _traction_separation_UO(getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
     // _unload_traction_separation_UO(
@@ -64,7 +66,7 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     _czm_residual(declareProperty<RealVectorValue>("czm_residual")),
     _czm_jacobian(declareProperty<std::vector<std::vector<Real>>>("czm_jacobian")),
     _normals_average(declareProperty<RealVectorValue>("normals_average")),
-
+    _shear_traction(declareProperty<Real>("shear_traction")),
     // _uo_id(0),
     _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties()),
     _n_non_stateful_uo_czm_properties(
@@ -152,6 +154,10 @@ CZMUOBasedMaterial::computeQpProperties()
   for (unsigned int i = 0; i < 3; i++)
     for (unsigned int j = 0; j < 3; j++)
       _czm_jacobian[_qp][i][j] = _traction_spatial_derivatives[_qp](i, j);
+
+  if (_compute_shear_traction)
+    _shear_traction[_qp] =
+        std::sqrt(std::pow(_traction_local[_qp](1), 2) + std::pow(_traction_local[_qp](2), 2));
 }
 
 void
