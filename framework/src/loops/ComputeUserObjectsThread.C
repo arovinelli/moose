@@ -13,8 +13,10 @@
 #include "ElementUserObject.h"
 #include "ShapeElementUserObject.h"
 #include "SideUserObject.h"
+#include "InterfaceUserObject.h"
 #include "ShapeSideUserObject.h"
 #include "InternalSideUserObject.h"
+#include "InterfaceUserObject.h"
 #include "NodalUserObject.h"
 #include "SwapBackSentinel.h"
 #include "FEProblem.h"
@@ -41,7 +43,9 @@ ComputeUserObjectsThread::subdomainChanged()
 {
   // for the current thread get block objects for the current subdomain and *all* side objects
   std::vector<UserObject *> objs;
-  querySubdomain(Interfaces::ElementUserObject | Interfaces::InternalSideUserObject, objs);
+  querySubdomain(Interfaces::ElementUserObject | Interfaces::InternalSideUserObject |
+                     Interfaces::InterfaceUserObject,
+                 objs);
 
   std::vector<UserObject *> side_objs;
   _query.clone()
@@ -80,6 +84,7 @@ ComputeUserObjectsThread::subdomainChanged()
   querySubdomain(Interfaces::InternalSideUserObject, _internal_side_objs);
   querySubdomain(Interfaces::ElementUserObject, _element_objs);
   querySubdomain(Interfaces::ShapeElementUserObject, _shape_element_objs);
+  querySubdomain(Interfaces::InterfaceUserObject, _interface_user_objects);
 }
 
 void
@@ -183,6 +188,49 @@ ComputeUserObjectsThread::onInternalSide(const Elem * elem, unsigned int side)
   for (const auto & uo : _internal_side_objs)
     if (!uo->blockRestricted() || uo->hasBlocks(neighbor->subdomain_id()))
       uo->execute();
+}
+
+void
+ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, BoundaryID bnd_id)
+{
+  // std::cout << "ComputeUserObjectsThread::onInterface" << std::endl;
+  // Pointer to the neighbor we are currently working on.
+  std::vector<UserObject *> userobjs;
+  queryBoundary(Interfaces::InterfaceUserObject, bnd_id, userobjs);
+  if (userobjs.size() == 0)
+    return;
+
+  const Elem * neighbor = elem->neighbor_ptr(side);
+
+  // Get the global id of the element and the neighbor
+  const dof_id_type elem_id = elem->id(), neighbor_id = neighbor->id();
+
+  if (!((neighbor->active() && (neighbor->level() == elem->level()) && (elem_id < neighbor_id)) ||
+        (neighbor->level() < elem->level())))
+    return;
+
+  _fe_problem.prepareFace(elem, _tid);
+  _fe_problem.reinitNeighbor(elem, side, _tid);
+
+  // Set up Sentinels so that, even if one of the reinitMaterialsXXX() calls throws, we
+  // still remember to swap back during stack unwinding.
+  SwapBackSentinel face_sentinel(_fe_problem, &FEProblem::swapBackMaterialsFace, _tid);
+  _fe_problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
+
+  // reinit boundary materials property
+  _fe_problem.reinitMaterialsBoundary(
+      bnd_id, _tid, /*swap_stateful=*/true, /*prevent_update_interface_materials=*/true);
+
+  SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
+  _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
+
+  for (const auto & uo : _interface_user_objects)
+  {
+    // std::cout << "ComputeUserObjectsThread::onInterface->execute " << std::endl;
+    uo->execute();
+  }
+
+  _fe_problem.reinitMaterialsBoundary(bnd_id, _tid);
 }
 
 void
