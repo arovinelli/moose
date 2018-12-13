@@ -655,8 +655,10 @@ public:
   virtual void reinitMaterialsFace(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
   virtual void
   reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
-  virtual void
-  reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bool swap_stateful = true);
+  virtual void reinitMaterialsBoundary(BoundaryID boundary_id,
+                                       THREAD_ID tid,
+                                       bool swap_stateful = true,
+                                       bool prevent_update_interface_materials = false);
   /*
    * Swap back underlying data storing stateful material properties
    */
@@ -1350,13 +1352,20 @@ public:
    * @param tid the THREAD_ID of the caller
    * @return Boolean indicating whether material properties need to be stored
    *
-   * Method 2:
+   * Method 2: (different from 1 because material property need to be computed on both sides)
+   * @param subdomain_id the subdomain id for which to see if stateful material properties need to
+   * be stored
+   * @param tid the THREAD_ID of the caller
+   * @return Boolean indicating whether material properties need to be stored
+   *
+   * Method 3:
    * @param subdomain_id the subdomain id for which to see if stateful material properties need to
    * be stored
    * @param tid the THREAD_ID of the caller
    * @return Boolean indicating whether material properties need to be stored
    */
   bool needBoundaryMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid);
+  bool needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid);
   bool needSubdomainMaterialOnSide(SubdomainID subdomain_id, THREAD_ID tid);
   ///@}
 
@@ -1725,6 +1734,9 @@ protected:
 
   /// Cache for calculating materials on side
   std::vector<std::unordered_map<BoundaryID, bool>> _bnd_mat_side_cache;
+
+  /// Cache for calculating materials on interface
+  std::vector<std::unordered_map<BoundaryID, bool>> _bnd_mat_interface_cache;
 
   /// Objects to be notified when the mesh changes
   std::vector<MeshChangedInterface *> _notify_when_mesh_changes;
