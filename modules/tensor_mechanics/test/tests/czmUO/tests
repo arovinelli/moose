@@ -39,4 +39,11 @@
     exodiff = 'czm_viscous_out.e'
     requirement = "Check that interface traction solution is mesh independent"
   [../]
+  [./test_shear_strain_interface]
+    type = 'Exodiff'
+    input = 'czm_Exponential_LoadUnloadPenalty_InterfaceShear.i'
+    exodiff = 'czm_Exponential_LoadUnloadPenalty_InterfaceShear_out.e'
+    requirement = "chekc that TensorOnInterfaceUO_QP and CZMUOBasedMaterialWithInterfaceStrains"
+    "works properly"
+  [../]
 []
