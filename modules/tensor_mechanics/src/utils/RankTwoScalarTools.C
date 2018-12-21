@@ -25,7 +25,7 @@ scalarOptions()
   return MooseEnum("VonMisesStress EffectiveStrain Hydrostatic L2norm MaxPrincipal "
                    "MidPrincipal MinPrincipal VolumetricStrain FirstInvariant SecondInvariant "
                    "ThirdInvariant AxialStress HoopStress RadialStress TriaxialityStress "
-                   "Direction MaxShear StressIntensity");
+                   "Direction MaxShear StressIntensity EquivalentDeviatoricStrain");
 }
 
 Real
@@ -94,11 +94,13 @@ getQuantity(const RankTwoTensor & tensor,
     case 17:
       val = stressIntensity(tensor);
       break;
+    case 18:
+      val = equivalentDeviatoricStrain(tensor);
+      break;
     default:
       mooseError("RankTwoScalarAux Error: Pass valid scalar type - " +
                  scalarOptions().getRawNames());
   }
-
   return val;
 }
 
@@ -135,6 +137,13 @@ Real
 effectiveStrain(const RankTwoTensor & strain)
 {
   return std::sqrt(2.0 / 3.0 * strain.doubleContraction(strain));
+}
+
+Real
+equivalentDeviatoricStrain(const RankTwoTensor & strain)
+{
+  RankTwoTensor dev_strain = strain.deviatoric();
+  return std::sqrt(2.0 / 3.0 * dev_strain.doubleContraction(dev_strain));
 }
 
 Real

@@ -82,6 +82,13 @@ Real equivalentPlasticStrain(const RankTwoTensor & strain);
 Real effectiveStrain(const RankTwoTensor & strain);
 
 /*
+ * The equivalent deviatoric strain
+ * \epsilon_{eff} =
+ * \sqrt{\frac{2}{3}\(epsilon_{ij}-I*trace(epsilon)/3)\(epsilon_{ij}-I*trace(epsilon)/3)}
+ */
+Real equivalentDeviatoricStrain(const RankTwoTensor & strain);
+
+/*
  * The hydrostatic scalar of a tensor is computed as the sum of the diagonal
  * terms divided by 3.
  */
