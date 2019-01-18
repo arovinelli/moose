@@ -75,6 +75,9 @@ public:
   /// method returning the traction derivates in local coordinates
   virtual RankTwoTensor computeTractionSpatialDerivativeLocal(const unsigned int /*qp*/) const;
 
+  virtual std::vector<RealVectorValue>
+  computeTractionOtherVarsDerivatives(const unsigned int /*qp*/) const;
+
 protected:
   /// number of history variables present in the model
   const unsigned int _n_stateful_mp;
@@ -89,7 +92,11 @@ protected:
   const MaterialProperty<RealVectorValue> & _displacement_jump;
   const MaterialProperty<RealVectorValue> & _displacement_jump_old;
 
+  const unsigned int _n_other_scalar_mp_names;
+  const std::vector<std::string> _other_scalar_mp_names;
+
   std::vector<std::vector<Real>> ResizeInitialValues() const;
+  std::vector<const MaterialProperty<Real> *> _other_scalar_mp;
 };
 
 #endif // CZMTRACTIONSEPARATIONUOBASE_H

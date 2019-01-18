@@ -39,6 +39,12 @@ validParams<CZMTractionSeparationUOBase>()
   params.addRequiredParam<std::string>("displacement_jump_mp_name",
                                        "the name of the material property hosting the displacement "
                                        "jump computed in natural element coordinate system");
+  params.addParam<unsigned int>(
+      "n_other_scalar_mp_names", 0, "number of other scalar mp required to compute  CZM Law");
+  params.addParam<std::vector<std::string>>(
+      "other_scalar_mp_names",
+      std::vector<std::string>(0),
+      "the name of other variables for which derivatives need to be computed");
 
   return params;
 }
@@ -55,7 +61,9 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
     _displacement_jump(getMaterialPropertyByName<RealVectorValue>(
         getParam<std::string>("displacement_jump_mp_name"))),
     _displacement_jump_old(getMaterialPropertyOldByName<RealVectorValue>(
-        getParam<std::string>("displacement_jump_mp_name")))
+        getParam<std::string>("displacement_jump_mp_name"))),
+    _n_other_scalar_mp_names(getParam<unsigned int>("n_other_scalar_mp_names")),
+    _other_scalar_mp_names(getParam<std::vector<std::string>>("other_scalar_mp_names"))
 
 {
   if (_n_stateful_mp != _stateful_mp_names.size())
@@ -89,6 +97,23 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
     mooseError("CZMTractionSeparationUOBase:: the number of supplied initial values does not match "
                "the material properies size");
   }
+
+  if (_n_other_scalar_mp_names != _other_scalar_mp_names.size())
+  {
+    std::cout << "n_other_scalar_mp_names: " << _n_other_scalar_mp_names
+              << " other_scalar_mp_names: " << _other_scalar_mp_names.size() << std::endl;
+
+    for (unsigned int i = 0; i < _other_scalar_mp_names.size(); i++)
+      std::cout << _other_scalar_mp_names[i] << std::endl;
+    std::cout << std::endl;
+    mooseError("CZMTractionSeparationUOBase:: n_other_scalar_mp_names does match with the number "
+               "of supplied "
+               "material properies names  other_scalar_mp_names");
+  }
+
+  if (_n_other_scalar_mp_names > 0)
+    for (unsigned int i = 0; i < _n_other_scalar_mp_names; i++)
+      _other_scalar_mp.push_back(&getMaterialPropertyByName<Real>(_other_scalar_mp_names[i]));
 }
 
 unsigned int
@@ -167,6 +192,14 @@ RankTwoTensor
 CZMTractionSeparationUOBase::computeTractionSpatialDerivativeLocal(unsigned int /*qp*/) const
 {
   mooseError("CZMTractionSeparationUOBase::computeTractionLocal should never "
+             "be called directly but always subclassed");
+}
+
+/// method returning the traction derivates wrt bulk varaibles in local coordinates
+std::vector<RealVectorValue>
+CZMTractionSeparationUOBase::computeTractionOtherVarsDerivatives(unsigned int /*qp*/) const
+{
+  mooseError("CZMTractionSeparationUOBase::computeTractionOtherVarsDerivatives should never "
              "be called directly but always subclassed");
 }
 
