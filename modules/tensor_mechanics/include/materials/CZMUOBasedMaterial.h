@@ -12,6 +12,7 @@
 
 #include "Material.h"
 #include "DispJumpUO_QP.h"
+#include "ScalarBulkMPAcrossInterface_QP.h"
 #include "CZMTractionSeparationUOBase.h"
 class CZMUOBasedMaterial;
 template <>
@@ -32,6 +33,21 @@ protected:
 
   /// User objects computing the displacement jump
   const DispJumpUO_QP & _displacement_jump_UO;
+
+  /// name of require averaged bulk mp
+  const std::vector<std::string> _bulk_avg_mp_names;
+  /// number of require averaged bulk mp (inherited from _bulk_avg_mp_names length)
+  const unsigned int _n_bulk_avg_mp;
+  /// userobjects returning the require bilk mp averaged
+  const std::vector<UserObjectName> _bulk_avg_mp_uo_names;
+  const unsigned int _n_bulk_avg_mp_uo_names;
+  std::vector<const ScalarBulkMPAcrossInterface_QP *> _bulk_avg_mp_uo;
+  std::vector<MaterialProperty<Real> *> _avg_interface_mp;
+  std::vector<MaterialProperty<RealVectorValue> *> _traction_derivatives_other_avg_vars;
+  std::vector<MaterialProperty<RealVectorValue> *> _traction_derivatives_other_avg_vars_local;
+  const bool _need_avg_scalar_vars_derivatives;
+  MaterialProperty<std::map<unsigned int /*var_id*/, unsigned int /*mp_index*/>> &
+      _traction_derivatives_other_avg_vars_id;
 
   /// User objectets defining the traction separation law
   /// non linear TS law

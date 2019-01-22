@@ -34,6 +34,12 @@ validParams<CZMUOBasedMaterial>()
   params.addClassDescription("this material class is used when defining a "
                              "cohesive zone model");
   params.addParam<bool>("compute_shear_traction", false, "flag to compute the shear traction");
+  params.addParam<std::vector<std::string>>(
+      "bulk_avg_mp_names", std::vector<std::string>(), "names of average mps");
+  params.addParam<std::vector<UserObjectName>>(
+      "bulk_avg_mp_uo_names", std::vector<UserObjectName>(0), "names of averaging uo");
+  params.addParam<bool>(
+      "need_avg_scalar_vars_derivatives", false, "flag to compute the shear traction");
   return params;
 }
 
@@ -41,6 +47,14 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
   : Material(parameters),
     _compute_shear_traction(getParam<bool>("compute_shear_traction")),
     _displacement_jump_UO(getUserObject<DispJumpUO_QP>("displacement_jump_UO")),
+    _bulk_avg_mp_names(getParam<std::vector<std::string>>("bulk_avg_mp_names")),
+    _n_bulk_avg_mp(getParam<std::vector<std::string>>("bulk_avg_mp_names").size()),
+    _bulk_avg_mp_uo_names(getParam<std::vector<UserObjectName>>("bulk_avg_mp_uo_names")),
+    _n_bulk_avg_mp_uo_names(getParam<std::vector<UserObjectName>>("bulk_avg_mp_uo_names").size()),
+    _need_avg_scalar_vars_derivatives(getParam<bool>("need_avg_scalar_vars_derivatives")),
+    _traction_derivatives_other_avg_vars_id(
+        declareProperty<std::map<unsigned int /*var_id*/, unsigned int /*mp_index*/>>(
+            "traction_derivatives_other_avg_vars_id")),
     _traction_separation_UO(getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
     // _unload_traction_separation_UO(
     //     parameters.isParamSetByUser("unload_traction_separation_UO")
@@ -100,18 +114,55 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
           _traction_separation_UO.getNonStatefulMaterialPropertyName(mp_index));
     }
   }
+
+  if (_n_bulk_avg_mp != _n_bulk_avg_mp_uo_names)
+    mooseError("CZMUOBasedMaterial:: the number fo required averaged material properties does not "
+               "match the number of provided averaging user objesct");
+
+  // assgin user objects and declare associate material properties
+  if (_n_bulk_avg_mp_uo_names > 0)
+  {
+    // assign user obejcts
+    _bulk_avg_mp_uo.resize(_n_bulk_avg_mp_uo_names);
+    _avg_interface_mp.resize(_n_bulk_avg_mp_uo_names);
+    _traction_derivatives_other_avg_vars_local.resize(_n_bulk_avg_mp_uo_names);
+    _traction_derivatives_other_avg_vars.resize(_n_bulk_avg_mp_uo_names);
+    for (unsigned int i = 0; i < _n_bulk_avg_mp_uo_names; ++i)
+    {
+      _bulk_avg_mp_uo[i] =
+          &getUserObjectByName<ScalarBulkMPAcrossInterface_QP>(_bulk_avg_mp_uo_names[i]);
+      _avg_interface_mp[i] = &declareProperty<Real>(_bulk_avg_mp_names[i]);
+      if (_need_avg_scalar_vars_derivatives)
+      {
+        _traction_derivatives_other_avg_vars_local[i] =
+            &declareProperty<RealVectorValue>(_bulk_avg_mp_names[i] + "_der_local");
+        _traction_derivatives_other_avg_vars[i] =
+            &declareProperty<RealVectorValue>(_bulk_avg_mp_names[i] + "_der");
+      }
+    }
+  }
 }
 
 void
 CZMUOBasedMaterial::computeQpProperties()
 {
+  // update average interface properties and save varaibles id
+  _traction_derivatives_other_avg_vars_id[_qp].clear();
+
+  if (_n_bulk_avg_mp_uo_names > 0)
+    for (unsigned int avg_mp_index = 0; avg_mp_index < _n_bulk_avg_mp_uo_names; avg_mp_index++)
+    {
+      (*_avg_interface_mp[avg_mp_index])[_qp] =
+          _bulk_avg_mp_uo[avg_mp_index]->getValueAverage(_current_elem->id(), _current_side, _qp);
+      _traction_derivatives_other_avg_vars_id[_qp]
+                                             [_bulk_avg_mp_uo[avg_mp_index]->getScalarVarID()] =
+                                                 avg_mp_index + 3;
+    }
   // resize non stateful mp
   if (_n_non_stateful_uo_czm_properties > 0)
     for (unsigned int mp_index = 0; mp_index < _n_non_stateful_uo_czm_properties; mp_index++)
       (*_uo_non_stateful_czm_properties[mp_index])[_qp].resize(
           _traction_separation_UO.getNonStatefulMaterialPropertySize(mp_index));
-
-  _czm_jacobian[_qp].resize(3, std::vector<Real>(3, 0));
 
   for (unsigned int i = 0; i < 3; i++)
   {
@@ -150,10 +201,32 @@ CZMUOBasedMaterial::computeQpProperties()
   _traction_spatial_derivatives[_qp] = rotateTensor2(
       _traction_spatial_derivatives_local[_qp], RotationGlobal2Local, /*inverse =*/true);
 
+  _czm_jacobian[_qp].resize(3, std::vector<Real>(3, 0));
+
+  if (_n_bulk_avg_mp_uo_names > 0 && _need_avg_scalar_vars_derivatives)
+  {
+    _czm_jacobian[_qp].resize(3 + _n_bulk_avg_mp_uo_names, std::vector<Real>(3, 0));
+    for (unsigned int avg_mp_index = 0; avg_mp_index < _n_bulk_avg_mp_uo_names; avg_mp_index++)
+    {
+      (*_traction_derivatives_other_avg_vars_local[avg_mp_index])[_qp] =
+          _traction_separation_UO.computeTractionOtherAveragedScalarVarDerivatives(_qp,
+                                                                                   avg_mp_index);
+      (*_traction_derivatives_other_avg_vars[avg_mp_index])[_qp] =
+          rotateVector((*_traction_derivatives_other_avg_vars_local[avg_mp_index])[_qp],
+                       RotationGlobal2Local,
+                       /*inverse =*/true);
+    }
+  }
+
   _czm_residual[_qp] = _traction[_qp];
   for (unsigned int i = 0; i < 3; i++)
     for (unsigned int j = 0; j < 3; j++)
       _czm_jacobian[_qp][i][j] = _traction_spatial_derivatives[_qp](i, j);
+
+  if (_n_bulk_avg_mp_uo_names > 0 && _need_avg_scalar_vars_derivatives)
+    for (unsigned int i = 3; i < 3 + _n_bulk_avg_mp_uo_names; i++)
+      for (unsigned int j = 0; j < 3; j++)
+        _czm_jacobian[_qp][i][j] = (*_traction_derivatives_other_avg_vars[i - 3])[_qp](j);
 
   if (_compute_shear_traction)
     _shear_traction[_qp] =

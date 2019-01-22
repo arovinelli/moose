@@ -40,9 +40,9 @@ validParams<CZMTractionSeparationUOBase>()
                                        "the name of the material property hosting the displacement "
                                        "jump computed in natural element coordinate system");
   params.addParam<unsigned int>(
-      "n_other_scalar_mp_names", 0, "number of other scalar mp required to compute  CZM Law");
+      "n_other_avg_scalar_mp_names", 0, "number of other scalar mp required to compute  CZM Law");
   params.addParam<std::vector<std::string>>(
-      "other_scalar_mp_names",
+      "other_avg_scalar_mp_names",
       std::vector<std::string>(0),
       "the name of other variables for which derivatives need to be computed");
 
@@ -62,8 +62,8 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
         getParam<std::string>("displacement_jump_mp_name"))),
     _displacement_jump_old(getMaterialPropertyOldByName<RealVectorValue>(
         getParam<std::string>("displacement_jump_mp_name"))),
-    _n_other_scalar_mp_names(getParam<unsigned int>("n_other_scalar_mp_names")),
-    _other_scalar_mp_names(getParam<std::vector<std::string>>("other_scalar_mp_names"))
+    _n_other_avg_scalar_mp_names(getParam<unsigned int>("n_other_avg_scalar_mp_names")),
+    _other_avg_scalar_mp_names(getParam<std::vector<std::string>>("other_avg_scalar_mp_names"))
 
 {
   if (_n_stateful_mp != _stateful_mp_names.size())
@@ -98,22 +98,27 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
                "the material properies size");
   }
 
-  if (_n_other_scalar_mp_names != _other_scalar_mp_names.size())
+  if (_n_other_avg_scalar_mp_names != _other_avg_scalar_mp_names.size())
   {
-    std::cout << "n_other_scalar_mp_names: " << _n_other_scalar_mp_names
-              << " other_scalar_mp_names: " << _other_scalar_mp_names.size() << std::endl;
+    std::cout << "n_other_avg_scalar_mp_names: " << _n_other_avg_scalar_mp_names
+              << " other_avg_scalar_mp_names: " << _other_avg_scalar_mp_names.size() << std::endl;
 
-    for (unsigned int i = 0; i < _other_scalar_mp_names.size(); i++)
-      std::cout << _other_scalar_mp_names[i] << std::endl;
+    for (unsigned int i = 0; i < _other_avg_scalar_mp_names.size(); i++)
+      std::cout << _other_avg_scalar_mp_names[i] << std::endl;
     std::cout << std::endl;
-    mooseError("CZMTractionSeparationUOBase:: n_other_scalar_mp_names does match with the number "
-               "of supplied "
-               "material properies names  other_scalar_mp_names");
+    mooseError(
+        "CZMTractionSeparationUOBase:: n_other_avg_scalar_mp_names does match with the number "
+        "of supplied "
+        "material properies names  other_avg_scalar_mp_names");
   }
 
-  if (_n_other_scalar_mp_names > 0)
-    for (unsigned int i = 0; i < _n_other_scalar_mp_names; i++)
-      _other_scalar_mp.push_back(&getMaterialPropertyByName<Real>(_other_scalar_mp_names[i]));
+  if (_n_other_avg_scalar_mp_names > 0)
+  {
+    for (unsigned int i = 0; i < _n_other_avg_scalar_mp_names; i++)
+      _other_avg_scalar_mp.push_back(
+          &getMaterialPropertyByName<Real>(_other_avg_scalar_mp_names[i]));
+    // _other_avg_scalar_mp_derivatives.resize(_n_other_avg_scalar_mp_names);
+  }
 }
 
 unsigned int
@@ -196,11 +201,13 @@ CZMTractionSeparationUOBase::computeTractionSpatialDerivativeLocal(unsigned int 
 }
 
 /// method returning the traction derivates wrt bulk varaibles in local coordinates
-std::vector<RealVectorValue>
-CZMTractionSeparationUOBase::computeTractionOtherVarsDerivatives(unsigned int /*qp*/) const
+RealVectorValue
+CZMTractionSeparationUOBase::computeTractionOtherAveragedScalarVarDerivatives(
+    unsigned int /*qp*/, unsigned int /*mp_index*/) const
 {
-  mooseError("CZMTractionSeparationUOBase::computeTractionOtherVarsDerivatives should never "
-             "be called directly but always subclassed");
+  mooseError(
+      "CZMTractionSeparationUOBase::computeTractionOtherAveragedScalarVarsDerivatives should never "
+      "be called directly but always subclassed");
 }
 
 std::vector<std::vector<Real>>

@@ -14,20 +14,23 @@
 
 class CZMTestLaw_SVM;
 
-template <> InputParameters validParams<CZMTestLaw_SVM>();
+template <>
+InputParameters validParams<CZMTestLaw_SVM>();
 
 /**
 Traction sepration law basic user object
  */
-class CZMTestLaw_SVM : public CZMTractionSeparationUOBase {
+class CZMTestLaw_SVM : public CZMTractionSeparationUOBase
+{
 public:
-  CZMTestLaw_SVM(const InputParameters &parameters);
+  CZMTestLaw_SVM(const InputParameters & parameters);
+  const Real _interface_stiffness;
 
   RealVectorValue computeTractionLocal(unsigned int qp) const override;
-  RankTwoTensor
-  computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
-  std::vector<RealVectorValue>
-  computeTractionOtherVarsDerivatives(unsigned int qp) const override;
+  RankTwoTensor computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
+  RealVectorValue
+  computeTractionOtherAveragedScalarVarDerivatives(unsigned int qp,
+                                                   unsigned int mp_index) const override;
 };
 
 #endif // CZMTESTLAW_SVM_H
