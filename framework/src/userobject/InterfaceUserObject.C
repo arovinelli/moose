@@ -8,6 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "InterfaceUserObject.h"
+#include "SubProblem.h"
+#include "MooseTypes.h"
 #include "Assembly.h"
 
 template <>

@@ -53,7 +53,8 @@ private:
 template <typename T>
 MaterialAuxBase<T>::MaterialAuxBase(const InputParameters & parameters)
   : AuxKernel(parameters),
-    _prop(getMaterialProperty<T>("property")),
+    _prop(getParam<bool>("use_old_prop") ? getMaterialPropertyOld<T>("property")
+                                         : getMaterialProperty<T>("property")),
     _factor(getParam<Real>("factor")),
     _offset(getParam<Real>("offset"))
 {
