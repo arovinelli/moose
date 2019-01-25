@@ -20,5 +20,8 @@ validParams<MaterialAuxBase<>>()
       "factor", 1, "The factor by which to multiply your material property for visualization");
   params.addParam<Real>(
       "offset", 0, "The offset to add to your material property for visualization");
+  params.addParam<bool>("use_old_prop",
+                        false,
+                        "flag to return the previous material property value (mostly for debug)");
   return params;
 }
