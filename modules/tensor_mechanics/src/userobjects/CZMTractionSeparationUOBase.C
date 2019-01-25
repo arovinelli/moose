@@ -58,6 +58,12 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
         getParam<std::string>("displacement_jump_mp_name")))
 
 {
+  checkInputsBase();
+}
+
+void
+CZMTractionSeparationUOBase::checkInputsBase()
+{
   if (_n_stateful_mp != _stateful_mp_names.size())
   {
     std::cout << "_n_stateful_mp: " << _n_stateful_mp
