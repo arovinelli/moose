@@ -90,6 +90,7 @@ protected:
   const MaterialProperty<RealVectorValue> & _displacement_jump_old;
 
   std::vector<std::vector<Real>> ResizeInitialValues() const;
+  void checkInputsBase();
 };
 
 #endif // CZMTRACTIONSEPARATIONUOBASE_H
