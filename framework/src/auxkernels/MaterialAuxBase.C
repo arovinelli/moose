@@ -23,5 +23,8 @@ validParams<MaterialAuxBase<>>()
   params.addParam<bool>("use_old_prop",
                         false,
                         "flag to return the previous material property value (mostly for debug)");
+  params.addParam<bool>("use_older_prop",
+                        false,
+                        "flag to return the older material property value (mostly for debug)");
   return params;
 }

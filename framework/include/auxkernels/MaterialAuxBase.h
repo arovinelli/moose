@@ -53,11 +53,21 @@ private:
 template <typename T>
 MaterialAuxBase<T>::MaterialAuxBase(const InputParameters & parameters)
   : AuxKernel(parameters),
-    _prop(getParam<bool>("use_old_prop") ? getMaterialPropertyOld<T>("property")
-                                         : getMaterialProperty<T>("property")),
+    _prop(!getParam<bool>("use_old_prop") && !getParam<bool>("use_older_prop")
+              ? getMaterialProperty<T>("property")
+              : (getParam<bool>("use_old_prop") && !getParam<bool>("use_older_prop")
+                     ? getMaterialPropertyOld<T>("property")
+                     : (!getParam<bool>("use_old_prop") && getParam<bool>("use_older_prop")
+                            ? getMaterialPropertyOlder<T>("property")
+                            : getMaterialProperty<T>("property")))),
+
     _factor(getParam<Real>("factor")),
     _offset(getParam<Real>("offset"))
 {
+  if ((parameters.isParamSetByUser("use_old_prop") &&
+       parameters.isParamSetByUser("use_older_prop")) ||
+      (parameters.get<bool>("use_old_prop") && parameters.get<bool>("use_older_prop")))
+    mooseError("MaterialAuxBase cannot set both use_old_prop and use_older_prop to true");
 }
 
 template <typename T>
