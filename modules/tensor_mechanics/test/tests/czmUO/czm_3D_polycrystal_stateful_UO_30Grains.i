@@ -1,5 +1,5 @@
 [Mesh]
-  file = testTri30.e
+  file = poly.msh
   parallel_type = REPLICATED
 []
 
@@ -272,13 +272,13 @@
   petsc_options_value = 'lu        superlu_dist'
   # petsc_options_value = 'hypre     boomerang'
   solve_type = NEWTON
-  nl_abs_tol = 1e-5
-  nl_rel_tol = 1e-6
+  nl_abs_tol = 1e-7
+  nl_rel_tol = 1e-8
   nl_max_its = 20
   l_tol = 1e-15
   l_max_its = 5
   start_time = 0.0
-  dt = 1
+  dt = 0.5
   # dtmin = 0.01
   end_time = 142
   line_search = none
