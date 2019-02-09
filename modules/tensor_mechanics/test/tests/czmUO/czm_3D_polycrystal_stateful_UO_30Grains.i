@@ -278,7 +278,7 @@
   l_tol = 1e-15
   l_max_its = 5
   start_time = 0.0
-  dt = 0.5
+  dt = 5
   # dtmin = 0.01
   end_time = 142
   line_search = none
