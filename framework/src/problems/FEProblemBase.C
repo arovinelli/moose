@@ -2785,7 +2785,6 @@ FEProblemBase::addUserObject(std::string user_object_name,
     auto suo = std::dynamic_pointer_cast<SideUserObject>(user_object);
     auto iuo = std::dynamic_pointer_cast<InterfaceUserObject>(user_object);
     auto isuo = std::dynamic_pointer_cast<InternalSideUserObject>(user_object);
-    auto iuo = std::dynamic_pointer_cast<InterfaceUserObject>(user_object);
     auto nuo = std::dynamic_pointer_cast<NodalUserObject>(user_object);
     auto guo = std::dynamic_pointer_cast<GeneralUserObject>(user_object);
     auto tguo = std::dynamic_pointer_cast<ThreadedGeneralUserObject>(user_object);
