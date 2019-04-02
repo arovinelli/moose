@@ -80,6 +80,7 @@ ComputeElemAuxBcsThread::operator()(const ConstBndElemRange & range)
           }
           _problem.setActiveMaterialProperties(needed_mat_props, _tid);
           _problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
+          // _problem.reinitMaterialsBoundary(boundary_id, _tid);
           _problem.reinitMaterialsBoundary(boundary_id,
                                            _tid,
                                            /* swap_stateful = */ true,

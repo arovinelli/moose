@@ -2596,7 +2596,11 @@ FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id,
                                        bool swap_stateful,
                                        bool prevent_update_interface_materials)
 {
+
+  // if (hasActiveMaterialProperties(tid) &&
+  //     !(prevent_update_interface_materials || needBoundaryMaterialOnInterface(boundary_id, tid)))
   if (hasActiveMaterialProperties(tid) && !prevent_update_interface_materials)
+  // if (hasActiveMaterialProperties(tid) && !needBoundaryMaterialOnInterface(boundary_id, tid))
   {
     const Elem *& elem = _assembly[tid]->elem();
     unsigned int side = _assembly[tid]->side();
@@ -5835,16 +5839,16 @@ FEProblemBase::needBoundaryMaterialOnInterface(BoundaryID bnd_id, THREAD_ID tid)
   {
     _bnd_mat_interface_cache[tid][bnd_id] = false;
 
-    // if (_nl->needBoundaryMaterialOnInterface(bnd_id, tid))
-    //   _bnd_mat_interface_cache[tid][bnd_id] = true;
+    if (_nl->needBoundaryMaterialOnInterface(bnd_id, tid))
+      _bnd_mat_interface_cache[tid][bnd_id] = true;
     // else if (_interface_user_objects.hasActiveBoundaryObjects(bnd_id, tid))
     //   _bnd_mat_interface_cache[tid][bnd_id] = true;
-    if (theWarehouse() // THIS DOES NOT WORK AND I CAN'T FIGURE OUT WHY
-            .query()
-            .condition<AttribThread>(tid)
-            .condition<AttribInterfaces>(Interfaces::InterfaceUserObject)
-            .condition<AttribBoundaries>(bnd_id)
-            .count() > 0)
+    else if (theWarehouse() // THIS DOES NOT WORK AND I CAN'T FIGURE OUT WHY
+                 .query()
+                 .condition<AttribThread>(tid)
+                 .condition<AttribInterfaces>(Interfaces::InterfaceUserObject)
+                 .condition<AttribBoundaries>(bnd_id)
+                 .count() > 0)
       _bnd_mat_interface_cache[tid][bnd_id] = true;
   }
 
