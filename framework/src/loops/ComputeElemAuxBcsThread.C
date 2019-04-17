@@ -84,7 +84,11 @@ ComputeElemAuxBcsThread<AuxKernelType>::operator()(const ConstBndElemRange & ran
           }
           _problem.setActiveMaterialProperties(needed_mat_props, _tid);
           _problem.reinitMaterialsFace(elem->subdomain_id(), _tid);
-          _problem.reinitMaterialsBoundary(boundary_id, _tid);
+          _problem.reinitMaterialsBoundary(boundary_id,
+                                           _tid,
+                                           /* swap_stateful = */ true,
+                                           /* prevent_update_interface_materials = */
+                                           true);
         }
 
         for (const auto & aux : iter->second)

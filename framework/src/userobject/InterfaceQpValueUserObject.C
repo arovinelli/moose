@@ -20,14 +20,19 @@ validParams<InterfaceQpValueUserObject>()
   params.addCoupledVar("var_neighbor", "The variable name");
   params.addClassDescription("Test Interfae User Object computing and storing average values at "
                              "each QP across an interface");
+  params.addParam<bool>("use_old_value", false, "each QP across an interface");
   return params;
 }
 
 InterfaceQpValueUserObject::InterfaceQpValueUserObject(const InputParameters & parameters)
   : InterfaceValueUserObject(parameters),
-    _u(coupledValue("var")),
-    _u_neighbor(parameters.isParamSetByUser("var_neighbor") ? coupledNeighborValue("var_neighbor")
-                                                            : coupledNeighborValue("var"))
+    _use_old_value(getParam<bool>("use_old_value")),
+    _u(_use_old_value ? coupledValueOld("var") : coupledValue("var")),
+    _u_neighbor(
+        parameters.isParamSetByUser("var_neighbor")
+            ? (_use_old_value ? coupledNeighborValueOld("var_neighbor")
+                              : coupledNeighborValue("var_neighbor"))
+            : (_use_old_value ? coupledNeighborValueOld("var") : coupledNeighborValue("var")))
 
 {
 }

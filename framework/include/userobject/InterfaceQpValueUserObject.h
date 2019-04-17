@@ -35,6 +35,7 @@ public:
   Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const;
 
 protected:
+  const bool _use_old_value;
   /// this map is used to store QP data.
   std::map<std::pair<dof_id_type, unsigned int>, std::vector<Real>> _map_values;
   const VariableValue & _u;
