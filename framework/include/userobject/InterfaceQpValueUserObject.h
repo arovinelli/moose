@@ -32,7 +32,8 @@ public:
   virtual void finalize() { return; };
   virtual void threadJoin(const UserObject & /*uo*/) { return; };
 
-  Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const;
+  virtual Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const;
+  virtual Real getQpValueForLD(dof_id_type /*LD_elem*/, unsigned int /*qp*/) const { return 0; };
 
 protected:
   /// this map is used to store QP data.
@@ -40,4 +41,3 @@ protected:
   const VariableValue & _u;
   const VariableValue & _u_neighbor;
 };
-
