@@ -7,8 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef DISPJUMPUO_QP_H
-#define DISPJUMPUO_QP_H
+#pragma once
 
 #include "InterfaceUserObject.h"
 
@@ -53,5 +52,3 @@ protected:
   const VariableValue & _uz_dot;
   const VariableValue & _uz_neighbor_dot;
 };
-
-#endif // DISPJUMPUO_QP_H

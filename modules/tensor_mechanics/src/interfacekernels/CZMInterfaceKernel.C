@@ -76,9 +76,10 @@ CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
     // the residual and jacobain of the traction sepration law wrt the displacement jump.
     _residual(getParam<std::string>("residual")),
     _jacobian(getParam<std::string>("jacobian")),
+    _throw_exception("throw_exception_mp"),
     _ResidualMP(getMaterialProperty<RealVectorValue>(_residual)),
-    _JacobianMP(getMaterialProperty<std::vector<std::vector<Real>>>(_jacobian))
-
+    _JacobianMP(getMaterialProperty<std::vector<std::vector<Real>>>(_jacobian)),
+    _throw_exception_mp(getMaterialProperty<bool>(_throw_exception))
 {
   if (!parameters.isParamValid("boundary"))
   {
@@ -90,6 +91,10 @@ CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
 Real
 CZMInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 {
+
+  if (_throw_exception_mp[_qp])
+    throw MooseException("CZMInterfaceMaterial failed to solve," +
+                         std::to_string(_current_elem->id()) + " cutting time step");
 
   Real r = _ResidualMP[_qp](_disp_index);
 

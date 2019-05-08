@@ -88,7 +88,7 @@ ComputeElemAuxBcsThread<AuxKernelType>::operator()(const ConstBndElemRange & ran
                                            _tid,
                                            /* swap_stateful = */ true,
                                            /* prevent_update_interface_materials = */
-                                           true);
+                                           false);
         }
 
         for (const auto & aux : iter->second)

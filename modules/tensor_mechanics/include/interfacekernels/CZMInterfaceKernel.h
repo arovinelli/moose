@@ -51,10 +51,12 @@ protected:
   /// wrt to the displacement jump.
   const std::string _residual;
   const std::string _jacobian;
+  const std::string _throw_exception;
 
   // values of the residual's and jacobian's cofficients
   const MaterialProperty<RealVectorValue> & _ResidualMP;
   const MaterialProperty<std::vector<std::vector<Real>>> & _JacobianMP;
+  const MaterialProperty<bool> & _throw_exception_mp;
 };
 
 #endif // CZMINTERFACEKERNEL_H

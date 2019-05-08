@@ -88,7 +88,8 @@ InterfaceQpValueUserObject::execute()
       vec[qp] = computeInterfaceValueType(_u[qp], _u_neighbor[qp]);
   }
   else
-    mooseError("InterfaceQpValueUserObject:: cannot find the required element and side");
+    mooseError("InterfaceQpValueUserObject:: cannot find the required element " +
+               std::to_string(_current_elem->id()) + "and side" + std::to_string(_current_side));
 }
 
 Real

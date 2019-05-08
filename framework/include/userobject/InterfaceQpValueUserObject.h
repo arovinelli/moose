@@ -32,7 +32,12 @@ public:
   virtual void finalize() { return; };
   virtual void threadJoin(const UserObject & /*uo*/) { return; };
 
-  Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const;
+  virtual Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const;
+  virtual Real getQpValueForLD(dof_id_type, unsigned int /*qp*/) const
+  {
+    mooseError("this function need to be overriden");
+    return 0;
+  };
 
 protected:
   const bool _use_old_value;
