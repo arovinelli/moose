@@ -34,6 +34,9 @@ public:
   RealVectorValue
   getDisplacementJumpVelocity(dof_id_type elem, unsigned int side, unsigned int qp) const;
 
+  std::vector<RankTwoTensor>
+  getOpeningAndSlidingStrain(dof_id_type elem, unsigned int side, unsigned int qp) const;
+
 protected:
   /// this map is used for storing data at QPs.
   /// keys<element_id, side_id>, values<vector (1 elem_per_QP)<vector<Real (_mean_mat_prop, _var_jump)>>>

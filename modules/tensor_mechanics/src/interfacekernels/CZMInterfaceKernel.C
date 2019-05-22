@@ -153,72 +153,76 @@ CZMInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigne
   if (jvar != _disp_1_var && jvar != _disp_2_var && jvar != _disp_1_neighbor_var &&
       jvar != _disp_2_neighbor_var)
   {
-    mooseError("wrong variable requested");
+    // mooseError("CZMInterfaceKernel wrong variable requested");
+    return 0;
   }
 
-  // set the off diag index depending on the coupled variable ID (jvar) and
-  // on the displacement index this kernel is working on (_disp_index)
-  std::vector<unsigned int> indeces(3, 0);
-  indeces[0] = _disp_index;
-  if (_disp_index == 0)
-  {
-    indeces[1] = 1;
-    indeces[2] = 2;
-  }
-  else if (_disp_index == 1)
-  {
-    indeces[1] = 0;
-    indeces[2] = 2;
-  }
-  else if (_disp_index == 2)
-  {
-    indeces[1] = 0;
-    indeces[2] = 1;
-  }
-
-  // retrieve the off diagonal index
-  unsigned int OffDiagIndex = 3;
-  // set index to a non existing values if OffDiagIndex
-  // does not change a segfault error will appear
-  if (jvar == _disp_1_var || jvar == _disp_1_neighbor_var)
-  {
-    OffDiagIndex = indeces[1];
-  }
-  else if (jvar == _disp_2_var || jvar == _disp_2_neighbor_var)
-  {
-    OffDiagIndex = indeces[2];
-  }
   else
   {
-    mooseError("cannot determine the proper OffDiagIndex");
+
+    // set the off diag index depending on the coupled variable ID (jvar) and
+    // on the displacement index this kernel is working on (_disp_index)
+    std::vector<unsigned int> indeces(3, 0);
+    indeces[0] = _disp_index;
+    if (_disp_index == 0)
+    {
+      indeces[1] = 1;
+      indeces[2] = 2;
+    }
+    else if (_disp_index == 1)
+    {
+      indeces[1] = 0;
+      indeces[2] = 2;
+    }
+    else if (_disp_index == 2)
+    {
+      indeces[1] = 0;
+      indeces[2] = 1;
+    }
+
+    // retrieve the off diagonal index
+    unsigned int OffDiagIndex = 3;
+    // set index to a non existing values if OffDiagIndex
+    // does not change a segfault error will appear
+    if (jvar == _disp_1_var || jvar == _disp_1_neighbor_var)
+    {
+      OffDiagIndex = indeces[1];
+    }
+    else if (jvar == _disp_2_var || jvar == _disp_2_neighbor_var)
+    {
+      OffDiagIndex = indeces[2];
+    }
+    else
+    {
+      mooseError("cannot determine the proper OffDiagIndex");
+    }
+
+    Real jac = _JacobianMP[_qp][_disp_index][OffDiagIndex];
+
+    switch (type)
+    {
+      // (1) and (-1) terms in parenthesis are the derivatives of \deltaU with respect to slave and
+      // master variables
+      case Moose::ElementElement:
+        jac *= -_test[_i][_qp] * _phi[_j][_qp] * (-1);
+        break;
+
+      case Moose::ElementNeighbor:
+        jac *= -_test[_i][_qp] * _phi_neighbor[_j][_qp] * (1);
+        break;
+
+      case Moose::NeighborElement:
+        jac *= _test_neighbor[_i][_qp] * _phi[_j][_qp] * (-1);
+        break;
+
+      case Moose::NeighborNeighbor:
+        jac *= _test_neighbor[_i][_qp] * _phi_neighbor[_j][_qp] * (1);
+        break;
+
+      default:
+        mooseError("unknown type of jacobian");
+        break;
+    }
+    return jac;
   }
-
-  Real jac = _JacobianMP[_qp][_disp_index][OffDiagIndex];
-
-  switch (type)
-  {
-    // (1) and (-1) terms in parenthesis are the derivatives of \deltaU with respect to slave and
-    // master variables
-    case Moose::ElementElement:
-      jac *= -_test[_i][_qp] * _phi[_j][_qp] * (-1);
-      break;
-
-    case Moose::ElementNeighbor:
-      jac *= -_test[_i][_qp] * _phi_neighbor[_j][_qp] * (1);
-      break;
-
-    case Moose::NeighborElement:
-      jac *= _test_neighbor[_i][_qp] * _phi[_j][_qp] * (-1);
-      break;
-
-    case Moose::NeighborNeighbor:
-      jac *= _test_neighbor[_i][_qp] * _phi_neighbor[_j][_qp] * (1);
-      break;
-
-    default:
-      mooseError("unknown type of jacobian");
-      break;
-  }
-
-  return jac;
 }

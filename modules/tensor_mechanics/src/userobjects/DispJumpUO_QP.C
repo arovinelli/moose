@@ -100,7 +100,7 @@ DispJumpUO_QP::execute()
     // loop over qps and do stuff
     for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)
     {
-      vec[qp].resize(2, 0);
+      vec[qp].resize(3, 0);
 
       // compute displacement jump
       vec[qp][0](0) = _ux_neighbor[qp] - _ux[qp];
@@ -111,6 +111,11 @@ DispJumpUO_QP::execute()
       vec[qp][1](0) = _ux_neighbor_dot[qp] - _ux_dot[qp];
       vec[qp][1](1) = _uy_neighbor_dot[qp] - _uy_dot[qp];
       vec[qp][1](2) = _uz_neighbor_dot[qp] - _uz_dot[qp];
+
+      vec[qp][2](0) = _normals[qp](0);
+      vec[qp][2](1) = _normals[qp](1);
+      vec[qp][2](2) = _normals[qp](2);
+      ;
     }
   }
   else
@@ -135,6 +140,47 @@ DispJumpUO_QP::getDisplacementJumpVelocity(dof_id_type elem,
   auto dispJump = _map_values.find(std::make_pair(elem, side));
   if (dispJump != _map_values.end())
     return dispJump->second[qp][1];
+  else
+    mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
+}
+
+std::vector<RankTwoTensor>
+DispJumpUO_QP::getOpeningAndSlidingStrain(dof_id_type elem,
+                                          unsigned int side,
+                                          unsigned int qp) const
+{
+  auto dispJump = _map_values.find(std::make_pair(elem, side));
+  if (dispJump != _map_values.end())
+  {
+    RealVectorValue n = dispJump->second[qp][2];
+    RealVectorValue du_dot = dispJump->second[qp][1];
+
+    Real opening_velocity = 0;
+    std::vector<RankTwoTensor> total_open_and_slide;
+    total_open_and_slide.resize(3);
+    std::vector<std::vector<Real>> total(3, std::vector<Real>(3, 0));
+    std::vector<std::vector<Real>> n_diad_n(3, std::vector<Real>(3, 0));
+    std::vector<std::vector<Real>> opening(3, std::vector<Real>(3, 0));
+    std::vector<std::vector<Real>> sliding(3, std::vector<Real>(3, 0));
+    for (unsigned int i = 0; i < 3; i++)
+    {
+      opening_velocity += du_dot(i) * n(i);
+      for (unsigned int j = 0; j < 3; j++)
+      {
+        n_diad_n[i][j] = n(i) * n(j);
+        total_open_and_slide[0](i, j) = (du_dot(i) * n(j) + du_dot(j) * n(i)) * .5;
+      }
+    }
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int j = 0; j < 3; j++)
+      {
+        total_open_and_slide[1](i, j) = opening_velocity * n_diad_n[i][j];
+        total_open_and_slide[2](i, j) =
+            total_open_and_slide[0](i, j) - total_open_and_slide[1](i, j);
+      }
+
+    return total_open_and_slide;
+  }
   else
     mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
 }
