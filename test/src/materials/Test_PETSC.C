@@ -11,8 +11,8 @@
 
 #include "libmesh/quadrature.h"
 
-extern PetscErrorCode FormJacobian1(SNES, Vec, Mat, Mat, void *);
-extern PetscErrorCode FormFunction1(SNES, Vec, Vec, void *);
+// extern PetscErrorCode FormJacobian1(SNES, Vec, Mat, Mat, void *);
+// extern PetscErrorCode FormFunction1(SNES, Vec, Vec, void *);
 
 registerMooseObject("MooseTestApp", Test_PETSC);
 
@@ -114,6 +114,12 @@ Test_PETSC::computeQpProperties()
   */
 
   _petsc_ierr = SNESSolve(_petsc_snes, NULL, _petsc_x);
+
+  Vec f;
+  VecView(_petsc_x, PETSC_VIEWER_STDOUT_WORLD);
+  SNESGetFunction(_petsc_snes, &f, 0, 0);
+  VecView(_petsc_r, PETSC_VIEWER_STDOUT_WORLD);
+
   // CHKERRQ(_petsc_ierr);
   // if (flg) {
   //   Vec f;
@@ -132,7 +138,7 @@ Test_PETSC::computeQpProperties()
      are no longer needed.
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  _petsc_ierr = SNESDestroy(&_petsc_snes);
+  // _petsc_ierr = SNESDestroy(&_petsc_snes);
   // CHKERRQ(_petsc_ierr);
 }
 
@@ -149,7 +155,7 @@ Test_PETSC::computeQpProperties()
 .  f - function vector
  */
 PetscErrorCode
-FormFunction1(SNES snes, Vec x, Vec f, void * ctx)
+Test_PETSC::FormFunction1(SNES q_snes, Vec x, Vec f, void * ctx)
 {
   PetscErrorCode ierr;
   const PetscScalar * xx;
@@ -190,7 +196,7 @@ FormFunction1(SNES snes, Vec x, Vec f, void * ctx)
 .  flag - flag indicating matrix structure
 */
 PetscErrorCode
-FormJacobian1(SNES snes, Vec x, Mat jac, Mat B, void * dummy)
+Test_PETSC::FormJacobian1(SNES q_snes, Vec x, Mat jac, Mat B, void * dummy)
 {
   const PetscScalar * xx;
   PetscScalar A[4];

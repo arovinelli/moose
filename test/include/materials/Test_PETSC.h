@@ -41,4 +41,7 @@ protected:
   PetscErrorCode _petsc_ierr;
   PetscErrorCode * _petsc_ierr_pt;
   PetscScalar _pfive = .5, *xx;
+
+  static PetscErrorCode FormJacobian1(SNES, Vec, Mat, Mat, void *);
+  static PetscErrorCode FormFunction1(SNES, Vec, Vec, void *);
 };
