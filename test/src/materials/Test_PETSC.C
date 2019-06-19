@@ -26,7 +26,7 @@ validParams<Test_PETSC>()
 
 Test_PETSC::Test_PETSC(const InputParameters & parameters) : GenericConstantMaterial(parameters)
 {
-  int _petsc_ierr = SNESCreate(PETSC_COMM_SELF, &_petsc_snes);
+  _petsc_ierr = SNESCreate(PETSC_COMM_SELF, &_petsc_snes);
   // CHKERRQ(_petsc_ierr);
   _petsc_ierr = VecCreate(PETSC_COMM_SELF, &_petsc_x);
   // CHKERRQ(_petsc_ierr);
@@ -105,12 +105,7 @@ Test_PETSC::computeQpProperties()
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      Evaluate initial guess; then solve nonlinear system
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  _petsc_ierr = VecGetArray(_petsc_x, &xx);
-  // CHKERRQ(_petsc_ierr);
-  xx[0] = 2.0;
-  xx[1] = 3.0;
-  _petsc_ierr = VecRestoreArray(_petsc_x, &xx);
-  // CHKERRQ(_petsc_ierr);
+  VecSet(_petsc_x, _pfive);
   /*
      Note: The user should initialize the vector, x, with the initial guess
      for the nonlinear solver prior to calling SNESSolve().  In particular,
