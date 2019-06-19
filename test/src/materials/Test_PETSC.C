@@ -89,6 +89,10 @@ Test_PETSC::Test_PETSC(const InputParameters & parameters) : GenericConstantMate
   // CHKERRQ(_petsc_ierr);
 }
 
+Test_PETSC::~Test_PETSC() { _petsc_ierr = SNESDestroy(&_petsc_snes); }
+// _petsc_ierr = SNESDestroy(&_petsc_snes);
+// CHKERRQ(_petsc_ierr);
+
 void
 Test_PETSC::initQpStatefulProperties()
 {

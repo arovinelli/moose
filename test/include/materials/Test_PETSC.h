@@ -28,6 +28,7 @@ class Test_PETSC : public GenericConstantMaterial
 {
 public:
   Test_PETSC(const InputParameters & parameters);
+  ~Test_PETSC();
 
 protected:
   virtual void initQpStatefulProperties() override;
