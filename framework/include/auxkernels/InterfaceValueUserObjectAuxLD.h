@@ -11,6 +11,7 @@
 #define INTERFACEUSEROBJECTQPAUXLD_H
 
 #include "InterfaceQpValueUserObject.h"
+#include "map2LDelem.h"
 
 // Forward Declarations
 class InterfaceValueUserObjectAuxLD;
@@ -32,6 +33,7 @@ public:
 
 protected:
   virtual Real computeValue() override;
+  const map2LDelem & _LDmapUO;
 };
 
 #endif // INTERFACEUSEROBJECTQPAUXLD_H

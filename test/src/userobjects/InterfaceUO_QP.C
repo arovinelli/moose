@@ -56,6 +56,10 @@ InterfaceUO_QP::initialize()
   // clear map values
   _map_values.clear();
 
+  _n_init += 1;
+
+  std::cout << "number of times the InterfaceUO_QP has been initialized: " << _n_init << std::endl;
+
   // initialize the map_values looping over all the element and sides
   for (unsigned int i = 0; i < elem_side_bid.size(); i++)
   {

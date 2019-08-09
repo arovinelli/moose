@@ -15,14 +15,14 @@ template <>
 InputParameters
 validParams<map2LDelem>()
 {
-  InputParameters params = validParams<InterfaceQpValueUserObject>();
+  InputParameters params = validParams<InterfaceUserObject>();
   params.addRequiredParam<std::vector<SubdomainName>>(
       "ld_block_names", "The name of the lower dimensional element blocks");
   return params;
 }
 
 map2LDelem::map2LDelem(const InputParameters & parameters)
-  : InterfaceQpValueUserObject(parameters),
+  : InterfaceUserObject(parameters),
     ld_block_ids(_mesh.getSubdomainIDs(getParam<std::vector<SubdomainName>>("ld_block_names")))
 {
 }
@@ -41,8 +41,6 @@ map2LDelem::initialize()
   // retrieve on which boudnary this UO operates
   std::set<BoundaryID> boundaryList = boundaryIDs();
 
-  // clear map values
-  _map_values.clear();
   // clear map values
   _map_LD_with_elem_side.clear();
 
@@ -108,9 +106,6 @@ map2LDelem::initialize()
             // initialize map elemenet
             // add entry to the <element,side> LD neighbor map and to the reverse map
 
-            // outer vector indeces qp, inner vector indeces data
-            std::vector<Real> var_values(0, 0);
-            _map_values[elem_side_pair] = var_values;
             _map_LD_with_elem_side[LD_neighbor_elem_id] = elem_side_pair;
             break;
           }
@@ -125,18 +120,30 @@ map2LDelem::initialize()
   }
 }
 
-Real
-map2LDelem::getQpValueForLD(dof_id_type ld_elem, unsigned int qp) const
+// Real
+// map2LDelem::getQpValueForLD(dof_id_type ld_elem, unsigned int qp) const
+// {
+//   auto elem_side_pair = _map_LD_with_elem_side.find(ld_elem);
+//   if (elem_side_pair != _map_LD_with_elem_side.end())
+//   {
+//     auto data = _map_values.find(elem_side_pair->second);
+//     if (data != _map_values.end())
+//       return data->second[qp][0];
+//     else
+//       mooseError("getQpValueForLD: can't find the element");
+//   }
+//   else
+//     mooseError("getQpValueForLD: can't find the given LD element");
+// }
+
+std::pair<dof_id_type, unsigned int>
+map2LDelem::getLDNeighbor(dof_id_type ld_elem) const
 {
   auto elem_side_pair = _map_LD_with_elem_side.find(ld_elem);
   if (elem_side_pair != _map_LD_with_elem_side.end())
   {
-    auto data = _map_values.find(elem_side_pair->second);
-    if (data != _map_values.end())
-      return data->second[qp];
-    else
-      mooseError("getQpValueForLD: can't find the element");
+    return elem_side_pair->second;
   }
   else
-    mooseError("getQpValueForLD: can't find the given LD element");
+    mooseError("getLDNeighbor: can't find the given LD element");
 }

@@ -31,7 +31,8 @@ public:
   MaterialRealAux(const InputParameters & parameters);
 
 protected:
+  const bool _selected_qp_bool;
+  const unsigned int _selected_qp;
   /// Returns the material property values at quadrature points
   virtual Real getRealValue();
 };
-

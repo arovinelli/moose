@@ -17,16 +17,23 @@ validParams<MaterialRealAux>()
 {
   InputParameters params = validParams<MaterialAuxBase<Real>>();
   params.addClassDescription("Outputs element volume-averaged material properties");
+  params.addParam<unsigned int>("qp_idx", 0, "output only the selected qp value");
   return params;
 }
 
 MaterialRealAux::MaterialRealAux(const InputParameters & parameters)
-  : MaterialAuxBase<Real>(parameters)
+  : MaterialAuxBase<Real>(parameters),
+    _selected_qp_bool(parameters.isParamSetByUser("qp_idx") ? true : false),
+    _selected_qp(getParam<unsigned int>("qp_idx"))
+
 {
 }
 
 Real
 MaterialRealAux::getRealValue()
 {
-  return _prop[_qp];
+  if (!_selected_qp_bool)
+    return _prop[_qp];
+  else
+    return _prop[_selected_qp];
 }

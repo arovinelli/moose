@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "InterfaceValueUserObject.h"
+#include "InterfaceQpValueUserObjectBase.h"
 
 class InterfaceQpValueUserObject;
 
@@ -21,29 +21,28 @@ InputParameters validParams<InterfaceQpValueUserObject>();
  * scalar. The computed scalar value depends on the given parameter _interface_value_type\
  * _interface_value_type (see IntervafeValueTools).
  */
-class InterfaceQpValueUserObject : public InterfaceValueUserObject
+class InterfaceQpValueUserObject : public InterfaceQpValueUserObjectBase
 {
 public:
   InterfaceQpValueUserObject(const InputParameters & parameters);
   virtual ~InterfaceQpValueUserObject();
 
-  virtual void initialize();
-  virtual void execute();
-  virtual void finalize() { return; };
-  virtual void threadJoin(const UserObject & /*uo*/) { return; };
+  // virtual void initialize();
+   void execute() override;
+  // virtual void finalize() { return; };
+  // virtual void threadJoin(const UserObject & /*uo*/) { return; };
 
-  virtual Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const;
-  virtual Real getQpValueForLD(dof_id_type, unsigned int /*qp*/) const
-  {
-    mooseError("this function need to be overriden");
-    return 0;
-  };
+   // virtual Real getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const override;
+   // virtual Real getQpValueForLD(dof_id_type, unsigned int /*qp*/) const
+   // {
+   //   mooseError("this function need to be overriden");
+   //   return 0;
+   // };
 
-protected:
-  const bool _use_old_value;
-  /// this map is used to store QP data.
-  std::map<std::pair<dof_id_type, unsigned int>, std::vector<Real>> _map_values;
-  const VariableValue & _u;
-  const VariableValue & _u_neighbor;
+ protected:
+   // const bool _use_old_value;
+   // /// this map is used to store QP data.
+   // std::map<std::pair<dof_id_type, unsigned int>, std::vector<Real>> _map_values;
+   const VariableValue & _u;
+   const VariableValue & _u_neighbor;
 };
-

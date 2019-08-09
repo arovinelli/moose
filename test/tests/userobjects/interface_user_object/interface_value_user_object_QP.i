@@ -44,7 +44,7 @@
     var = diffusivity_1
     var_neighbor = diffusivity_2
     boundary = 'interface'
-    execute_on = 'initial timestep_end'
+    execute_on = 'initial linear nonlinear timestep_end'
     interface_value_type = average
   [../]
   [./interface_master_minus_slave_uo]

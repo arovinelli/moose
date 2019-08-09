@@ -35,5 +35,6 @@ protected:
 
   /// The vector component to output
   unsigned int _component;
+  const bool _selected_qp_bool;
+  const unsigned int _selected_qp;
 };
-

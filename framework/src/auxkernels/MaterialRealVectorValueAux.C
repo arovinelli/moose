@@ -17,12 +17,16 @@ validParams<MaterialRealVectorValueAux>()
 {
   InputParameters params = validParams<MaterialAuxBase<>>();
   params.addParam<unsigned int>("component", 0, "The vector component to consider for this kernel");
+  params.addParam<unsigned int>("qp_idx", 0, "output only the selected qp value");
 
   return params;
 }
 
 MaterialRealVectorValueAux::MaterialRealVectorValueAux(const InputParameters & parameters)
-  : MaterialAuxBase<RealVectorValue>(parameters), _component(getParam<unsigned int>("component"))
+  : MaterialAuxBase<RealVectorValue>(parameters),
+    _component(getParam<unsigned int>("component")),
+    _selected_qp_bool(parameters.isParamSetByUser("qp_idx") ? true : false),
+    _selected_qp(getParam<unsigned int>("qp_idx"))
 {
   if (_component > LIBMESH_DIM)
     mooseError(
@@ -32,5 +36,8 @@ MaterialRealVectorValueAux::MaterialRealVectorValueAux(const InputParameters & p
 Real
 MaterialRealVectorValueAux::getRealValue()
 {
-  return _prop[_qp](_component);
+  if (!_selected_qp_bool)
+    return _prop[_qp](_component);
+  else
+    return _prop[_selected_qp](_component);
 }

@@ -44,6 +44,8 @@ protected:
 
   const MaterialProperty<Real> & _diffusivity_prop;
   const MaterialProperty<Real> & _neighbor_diffusivity_prop;
+
+  unsigned int _n_init = 0;
 };
 
 #endif // INTERFACEUO_QP_H

@@ -18,19 +18,25 @@ validParams<InterfaceValueUserObjectAux>()
   InputParameters params = validParams<AuxKernel>();
   params.addRequiredParam<UserObjectName>("interface_uo_name",
                                           "The name of the interface user object to use");
-  params.addClassDescription("Get stored value from the specified InterfaceQpValueUserObject.");
-
+  params.addClassDescription("Get stored value from the specified InterfaceQpValueUserObjectBase.");
+  params.addParam<unsigned int>("qp_idx", 0, "output only the selected qp value");
   return params;
 }
 
 InterfaceValueUserObjectAux::InterfaceValueUserObjectAux(const InputParameters & parameters)
   : AuxKernel(parameters),
-    _interface_uo(getUserObject<InterfaceQpValueUserObject>("interface_uo_name"))
+    _interface_uo(getUserObject<InterfaceQpValueUserObjectBase>("interface_uo_name")),
+    _selected_qp_bool(parameters.isParamSetByUser("qp_idx") ? true : false),
+    _selected_qp(getParam<unsigned int>("qp_idx"))
 {
 }
 
 Real
 InterfaceValueUserObjectAux::computeValue()
 {
-  return _interface_uo.getQpValue(_current_elem->id(), _current_side, _qp);
+  unsigned int my_qp = _qp;
+  if (_selected_qp_bool)
+    my_qp = _selected_qp;
+
+  return _interface_uo.getQpValue(_current_elem->id(), _current_side, my_qp);
 }

@@ -56,6 +56,8 @@ validParams<CZMInterfaceKernel>()
       "The name of the  material property representing the jacobian coefficients");
   params.addClassDescription("Cohesive Zone Interface Kernel for non-stateful"
                              "cohesive laws depending only on the displacement Jump");
+  params.addParam<Real>(
+      "penalty", 1, "The name of the  material property representing the jacobian coefficients");
   // params.set<bool>("use_displaced_mesh") = false;
 
   return params;
@@ -79,7 +81,8 @@ CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
     _throw_exception("throw_exception_mp"),
     _ResidualMP(getMaterialProperty<RealVectorValue>(_residual)),
     _JacobianMP(getMaterialProperty<std::vector<std::vector<Real>>>(_jacobian)),
-    _throw_exception_mp(getMaterialProperty<bool>(_throw_exception))
+    _throw_exception_mp(getMaterialProperty<bool>(_throw_exception)),
+    _penalty(getParam<Real>("penalty"))
 {
   if (!parameters.isParamValid("boundary"))
   {
@@ -93,10 +96,11 @@ CZMInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 {
 
   if (_throw_exception_mp[_qp])
-    throw MooseException("CZMInterfaceMaterial failed to solve," +
-                         std::to_string(_current_elem->id()) + " cutting time step");
+    throw MooseException("CZMInterfaceMaterial failed to solve for element " +
+                         std::to_string(_current_elem->id()) + " qp " + std::to_string(_qp) +
+                         ", cutting time step");
 
-  Real r = _ResidualMP[_qp](_disp_index);
+  Real r = _penalty * _ResidualMP[_qp](_disp_index);
 
   switch (type)
   {
@@ -119,7 +123,7 @@ CZMInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
 {
   // retrieve the diagonal jacobain coefficient dependning on the disaplcement
   // component (_disp_index) this kernel is working on
-  Real jac = _JacobianMP[_qp][_disp_index][_disp_index];
+  Real jac = _penalty * _JacobianMP[_qp][_disp_index][_disp_index];
 
   switch (type)
   {
@@ -197,7 +201,7 @@ CZMInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigne
       mooseError("cannot determine the proper OffDiagIndex");
     }
 
-    Real jac = _JacobianMP[_qp][_disp_index][OffDiagIndex];
+    Real jac = _penalty * _JacobianMP[_qp][_disp_index][OffDiagIndex];
 
     switch (type)
     {

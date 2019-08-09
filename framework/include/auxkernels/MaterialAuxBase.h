@@ -64,4 +64,3 @@ MaterialAuxBase<T>::computeValue()
 {
   return _factor * getRealValue() + _offset;
 }
-

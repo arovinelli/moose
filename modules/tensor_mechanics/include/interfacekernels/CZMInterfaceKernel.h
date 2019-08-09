@@ -57,6 +57,7 @@ protected:
   const MaterialProperty<RealVectorValue> & _ResidualMP;
   const MaterialProperty<std::vector<std::vector<Real>>> & _JacobianMP;
   const MaterialProperty<bool> & _throw_exception_mp;
+  const Real _penalty;
 };
 
 #endif // CZMINTERFACEKERNEL_H

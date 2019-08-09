@@ -53,33 +53,38 @@ DispJumpUO_QP::~DispJumpUO_QP() {}
 void
 DispJumpUO_QP::initialize()
 {
+  _n_init += 1;
 
-  // define the boundary map nad retrieve element side and boundary_ID
-  std::vector<std::tuple<dof_id_type, unsigned short int, boundary_id_type>> elem_side_bid =
-      _mesh.buildSideList();
-
-  // retrieve on which boudnary this UO operates
-  std::set<BoundaryID> boundaryList = boundaryIDs();
-
-  // clear map values
-  _map_values.clear();
-
-  // initialize the map_values looping over all the element and sides
-  for (unsigned int i = 0; i < elem_side_bid.size(); i++)
+  if (_n_init == 1)
   {
-    // check if this boundary
-    // if this element side is part of the boundary then add elements to the map
-    if (boundaryList.find(std::get<2>(elem_side_bid[i])) != boundaryList.end())
+
+    // define the boundary map nad retrieve element side and boundary_ID
+    std::vector<std::tuple<dof_id_type, unsigned short int, boundary_id_type>> elem_side_bid =
+        _mesh.buildSideList();
+
+    // retrieve on which boudnary this UO operates
+    std::set<BoundaryID> boundaryList = boundaryIDs();
+
+    // clear map values
+    _map_values.clear();
+
+    // initialize the map_values looping over all the element and sides
+    for (unsigned int i = 0; i < elem_side_bid.size(); i++)
     {
+      // check if this boundary
+      // if this element side is part of the boundary then add elements to the map
+      if (boundaryList.find(std::get<2>(elem_side_bid[i])) != boundaryList.end())
+      {
 
-      // make pair
-      std::pair<dof_id_type, unsigned int> elem_side_pair =
-          std::make_pair(std::get<0>(elem_side_bid[i]), std::get<1>(elem_side_bid[i]));
-      // initialize map elemenet
-      std::vector<std::vector<RealVectorValue>> var_values(0, std::vector<RealVectorValue>(0));
+        // make pair
+        std::pair<dof_id_type, unsigned int> elem_side_pair =
+            std::make_pair(std::get<0>(elem_side_bid[i]), std::get<1>(elem_side_bid[i]));
+        // initialize map elemenet
+        std::vector<std::vector<RealVectorValue>> var_values(0, std::vector<RealVectorValue>(0));
 
-      // add entry to the value map
-      _map_values[elem_side_pair] = var_values;
+        // add entry to the value map
+        _map_values[elem_side_pair] = var_values;
+      }
     }
   }
 }
@@ -129,7 +134,8 @@ DispJumpUO_QP::getDisplacementJump(dof_id_type elem, unsigned int side, unsigned
   if (dispJump != _map_values.end())
     return dispJump->second[qp][0];
   else
-    mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
+    mooseError("DispJumpUO_QP::getDisplacementJump can't find elem: " + std::to_string(elem) +
+               " side: " + std::to_string(side) + " qp: " + std::to_string(qp));
 }
 
 RealVectorValue
@@ -141,7 +147,9 @@ DispJumpUO_QP::getDisplacementJumpVelocity(dof_id_type elem,
   if (dispJump != _map_values.end())
     return dispJump->second[qp][1];
   else
-    mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
+    mooseError(
+        "DispJumpUO_QP::getDisplacementJumpVelocity can't find elem: " + std::to_string(elem) +
+        " side: " + std::to_string(side) + " qp: " + std::to_string(qp));
 }
 
 std::vector<RankTwoTensor>
@@ -182,5 +190,7 @@ DispJumpUO_QP::getOpeningAndSlidingStrain(dof_id_type elem,
     return total_open_and_slide;
   }
   else
-    mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
+    mooseError(
+        "DispJumpUO_QP::getOpeningAndSlidingStrain can't find elem: " + std::to_string(elem) +
+        " side: " + std::to_string(side) + " qp: " + std::to_string(qp));
 }

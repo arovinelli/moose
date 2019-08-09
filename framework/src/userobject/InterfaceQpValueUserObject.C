@@ -15,7 +15,7 @@ template <>
 InputParameters
 validParams<InterfaceQpValueUserObject>()
 {
-  InputParameters params = validParams<InterfaceValueUserObject>();
+  InputParameters params = validParams<InterfaceQpValueUserObjectBase>();
   params.addRequiredCoupledVar("var", "The variable name");
   params.addCoupledVar("var_neighbor", "The variable name");
   params.addClassDescription("Test Interfae User Object computing and storing average values at "
@@ -25,8 +25,7 @@ validParams<InterfaceQpValueUserObject>()
 }
 
 InterfaceQpValueUserObject::InterfaceQpValueUserObject(const InputParameters & parameters)
-  : InterfaceValueUserObject(parameters),
-    _use_old_value(getParam<bool>("use_old_value")),
+  : InterfaceQpValueUserObjectBase(parameters),
     _u(_use_old_value ? coupledValueOld("var") : coupledValue("var")),
     _u_neighbor(
         parameters.isParamSetByUser("var_neighbor")
@@ -38,38 +37,6 @@ InterfaceQpValueUserObject::InterfaceQpValueUserObject(const InputParameters & p
 }
 
 InterfaceQpValueUserObject::~InterfaceQpValueUserObject() {}
-
-void
-InterfaceQpValueUserObject::initialize()
-{
-  // define the boundary map and retrieve element side and boundary_ID
-  std::vector<std::tuple<dof_id_type, unsigned short int, boundary_id_type>> elem_side_bid =
-      _mesh.buildSideList();
-
-  // retrieve on which boundary this UO operates
-  std::set<BoundaryID> boundaryList = boundaryIDs();
-
-  // clear map values
-  _map_values.clear();
-
-  // initialize the map_values looping over all the element and sides
-  for (unsigned int i = 0; i < elem_side_bid.size(); i++)
-  {
-    // check if this element side is part of the boundary, if so add element side to the interface
-    // map
-    if (boundaryList.find(std::get<2>(elem_side_bid[i])) != boundaryList.end())
-    {
-      // make pair
-      std::pair<dof_id_type, unsigned int> elem_side_pair =
-          std::make_pair(std::get<0>(elem_side_bid[i]), std::get<1>(elem_side_bid[i]));
-      // initialize map elemenet
-      std::vector<Real> var_values(0, 0);
-
-      // add entry to the value map
-      _map_values[elem_side_pair] = var_values;
-    }
-  }
-}
 
 void
 InterfaceQpValueUserObject::execute()
@@ -84,20 +51,13 @@ InterfaceQpValueUserObject::execute()
 
     // loop over qps and do stuff
     for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)
+    {
       // compute average value at qp
-      vec[qp] = computeInterfaceValueType(_u[qp], _u_neighbor[qp]);
+      vec[qp].resize(1);
+      vec[qp][0] = computeInterfaceValueType(_u[qp], _u_neighbor[qp]);
+    }
   }
   else
     mooseError("InterfaceQpValueUserObject:: cannot find the required element " +
                std::to_string(_current_elem->id()) + "and side" + std::to_string(_current_side));
-}
-
-Real
-InterfaceQpValueUserObject::getQpValue(dof_id_type elem, unsigned int side, unsigned int qp) const
-{
-  auto data = _map_values.find(std::make_pair(elem, side));
-  if (data != _map_values.end())
-    return data->second[qp];
-  else
-    mooseError("getMeanMatProp: can't find the given qp");
 }

@@ -10,7 +10,7 @@
 #ifndef map2LDelem_h
 #define map2LDelem_h
 
-#include "InterfaceQpValueUserObject.h"
+#include "InterfaceUserObject.h"
 
 class map2LDelem;
 
@@ -20,17 +20,19 @@ InputParameters validParams<map2LDelem>();
 /**
  *
  */
-class map2LDelem : public InterfaceQpValueUserObject
+class map2LDelem : public InterfaceUserObject
 {
 public:
   map2LDelem(const InputParameters & parameters);
   virtual ~map2LDelem();
 
   virtual void initialize() override;
-  // virtual void execute();
-  // virtual void finalize() { return; };
-  // virtual void threadJoin(const UserObject & /*uo*/) { return; };
-  Real getQpValueForLD(dof_id_type ld_elem, unsigned int qp) const;
+  virtual void execute() override{};
+  virtual void finalize() override { return; };
+  virtual void threadJoin(const UserObject & /*uo*/) override { return; };
+  // Real getQpValueForLD(dof_id_type ld_elem, unsigned int qp) const;
+
+  std::pair<dof_id_type, unsigned int> getLDNeighbor(dof_id_type ld_elem) const;
 
 protected:
   const std::vector<SubdomainID> ld_block_ids;

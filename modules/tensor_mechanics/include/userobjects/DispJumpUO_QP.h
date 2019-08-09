@@ -54,4 +54,6 @@ protected:
   const VariableValue & _uy_neighbor_dot;
   const VariableValue & _uz_dot;
   const VariableValue & _uz_neighbor_dot;
+
+  unsigned int _n_init = 0;
 };

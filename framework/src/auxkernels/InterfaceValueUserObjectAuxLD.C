@@ -16,6 +16,8 @@ InputParameters
 validParams<InterfaceValueUserObjectAuxLD>()
 {
   InputParameters params = validParams<InterfaceValueUserObjectAux>();
+  params.addRequiredParam<UserObjectName>("LD_map_UO",
+                                          "The name of the interface user object to use");
   params.addClassDescription(
       "Get stored value from the specified UO and save them in an LD element.");
 
@@ -23,12 +25,14 @@ validParams<InterfaceValueUserObjectAuxLD>()
 }
 
 InterfaceValueUserObjectAuxLD::InterfaceValueUserObjectAuxLD(const InputParameters & parameters)
-  : InterfaceValueUserObjectAux(parameters)
+  : InterfaceValueUserObjectAux(parameters), _LDmapUO(getUserObject<map2LDelem>("LD_map_UO"))
 {
 }
 
 Real
 InterfaceValueUserObjectAuxLD::computeValue()
 {
-  return _interface_uo.getQpValueForLD(_current_elem->id(), _qp);
+  std::pair<dof_id_type, unsigned int> bulk_elem_side = _LDmapUO.getLDNeighbor(_current_elem->id());
+
+  return _interface_uo.getQpValue(bulk_elem_side.first, bulk_elem_side.second, _qp);
 }
