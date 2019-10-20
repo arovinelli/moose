@@ -15,4 +15,12 @@
     issues = '#12066'
     requirement = 'The system shall be able to grab face and neighboring face variable values and material properties in a single material object that lives on an interface even with a splitted mesh (BreakMeshByBlockGenrator)'
   []
+  [jump_split_stateful]
+    type = Exodiff
+    input = interface_value_material_split_mesh_stateful.i
+    exodiff = interface_value_material_split_mesh_stateful_out.e
+    design = 'Materials/index.md'
+    issues = '#12066'
+    requirement = 'Same as jump_split but also checks that when coupling old variables, nonlinear variables and material properites reuslts are correct'
+  []
 []
