@@ -13,7 +13,9 @@
     exodiff = interface_value_material_split_mesh_out.e
     design = 'Materials/index.md'
     issues = '#12066'
-    requirement = 'The system shall be able to grab face and neighboring face variable values and material properties in a single material object that lives on an interface even with a splitted mesh (BreakMeshByBlockGenrator)'
+    requirement = 'The system shall be able to grab face and neighboring face variable values and material properties in a single material object that lives on an interface even with a splitted mesh (BreakMeshByBlockGenrator). Skip recover becasue of BreakMeshByBlockGenrator. This test only works with a replicated mesh becasue of BreakMeshByBlockGenrator'
+    mesh_mode = 'REPLICATED'
+    recover = false
   []
   [jump_split_stateful]
     type = Exodiff
@@ -21,6 +23,8 @@
     exodiff = interface_value_material_split_mesh_stateful_out.e
     design = 'Materials/index.md'
     issues = '#12066'
-    requirement = 'Same as jump_split but also checks that when coupling old variables, nonlinear variables and material properites reuslts are correct'
+    requirement = 'Same as jump_split but also checks that when coupling old variables, nonlinear variables and material properites reuslts are correct. Skip recover becasue of BreakMeshByBlockGenrator. This test only works with a replicated mesh becasue of BreakMeshByBlockGenrator'
+    mesh_mode = 'REPLICATED'
+    recover = false
   []
 []
