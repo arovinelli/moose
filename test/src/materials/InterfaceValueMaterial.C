@@ -104,6 +104,8 @@ InterfaceValueMaterial::computeQpProperties()
       InterfaceValueTools::getQuantity(_interface_value_type, _var_master[_qp], _var_slave[_qp]);
   _jump[_qp] = _nl_var_master[_qp] - _nl_var_slave[_qp];
 
+  std::cout << "InterfaceValueMaterial::computeQpProperties()" << std::endl;
+
   if (_couple_old_values_and_properties)
   {
     _interface_value_prev[_qp] = InterfaceValueTools::getQuantity(
