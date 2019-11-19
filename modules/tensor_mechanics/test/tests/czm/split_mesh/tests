@@ -1,0 +1,30 @@
+[Tests]
+  [./no_split]
+    type = Exodiff
+    input = test_split_mesh.i
+    exodiff = test_nosplit_mesh_out.e
+    issues = '#12033'
+    min_parallel = 3
+    max_parallel = 3
+    cli_args = 'Outputs/file_base=test_nosplit_mesh_out'
+  [../]
+  [./make_split]
+    type = CheckFiles
+    check_files = 'foo.cpr/3/header.cpr foo.cpr/3/split-3-0.cpr foo.cpr/3/split-3-1.cpr foo.cpr/3/split-3-2.cpr'
+    input = test_split_mesh.i
+    issues = '#12033'
+    cli_args = '--split-mesh 3 --split-file foo.cpr'
+    min_parallel = 3
+    max_parallel = 3
+  [../]
+  [./run_split]
+    type = 'Exodiff'
+    input = test_split_mesh.i
+    exodiff = 'test_split_mesh.e'
+    issues = '#12033'
+    cli_args = '--use-split --split-file foo.cpr'
+    prereq = 'make_split'
+    min_parallel = 3
+    max_parallel = 3
+  [../]
+[]
