@@ -7,10 +7,20 @@
     requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
     issues = '#11640'
-    mesh_mode = 'REPLICATED'
+    #mesh_mode = 'REPLICATED'
     recover = false
   [../]
-
+  [./break_mesh_by_blocks_generator_3d_auto_test_distributed]
+    type = 'Exodiff'
+    input = 'break_mesh_3D_auto.i'
+    cli_args = '--mesh-only'
+    exodiff = 'break_mesh_3D_auto_in.e'
+    requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
+    design = 'meshgenerators/BreakMeshByBlockGenerator.md'
+    issues = '#11640'
+    #mesh_mode = 'REPLICATED'
+    recover = false
+  [../]
   [./break_mesh_by_blocks_generator_3d_split_test]
     type = 'Exodiff'
     input = 'break_mesh_3D_splittrue.i'
@@ -19,7 +29,7 @@
     requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
     issues = '#11640'
-    mesh_mode = 'REPLICATED'
+    #mesh_mode = 'REPLICATED'
     recover = false
   [../]
 
@@ -31,7 +41,7 @@
     requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
     issues = '#11640'
-    mesh_mode = 'REPLICATED'
+    #mesh_mode = 'REPLICATED'
     recover = false
   [../]
 
@@ -43,7 +53,7 @@
     requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
     issues = '#11640'
-    mesh_mode = 'REPLICATED'
+    #mesh_mode = 'REPLICATED'
     recover = false
   [../]
 
@@ -55,7 +65,7 @@
     requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
     issues = '#11640'
-    mesh_mode = 'REPLICATED'
+    #mesh_mode = 'REPLICATED'
     recover = false
   [../]
 
@@ -67,7 +77,7 @@
     requirement = 'MOOSE shall be able to create separate blocks in a mesh.'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
     issues = '#11640'
-    mesh_mode = 'REPLICATED'
+    #mesh_mode = 'REPLICATED'
     recover = false
   [../]
 []

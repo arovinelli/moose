@@ -34,8 +34,8 @@ BreakMeshByBlockGenerator::validParams()
 BreakMeshByBlockGenerator::BreakMeshByBlockGenerator(const InputParameters & parameters)
   : BreakMeshByBlockGeneratorBase(parameters), _input(getMesh("input"))
 {
-  if (typeid(_input).name() == typeid(DistributedMesh).name())
-    mooseError("BreakMeshByBlockGenerator only works with ReplicatedMesh.");
+  // if (typeid(_input).name() == typeid(DistributedMesh).name())
+  //   mooseError("BreakMeshByBlockGenerator only works with ReplicatedMesh.");
 }
 
 std::unique_ptr<MeshBase>
