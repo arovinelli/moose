@@ -37,199 +37,272 @@ JoinMeshByFaces::JoinMeshByFaces(const InputParameters & parameters)
     mooseError("JoinMeshByFaces only works with ReplicatedMesh.");
 }
 
+bool
+JoinMeshByFaces::findOppositeElementFace(const Elem * elem,
+                                         const std::vector<dof_id_type> opposite_nodes,
+                                         unsigned int & opposite_elem_face) const
+{
+  bool found_opposite_face = false;
+  for (unsigned int face_idx = 0; face_idx < elem->n_faces(); face_idx++)
+    if (elem->neighbor_ptr(face_idx) == nullptr)
+    {
+      std::vector<dof_id_type> face_node_list(0);
+      std::vector<dof_id_type> all_opposite_nodes(0);
+      bool coincident_face = conincidentFace(elem, face_idx, face_node_list, all_opposite_nodes);
+      std::cout << "Face face_idx:  " << face_idx << std::endl;
+      if (coincident_face)
+      {
+        std::cout << "conincidentFace coincident_face:  " << face_idx << std::endl;
+        ;
+        std::cout << "findOppositeElementFace all_opposite_nodes ";
+        for (auto n : all_opposite_nodes)
+          std::cout << n << " ";
+        std::cout << std::endl;
+
+        std::cout << "findOppositeElementFace opposite_nodes ";
+        for (auto n : opposite_nodes)
+          std::cout << n << " ";
+        std::cout << std::endl;
+
+        std::vector<dof_id_type> node_intersection_list(opposite_nodes.size() +
+                                                        all_opposite_nodes.size());
+        auto it = std::set_intersection(opposite_nodes.begin(),
+                                        opposite_nodes.end(),
+                                        all_opposite_nodes.begin(),
+                                        all_opposite_nodes.end(),
+                                        node_intersection_list.begin());
+
+        node_intersection_list.resize(it - node_intersection_list.begin());
+        std::cout << "findOppositeElementFace node_intersection_list ";
+        for (auto n : node_intersection_list)
+          std::cout << n << " ";
+        std::cout << std::endl;
+        if (node_intersection_list.size() == opposite_nodes.size())
+        {
+          opposite_elem_face = face_idx;
+          std::cout << "findOppositeElementFace opposite_elem_face " << opposite_elem_face
+                    << "!!!!!!!!!!!!!" << std::endl;
+          found_opposite_face = true;
+          break;
+        }
+      }
+    }
+  return found_opposite_face;
+}
+
 std::unique_ptr<MeshBase>
 JoinMeshByFaces::generate()
 {
   std::unique_ptr<MeshBase> mesh = std::move(_input);
 
   // initialize the node to element map
-  std::map<dof_id_type, std::vector<dof_id_type>> node_to_elem_map;
+  _node_to_elem_map.clear();
   for (const auto & elem : mesh->active_element_ptr_range())
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      node_to_elem_map[elem->node_id(n)].push_back(elem->id());
+      _node_to_elem_map[elem->node_id(n)].push_back(elem->id());
 
-  // initialize concident nodes
-  std::map<dof_id_type, std::vector<dof_id_type>> coincident_nodes_map;
-  for (const auto & node1 : mesh->local_node_ptr_range())
-    for (const auto & node2 : mesh->local_node_ptr_range())
+  findCoincidentNodes(*mesh);
+  findCoincidentFaces(*mesh);
+
+  for (auto it : _coincident_faces_list)
+  {
+    Elem * elem = mesh->elem_ptr(it.first.first);
+    elem->set_neighbor(it.first.second, mesh->elem_ptr(it.second.first));
+  }
+
+  for (auto it : _coincident_faces_list)
+  {
+    Elem * elem = mesh->elem_ptr(it.first.first);
+    Elem * neigh = mesh->elem_ptr(it.second.first);
+    std::cout << "elem " << elem->id() << "is the " << elem->which_neighbor_am_i(neigh)
+              << "-th neighbor of element " << neigh->id() " face "
+              << neigh->which_neighbor_am_i(elem) << std::endl;
+    std::cout << "mapped data: elem " << it.first.first << " face " << it.first.second
+              << " neighbor " << it.second.first << " face " << it.second.second << std::endl;
+  }
+
+  return dynamic_pointer_cast<MeshBase>(mesh);
+}
+
+void
+JoinMeshByFaces::findCoincidentNodes(MeshBase & mesh)
+{
+  // clear map
+  _coincident_nodes_map.clear();
+
+  // loop over every ndoe pair to check equal coordinates
+  for (const auto & node1 : mesh.local_node_ptr_range())
+    for (const auto & node2 : mesh.local_node_ptr_range())
     {
       Point q;
       for (unsigned int k = 0; k < 3; ++k)
         q(k) = (*node2)(k);
 
+      // check corridnates are ok and the node is not itself and add map element
       if (node1->absolute_fuzzy_equals(q) && (node1->id() != node2->id()))
-        coincident_nodes_map[node1->id()].push_back(node2->id());
-    }
-
-  for (const auto & elem : mesh->active_element_ptr_range())
-  {
-    // if (elem->n_faces() !=
-    //     elem->n_neighbors()) // some fase does not have a neighbor, start checking
-    // {
-    for (unsigned int i = 0; i < elem->n_faces(); i++) // loop over the faces
-      if (elem->neighbor_ptr(i) == nullptr)
       {
-        bool coincident_side = true;
-        for (auto local_n_id : elem->nodes_on_side(i))
-        {
-          auto is_coincident_node = coincident_nodes_map.find(elem->node_id(local_n_id));
-          if (is_coincident_node == coincident_nodes_map.end())
-          {
-            coincident_side = false;
-            break;
-          }
-        }
-        if (coincident_side == true)
-          std::cout << "side " << i << " element " << elem->id() << " is a concident side"
-                    << std::endl;
+        _coincident_nodes_map[node1->id()].push_back(node2->id());
+        std::cout << "node " << node1->id() << " == node " << node2->id() << std::endl;
       }
-    // }
-  }
-  // for (const auto & elem : mesh->active_element_ptr_range())
-  //   for (unsigned int n = 0; n < elem->n_nodes(); n++)
-  //     node_to_elem_map[elem->node_id(n)].push_back(elem->id());
+    }
+}
 
-  // for (auto node_it = node_to_elem_map.begin(); node_it != node_to_elem_map.end(); ++node_it)
-  // {
-  //   const dof_id_type current_node_id = node_it->first;
-  //   const Node * current_node = mesh->node_ptr(current_node_id);
-  //
-  //   if (current_node != nullptr)
-  //   {
-  //     // find node multiplicity
-  //     std::set<subdomain_id_type> connected_blocks;
-  //     for (auto elem_id = node_it->second.begin(); elem_id != node_it->second.end(); elem_id++)
-  //     {
-  //       const Elem * current_elem = mesh->elem_ptr(*elem_id);
-  //       connected_blocks.insert(current_elem->subdomain_id());
-  //     }
-  //
-  //     unsigned int node_multiplicity = connected_blocks.size();
-  //
-  //     // check if current_node need to be duplicated
-  //     if (node_multiplicity > 1)
-  //     {
-  //       // retrieve connected elements from the map
-  //       const std::vector<dof_id_type> & connected_elems = node_it->second;
-  //
-  //       // find reference_subdomain_id (e.g. the subdomain with lower id)
-  //       auto subdomain_it = connected_blocks.begin();
-  //       subdomain_id_type reference_subdomain_id = *subdomain_it;
-  //
-  //       // multiplicity counter to keep track of how many nodes we added
-  //       unsigned int multiplicity_counter = node_multiplicity;
-  //       for (auto elem_id : connected_elems)
-  //       {
-  //         // all the duplicate nodes are added and assigned
-  //         if (multiplicity_counter == 0)
-  //           break;
-  //
-  //         Elem * current_elem = mesh->elem_ptr(elem_id);
-  //         if (current_elem->subdomain_id() != reference_subdomain_id)
-  //         {
-  //           // assign the newly added node to current_elem
-  //           Node * new_node = nullptr;
-  //
-  //           std::vector<boundary_id_type> node_boundary_ids;
-  //
-  //           for (unsigned int node_id = 0; node_id < current_elem->n_nodes(); ++node_id)
-  //             if (current_elem->node_id(node_id) ==
-  //                 current_node->id()) // if current node == node on element
-  //             {
-  //               // add new node
-  //               new_node = Node::build(*current_node, mesh->n_nodes()).release();
-  //               new_node->processor_id() = current_node->processor_id();
-  //               mesh->add_node(new_node);
-  //
-  //               // Add boundary info to the new node
-  //               mesh->boundary_info->boundary_ids(current_node, node_boundary_ids);
-  //               mesh->boundary_info->add_node(new_node, node_boundary_ids);
-  //
-  //               multiplicity_counter--; // node created, update multiplicity counter
-  //
-  //               current_elem->set_node(node_id) = new_node;
-  //               break; // ones the proper node has been fixed in one element we can break the
-  //                      // loop
-  //             }
-  //
-  //           for (auto connected_elem_id : connected_elems)
-  //           {
-  //             Elem * connected_elem = mesh->elem_ptr(connected_elem_id);
-  //
-  //             // Assign the newly added node to other connected elements with the same block_id
-  //             if (connected_elem->subdomain_id() == current_elem->subdomain_id() &&
-  //                 connected_elem != current_elem)
-  //             {
-  //               for (unsigned int node_id = 0; node_id < connected_elem->n_nodes(); ++node_id)
-  //                 if (connected_elem->node_id(node_id) ==
-  //                     current_node->id()) // if current node == node on element
-  //                 {
-  //                   connected_elem->set_node(node_id) = new_node;
-  //                   break;
-  //                 }
-  //             }
-  //           }
-  //         }
-  //       }
-  //
-  //       // create blocks pair and assign element side to new interface boundary map
-  //       for (auto elem_id : connected_elems)
-  //       {
-  //         for (auto connected_elem_id : connected_elems)
-  //         {
-  //           Elem * current_elem = mesh->elem_ptr(elem_id);
-  //           Elem * connected_elem = mesh->elem_ptr(connected_elem_id);
-  //
-  //           if (current_elem != connected_elem &&
-  //               current_elem->subdomain_id() < connected_elem->subdomain_id())
-  //           {
-  //             if (current_elem->has_neighbor(connected_elem))
-  //             {
-  //               std::pair<subdomain_id_type, subdomain_id_type> blocks_pair =
-  //                   std::make_pair(current_elem->subdomain_id(),
-  //                   connected_elem->subdomain_id());
-  //
-  //               _new_boundary_sides_map[blocks_pair].insert(std::make_pair(
-  //                   current_elem->id(), current_elem->which_neighbor_am_i(connected_elem)));
-  //             }
-  //           }
-  //         }
-  //       }
-  //
-  //     } // end multiplicity check
-  //   }   // end loop over nodes
-  // }     // end nodeptr check
-  //
-  // addInterfaceBoundary(*mesh);
-  return dynamic_pointer_cast<MeshBase>(mesh);
+bool
+JoinMeshByFaces::findOppositeElement(const Elem * elem,
+                                     const std::vector<dof_id_type> & face_nodes,
+                                     dof_id_type & opposite_elem_id) const
+{
+  bool found_opposite_element = false;
+  std::vector<dof_id_type> shared_elements(0);
+  for (unsigned int i = 0; i < face_nodes.size(); i++)
+  {
+    std::vector<dof_id_type> opposite_nodes = _coincident_nodes_map.find(face_nodes[i])->second;
+    std::vector<dof_id_type> opposite_elements(0);
+    for (unsigned int j = 0; j < opposite_nodes.size(); j++)
+    {
+      auto it = _node_to_elem_map.find(opposite_nodes[j]);
+      opposite_elements.insert(opposite_elements.end(), it->second.begin(), it->second.end());
+    }
+    std::sort(opposite_elements.begin(), opposite_elements.end());
+    auto ip = std::unique(opposite_elements.begin(),
+                          opposite_elements.begin() + opposite_elements.size());
+    opposite_elements.resize(std::distance(opposite_elements.begin(), ip));
+
+    if (shared_elements.size() == 0)
+      shared_elements.assign(opposite_elements.begin(), opposite_elements.end());
+    else
+    {
+      std::vector<dof_id_type> shared_elements_temp(shared_elements.size() +
+                                                    opposite_elements.size());
+      auto it = std::set_intersection(shared_elements.begin(),
+                                      shared_elements.end(),
+                                      opposite_elements.begin(),
+                                      opposite_elements.end(),
+                                      shared_elements_temp.begin());
+      shared_elements_temp.resize(it - shared_elements_temp.begin());
+      shared_elements.assign(shared_elements_temp.begin(), shared_elements_temp.end());
+    }
+  }
+  if (shared_elements.size() == 1)
+  {
+    found_opposite_element = true;
+    opposite_elem_id = shared_elements[0];
+  }
+  else
+    mooseError("findOppositeElement: Can't fined the opposite lement, something is wrong");
+
+  return found_opposite_element;
 }
 
 void
-JoinMeshByFaces::addInterfaceBoundary(MeshBase & mesh)
+JoinMeshByFaces::findCoincidentFaces(MeshBase & mesh)
 {
-  BoundaryInfo & boundary_info = mesh.get_boundary_info();
+  // clear map
+  _coincident_faces_list.clear();
+  unsigned int n_coincident_face = 0;
+  // loop over all the element and dine all the ones having a face with concident nodes using the
+  // _node_to_elem_map map and the _coincident_nodes_map
+  for (const auto & elem : mesh.active_element_ptr_range())
+    for (unsigned int face_idx = 0; face_idx < elem->n_faces(); face_idx++)
+    {
+      std::vector<dof_id_type> face_node_list(0);
+      std::vector<dof_id_type> all_duplicated_nodes(0);
+      bool coincident_face = conincidentFace(elem, face_idx, face_node_list, all_duplicated_nodes);
 
-  boundary_id_type boundaryID = findFreeBoundaryId(mesh);
-  std::string boundaryName = _interface_name;
+      if (coincident_face)
+      {
+        std::cout << "elem " << elem->id() << " face " << face_idx << " is coincident. Nodes are ";
+        for (auto n : face_node_list)
+          std::cout << n << " ";
+        std::cout << std::endl;
+        n_coincident_face++;
 
-  // loop over boundary sides
-  for (auto & boundary_side_map : _new_boundary_sides_map)
-  {
+        bool opposite_element_found = false;
+        dof_id_type opposite_elem_id;
+        opposite_element_found = findOppositeElement(elem, face_node_list, opposite_elem_id);
 
-    // find the appropriate boundary name and id
-    //  given master and slave block ID
-    if (_split_interface)
-      findBoundaryNameAndInd(mesh,
-                             boundary_side_map.first.first,
-                             boundary_side_map.first.second,
-                             boundaryName,
-                             boundaryID,
-                             boundary_info);
-    else
-      boundary_info.sideset_name(boundaryID) = boundaryName;
+        if (opposite_element_found)
+        {
+          std::cout << " oppposite element id " << opposite_elem_id << std::endl;
+          bool opposite_element_face_found = false;
+          unsigned int opposite_element_face_id = 0;
+          opposite_element_face_found = findOppositeElementFace(
+              mesh.elem_ptr(opposite_elem_id), face_node_list, opposite_element_face_id);
+          std::cout << "findCoincidentFaces opposite_element_face_found?"
+                    << opposite_element_face_found << " ,face_id " << opposite_element_face_id
+                    << "********************** " << std::endl;
 
-    // loop over all the side belonging to each pair and add it to the proper interface
-    for (auto & element_side : boundary_side_map.second)
-      boundary_info.add_side(element_side.first, element_side.second, boundaryID);
-  }
+          // save neighbor
+          _coincident_faces_list[std::make_pair(elem->id(), face_idx)] =
+              std::make_pair(opposite_elem_id, opposite_element_face_id);
+        }
+      }
+    }
+  std::cout << "I found " << n_coincident_face << "coincident faces" << std::endl;
 }
+
+bool
+JoinMeshByFaces::conincidentFace(const Elem * elem,
+                                 const unsigned int face_id,
+                                 std::vector<dof_id_type> & face_node_list,
+                                 std::vector<dof_id_type> & all_opposite_nodes) const
+{
+  bool coincident_face = true;
+  face_node_list.resize(0);
+  all_opposite_nodes.resize(0);
+  for (auto local_n_id : elem->nodes_on_side(face_id))
+  {
+    auto it = _coincident_nodes_map.find(elem->node_id(local_n_id));
+    if (it == _coincident_nodes_map.end())
+    {
+      coincident_face = false;
+      face_node_list.resize(0);
+      all_opposite_nodes.resize(0);
+      break;
+    }
+    else
+    {
+      all_opposite_nodes.insert(all_opposite_nodes.end(), it->second.begin(), it->second.end());
+      face_node_list.push_back(elem->node_id(local_n_id));
+    }
+  }
+  if (coincident_face)
+  {
+    std::sort(face_node_list.begin(), face_node_list.end());
+    std::sort(all_opposite_nodes.begin(), all_opposite_nodes.end());
+    auto ip = std::unique(all_opposite_nodes.begin(), all_opposite_nodes.end());
+    all_opposite_nodes.resize(std::distance(all_opposite_nodes.begin(), ip));
+  }
+
+  return coincident_face;
+}
+
+// void
+// JoinMeshByFaces::addInterfaceBoundary(MeshBase & mesh)
+// {
+//   BoundaryInfo & boundary_info = mesh.get_boundary_info();
+//
+//   boundary_id_type boundaryID = findFreeBoundaryId(mesh);
+//   std::string boundaryName = _interface_name;
+//
+//   // loop over boundary sides
+//   for (auto & boundary_side_map : _new_boundary_sides_map)
+//   {
+//
+//     // find the appropriate boundary name and id
+//     //  given master and slave block ID
+//     if (_split_interface)
+//       findBoundaryNameAndInd(mesh,
+//                              boundary_side_map.first.first,
+//                              boundary_side_map.first.second,
+//                              boundaryName,
+//                              boundaryID,
+//                              boundary_info);
+//     else
+//       boundary_info.sideset_name(boundaryID) = boundaryName;
+//
+//     // loop over all the side belonging to each pair and add it to the proper interface
+//     for (auto & element_side : boundary_side_map.second)
+//       boundary_info.add_side(element_side.first, element_side.second, boundaryID);
+//   }
+// }
