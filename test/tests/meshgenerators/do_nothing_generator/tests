@@ -1,0 +1,40 @@
+[Tests]
+  [./generate_mesh_split]
+    type = 'CheckFiles'
+    input = 'mesh_generator.i'
+    cli_args = '--split-mesh 3 --split-file foo Mesh/parallel_type=replicated'
+    check_files = 'foo.cpr/3/header.cpr foo.cpr/3/split-3-0.cpr foo.cpr/3/split-3-1.cpr foo.cpr/3/split-3-2.cpr'
+    recover = false
+    requirement = 'Use a mesh generator to create a split a mesh'
+    issues = '#11640 #12033'
+    mesh_mode = 'REPLICATED'
+  [../]
+  [./generate_mesh_exodus]
+    type = 'Exodiff'
+    input = 'mesh_generator.i'
+    cli_args = '--mesh-only'
+    exodiff = 'mesh_generator_in.e'
+    requirement = 'Use a mesh generator to create an exodus mesh'
+    issues = ' '
+    recover = false
+    mesh_mode = 'REPLICATED'
+  [../]
+  [./load_split_mesh_block]
+    type = 'RunApp'
+    input = 'only_mesh_block.i'
+    cli_args = '--use-split --split-file foo --mesh-only'
+    requirement = 'MOOSE shall be able to use a split mesh when using the Mesh type = FileMesh block'
+    issues = '#11640 #12033'
+    min_parallel = 3
+    max_parallel = 3
+  [../]
+  [./load_split_mesh_generator_block]
+    type = 'RunApp'
+    input = 'only_mesh_generator_block.i'
+    cli_args = '--use-split --split-file foo --mesh-only'
+    requirement = 'MOOSE shall be able to use a split mesh when using the FileMeshGenerator block'
+    issues = '#11640 #12033'
+    min_parallel = 3
+    max_parallel = 3
+  [../]
+[]
