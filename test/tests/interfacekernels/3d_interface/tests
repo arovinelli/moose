@@ -27,4 +27,28 @@
     design = "InterfaceKernels/index.md"
     requirement = "The InterfaceKernel system shall use with interface material in 3D."
   [../]
+  [./test_bmbb]
+    type = 'Exodiff'
+    input = 'coupled_value_coupled_flux_break_mesh_by_block.i'
+    exodiff = 'coupled_value_coupled_flux_break_mesh_by_block_out.e'
+    mesh_mode = REPLICATED
+  [../]
+  [./split_mesh]
+    type = 'CheckFiles'
+    input = 'coupled_value_coupled_flux_break_mesh_by_block.i'
+    cli_args = '--split-mesh 3 --split-file foo Mesh/parallel_type=replicated'
+    check_files = 'foo.cpr/3/header.cpr foo.cpr/3/split-3-0.cpr foo.cpr/3/split-3-1.cpr foo.cpr/3/split-3-2.cpr'
+    min_parallel = 1
+    max_parallel = 1
+  [../]
+  [./use_split_mesh]
+    type = 'Exodiff'
+    cli_args = '--use-split --split-file foo Mesh/parallel_type=replicated'
+    input = 'coupled_value_coupled_flux_break_mesh_by_block_reload.i'
+    exodiff = 'coupled_value_coupled_flux_break_mesh_by_block_reload_out.e'
+    mesh_mode = REPLICATED
+    prereq = 'split_mesh'
+    min_parallel = 3
+    max_parallel = 3
+  [../]
 []

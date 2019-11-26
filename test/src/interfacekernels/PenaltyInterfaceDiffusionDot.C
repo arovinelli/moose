@@ -17,6 +17,21 @@ PenaltyInterfaceDiffusionDot::validParams()
   InputParameters params = InterfaceTimeKernel::validParams();
   params.addRequiredParam<Real>(
       "penalty", "The penalty that penalizes jump between master and neighbor variables.");
+  params.addRelationshipManager("ElementSideNeighborLayers",
+                                Moose::RelationshipManagerType::GEOMETRIC,
+                                [](const InputParameters &, InputParameters & rm_params) {
+                                  rm_params.set<unsigned short>("layers") = 3;
+                                });
+  params.addRelationshipManager("ElementSideNeighborLayers",
+                                Moose::RelationshipManagerType::ALGEBRAIC,
+                                [](const InputParameters &, InputParameters & rm_params) {
+                                  rm_params.set<unsigned short>("layers") = 2;
+                                });
+  params.addRelationshipManager("ElementSideNeighborLayers",
+                                Moose::RelationshipManagerType::COUPLING,
+                                [](const InputParameters &, InputParameters & rm_params) {
+                                  rm_params.set<unsigned short>("layers") = 1;
+                                });
   return params;
 }
 
