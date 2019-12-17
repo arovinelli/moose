@@ -112,9 +112,9 @@
   petsc_options_value = 'lu'
   solve_type = NEWTON
   nl_abs_tol = 1e-8
-  nl_rel_tol = 1e-6
+  nl_rel_tol = 1e-7
   nl_max_its = 5
-  l_tol = 1e-10
+  l_tol = 1e-15
   l_max_its = 50
   start_time = 0.0
   dt = 0.2
