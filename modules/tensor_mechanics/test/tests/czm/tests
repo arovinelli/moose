@@ -14,7 +14,6 @@
     method = '!dbg' # issue 12033
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
     abs_zero = 1e-6
-    # rel_err = 1e-3
   [../]
   [./czm_3DC_load_shear_y]
     type = Exodiff
@@ -32,7 +31,6 @@
     method = '!dbg' # issue 12033
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
     abs_zero = 1e-6
-    # rel_err = 1e-3
   [../]
   [./czm_3DC_load_shear_z]
     type = Exodiff
@@ -50,7 +48,6 @@
     method = '!dbg' # issue 12033
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
     abs_zero = 1e-6
-    # rel_err = 1e-3
   [../]
   [./czm_3DC_load_complex]
     type = Exodiff
@@ -84,7 +81,6 @@
     method = '!dbg' # issue 12033
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
     abs_zero = 1e-6
-    # rel_err = 1e-3
   [../]
   [./czm_3DC_load_Normal_1D]
     type = Exodiff
@@ -101,6 +97,5 @@
     method = '!dbg' # issue 12033
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
     abs_zero = 1e-6
-    # rel_err = 1e-3
   [../]
 []
