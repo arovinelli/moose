@@ -23,7 +23,6 @@
     paired_block = '1'
     new_boundary = 'interface'
   [../]
-
 []
 
 [Functions]
@@ -181,8 +180,6 @@
     boundary = 'interface'
     interface_uo_name = interface_slave_uo
   [../]
-
-
 []
 
 [AuxVariables]

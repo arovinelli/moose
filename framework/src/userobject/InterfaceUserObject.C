@@ -32,8 +32,8 @@ InterfaceUserObject::validParams()
 
 InterfaceUserObject::InterfaceUserObject(const InputParameters & parameters)
   : UserObject(parameters),
-    BoundaryRestrictableRequired(this, false), // false for applying to sidesets
-    TwoMaterialPropertyInterface(this, Moose::EMPTY_BLOCK_IDS, boundaryIDs()),
+    BoundaryRestrictableRequired(this, blockIDs(), false), // false for applying to sidesets
+    TwoMaterialPropertyInterface(this, blockIDs(), boundaryIDs()),
     NeighborCoupleable(this, false, false),
     MooseVariableDependencyInterface(),
     UserObjectInterface(this),

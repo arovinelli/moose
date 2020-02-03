@@ -9,28 +9,32 @@
 
 #pragma once
 
-#include "InterfaceQpUserObjectBase.h"
+#include "InterfaceQpMaterialPropertyUserObjectBase.h"
 
-class InterfaceQpValueUserObject;
+// Forward declarations
+class InterfaceQpMaterialPropertyRealUO;
 
 template <>
-InputParameters validParams<InterfaceQpValueUserObject>();
+InputParameters validParams<InterfaceQpMaterialPropertyRealUO>();
 
 /**
  * This userobject collect values of a variable across an interface for each QP and compute a
  * scalar. The computed scalar value depends on the given parameter _interface_value_type\
  * _interface_value_type (see IntervafeValueTools).
  */
-class InterfaceQpValueUserObject : public InterfaceQpUserObjectBase
+class InterfaceQpMaterialPropertyRealUO : public InterfaceQpMaterialPropertyUserObjectBase<Real>
 {
+
 public:
   static InputParameters validParams();
-  InterfaceQpValueUserObject(const InputParameters & parameters);
-  virtual ~InterfaceQpValueUserObject(){};
+  /**
+   * Class constructor
+   * @param parameters The input parameters for this object
+   */
+  InterfaceQpMaterialPropertyRealUO(const InputParameters & parameters);
+  virtual ~InterfaceQpMaterialPropertyRealUO(){};
 
 protected:
-  virtual Real computeValueMaster(const unsigned int qp) override { return _u[qp]; };
-  virtual Real computeValueSlave(const unsigned int qp) override { return _u_neighbor[qp]; };
-  const VariableValue & _u;
-  const VariableValue & _u_neighbor;
+  virtual Real computeValueMaster(const unsigned int /*qp*/) override;
+  virtual Real computeValueSlave(const unsigned int /*qp*/) override;
 };
