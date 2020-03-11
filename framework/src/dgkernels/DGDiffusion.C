@@ -42,6 +42,10 @@ DGDiffusion::DGDiffusion(const InputParameters & parameters)
 Real
 DGDiffusion::computeQpResidual(Moose::DGResidualType type)
 {
+
+  if (_current_elem->id() == 54)
+    std::cout << " _qp " << _qp << " JxW " << _JxW[_qp] << std::endl;
+
   Real r = 0;
 
   const unsigned int elem_b_order = _var.order();
@@ -51,8 +55,9 @@ DGDiffusion::computeQpResidual(Moose::DGResidualType type)
   switch (type)
   {
     case Moose::Element:
-      r -= 0.5 * (_diff[_qp] * _grad_u[_qp] * _normals[_qp] +
-                  _diff_neighbor[_qp] * _grad_u_neighbor[_qp] * _normals[_qp]) *
+      r -= 0.5 *
+           (_diff[_qp] * _grad_u[_qp] * _normals[_qp] +
+            _diff_neighbor[_qp] * _grad_u_neighbor[_qp] * _normals[_qp]) *
            _test[_i][_qp];
       r += _epsilon * 0.5 * (_u[_qp] - _u_neighbor[_qp]) * _diff[_qp] * _grad_test[_i][_qp] *
            _normals[_qp];
@@ -60,8 +65,9 @@ DGDiffusion::computeQpResidual(Moose::DGResidualType type)
       break;
 
     case Moose::Neighbor:
-      r += 0.5 * (_diff[_qp] * _grad_u[_qp] * _normals[_qp] +
-                  _diff_neighbor[_qp] * _grad_u_neighbor[_qp] * _normals[_qp]) *
+      r += 0.5 *
+           (_diff[_qp] * _grad_u[_qp] * _normals[_qp] +
+            _diff_neighbor[_qp] * _grad_u_neighbor[_qp] * _normals[_qp]) *
            _test_neighbor[_i][_qp];
       r += _epsilon * 0.5 * (_u[_qp] - _u_neighbor[_qp]) * _diff_neighbor[_qp] *
            _grad_test_neighbor[_i][_qp] * _normals[_qp];

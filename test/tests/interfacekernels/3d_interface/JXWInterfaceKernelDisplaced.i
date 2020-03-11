@@ -3,29 +3,6 @@
   displacements = 'disp_x disp_y disp_z'
 []
 
-[Variables]
-      [./disp_x]
-      [../]
-      [./disp_y]
-      [../]
-      [./disp_z]
-      [../]
-      [./u]
-        [./InitialCondition]
-          type = ConstantIC
-          value = 1
-        [../]
-        block = 0
-      [../]
-      [./u_neighbor]
-        [./InitialCondition]
-          type = ConstantIC
-          value = 1
-        [../]
-        block = 1
-      [../]
-[]
-
 [Mesh]
   [./msh]
   type = GeneratedMeshGenerator
@@ -73,6 +50,30 @@
     nodes = '1 2 5 6 '
     new_boundary = bottom_nodes_right
   []
+[]
+
+
+[Variables]
+      [./disp_x]
+      [../]
+      [./disp_y]
+      [../]
+      [./disp_z]
+      [../]
+      [./u]
+        [./InitialCondition]
+          type = ConstantIC
+          value = 1
+        [../]
+        block = 0
+      [../]
+      [./u_neighbor]
+        [./InitialCondition]
+          type = ConstantIC
+          value = 1
+        [../]
+        block = 1
+      [../]
 []
 
 [InterfaceKernels]
