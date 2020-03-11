@@ -32,6 +32,8 @@ PenaltyInterfaceDiffusion::PenaltyInterfaceDiffusion(const InputParameters & par
 Real
 PenaltyInterfaceDiffusion::computeQpResidual(Moose::DGResidualType type)
 {
+
+  std::cout << "time " << _t << " _qp " << _qp << " JxW " << _JxW[_qp] << std::endl;
   Real r = 0;
 
   Real jump_value = 0;
