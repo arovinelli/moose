@@ -25,6 +25,7 @@ CohesiveZoneMasterAction::validParams()
   params.addRequiredParam<std::vector<VariableName>>(
       "displacements",
       "The displacements appropriate for the simulation geometry and coordinate system");
+  params.addParam<bool>("use_displaced_mesh", false, "if the disaplced mesh should be used");
   return params;
 }
 
@@ -49,7 +50,7 @@ CohesiveZoneMasterAction::act()
 
       InputParameters paramsk = _factory.getValidParams(kernel_name);
 
-      paramsk.set<bool>("use_displaced_mesh") = false;
+      paramsk.set<bool>("use_displaced_mesh") = getParam<bool>("use_displaced_mesh");
       paramsk.set<unsigned int>("component") = i;
       paramsk.set<NonlinearVariableName>("variable") = displacements[i];
       paramsk.set<std::vector<VariableName>>("neighbor_var") = {displacements[i]};
