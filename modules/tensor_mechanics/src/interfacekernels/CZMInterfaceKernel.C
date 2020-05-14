@@ -39,7 +39,9 @@ CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
     _disp_neighbor_var(_ndisp),
     _traction_global(getMaterialPropertyByName<RealVectorValue>("traction_global")),
     _traction_derivatives_global(
-        getMaterialPropertyByName<RankTwoTensor>("traction_derivatives_global"))
+        getMaterialPropertyByName<std::vector<RankTwoTensor>>("traction_derivatives_global")),
+    _traction_derivatives_global_neighbor(getMaterialPropertyByName<std::vector<RankTwoTensor>>(
+        "traction_derivatives_global_neighbor"))
 {
   if (getParam<bool>("use_displaced_mesh") == true)
     mooseError("CZMInterfaceKernel cannot be used with use_displaced_mesh = true");
@@ -67,6 +69,7 @@ CZMInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
       r *= _test_neighbor[_i][_qp];
       break;
   }
+
   return r;
 }
 
@@ -75,21 +78,27 @@ CZMInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
 {
   // retrieve the diagonal Jacobian coefficient dependning on the displacement
   // component (_component) this kernel is working on
-  Real jac = _traction_derivatives_global[_qp](_component, _component);
-
+  Real jac = 0;
+  if (_qp == 0)
+    std::cout << "\n _j " << _j << " component " << _component << "\n phi " << _phi[_j][_qp]
+              << "  phi_neigh " << _phi_neighbor[_j][_qp] << std::endl;
   switch (type)
   {
-    case Moose::ElementElement: // Residual_sign -1  ddeltaU_ddisp sign -1;
-      jac *= _test[_i][_qp] * _phi[_j][_qp];
+    case Moose::ElementElement:
+      jac = _traction_derivatives_global[_qp][_j](_component, _component);
+      jac *= -_test[_i][_qp];
       break;
-    case Moose::ElementNeighbor: // Residual_sign -1  ddeltaU_ddisp sign 1;
-      jac *= -_test[_i][_qp] * _phi_neighbor[_j][_qp];
+    case Moose::ElementNeighbor:
+      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, _component);
+      jac *= -_test[_i][_qp];
       break;
-    case Moose::NeighborElement: // Residual_sign 1  ddeltaU_ddisp sign -1;
-      jac *= -_test_neighbor[_i][_qp] * _phi[_j][_qp];
+    case Moose::NeighborElement:
+      jac = _traction_derivatives_global[_qp][_j](_component, _component);
+      jac *= _test_neighbor[_i][_qp];
       break;
-    case Moose::NeighborNeighbor: // Residual_sign 1  ddeltaU_ddisp sign 1;
-      jac *= _test_neighbor[_i][_qp] * _phi_neighbor[_j][_qp];
+    case Moose::NeighborNeighbor:
+      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, _component);
+      jac *= _test_neighbor[_i][_qp];
       break;
   }
   return jac;
@@ -108,22 +117,26 @@ CZMInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigne
   mooseAssert(off_diag_component < _ndisp,
               "CZMInterfaceKernel::computeQpOffDiagJacobian wrong offdiagonal variable");
 
-  Real jac = _traction_derivatives_global[_qp](_component, off_diag_component);
+  Real jac = 0;
 
   switch (type)
   {
-    case Moose::ElementElement: // Residual_sign -1  ddeltaU_ddisp sign -1;
-      jac *= _test[_i][_qp] * _phi[_j][_qp];
+    case Moose::ElementElement:
+      jac = _traction_derivatives_global[_qp][_j](_component, off_diag_component);
+      jac *= _test[_i][_qp];
       break;
-    case Moose::ElementNeighbor: // Residual_sign -1  ddeltaU_ddisp sign 1;
-      jac *= -_test[_i][_qp] * _phi_neighbor[_j][_qp];
+    case Moose::ElementNeighbor:
+      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, off_diag_component);
+      jac *= -_test[_i][_qp];
       break;
-    case Moose::NeighborElement: // Residual_sign 1  ddeltaU_ddisp sign -1;
-      jac *= -_test_neighbor[_i][_qp] * _phi[_j][_qp];
+    case Moose::NeighborElement:
+      jac = _traction_derivatives_global[_qp][_j](_component, off_diag_component);
+      jac *= -_test_neighbor[_i][_qp];
       break;
-    case Moose::NeighborNeighbor: // Residual_sign 1  ddeltaU_ddisp sign 1;
-      jac *= _test_neighbor[_i][_qp] * _phi_neighbor[_j][_qp];
+    case Moose::NeighborNeighbor:
+      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, off_diag_component);
+      jac *= _test_neighbor[_i][_qp];
       break;
   }
-  return jac;
+  return -jac;
 }
