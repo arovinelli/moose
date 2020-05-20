@@ -37,11 +37,11 @@ CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
     _ndisp(coupledComponents("displacements")),
     _disp_var(_ndisp),
     _disp_neighbor_var(_ndisp),
+    _vars(_ndisp),
     _traction_global(getMaterialPropertyByName<RealVectorValue>("traction_global")),
-    _traction_derivatives_global(
-        getMaterialPropertyByName<std::vector<RankTwoTensor>>("traction_derivatives_global")),
-    _traction_derivatives_global_neighbor(getMaterialPropertyByName<std::vector<RankTwoTensor>>(
-        "traction_derivatives_global_neighbor"))
+    _dtractionglobal_djumpglobal(
+        getMaterialPropertyByName<RankTwoTensor>("dtractionglobal_djumpglobal")),
+    _dtractionglobal_dF(getMaterialPropertyByName<RankThreeTensor>("dtractionglobal_dF"))
 {
   if (getParam<bool>("use_displaced_mesh") == true)
     mooseError("CZMInterfaceKernel cannot be used with use_displaced_mesh = true");
@@ -50,6 +50,7 @@ CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
   {
     _disp_var[i] = coupled("displacements", i);
     _disp_neighbor_var[i] = coupled("displacements", i);
+    _vars[i] = getVar("displacements", i);
   }
 }
 
@@ -69,7 +70,6 @@ CZMInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
       r *= _test_neighbor[_i][_qp];
       break;
   }
-
   return r;
 }
 
@@ -78,27 +78,25 @@ CZMInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
 {
   // retrieve the diagonal Jacobian coefficient dependning on the displacement
   // component (_component) this kernel is working on
+  Real jacsd = _dtractionglobal_djumpglobal[_qp](_component, _component);
   Real jac = 0;
-  if (_qp == 0)
-    std::cout << "\n _j " << _j << " component " << _component << "\n phi " << _phi[_j][_qp]
-              << "  phi_neigh " << _phi_neighbor[_j][_qp] << std::endl;
   switch (type)
   {
-    case Moose::ElementElement:
-      jac = _traction_derivatives_global[_qp][_j](_component, _component);
-      jac *= -_test[_i][_qp];
+    case Moose::ElementElement: // Residual_sign -1  ddeltaU_ddisp sign -1;
+      jac += _test[_i][_qp] * jacsd * _vars[_component]->phiFace()[_j][_qp];
+      jac -= _test[_i][_qp] * JacLD(_component, /*neighbor=*/false);
       break;
-    case Moose::ElementNeighbor:
-      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, _component);
-      jac *= -_test[_i][_qp];
+    case Moose::ElementNeighbor: // Residual_sign -1  ddeltaU_ddisp sign 1;
+      jac -= _test[_i][_qp] * jacsd * _vars[_component]->phiFaceNeighbor()[_j][_qp];
+      jac -= _test[_i][_qp] * JacLD(_component, /*neighbor=*/true);
       break;
-    case Moose::NeighborElement:
-      jac = _traction_derivatives_global[_qp][_j](_component, _component);
-      jac *= _test_neighbor[_i][_qp];
+    case Moose::NeighborElement: // Residual_sign 1  ddeltaU_ddisp sign -1;
+      jac -= _test_neighbor[_i][_qp] * jacsd * _vars[_component]->phiFace()[_j][_qp];
+      jac += _test_neighbor[_i][_qp] * JacLD(_component, /*neighbor=*/false);
       break;
-    case Moose::NeighborNeighbor:
-      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, _component);
-      jac *= _test_neighbor[_i][_qp];
+    case Moose::NeighborNeighbor: // Residual_sign 1  ddeltaU_ddisp sign 1;
+      jac += _test_neighbor[_i][_qp] * jacsd * _vars[_component]->phiFaceNeighbor()[_j][_qp];
+      jac += _test_neighbor[_i][_qp] * JacLD(_component, /*neighbor=*/true);
       break;
   }
   return jac;
@@ -117,26 +115,43 @@ CZMInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigne
   mooseAssert(off_diag_component < _ndisp,
               "CZMInterfaceKernel::computeQpOffDiagJacobian wrong offdiagonal variable");
 
+  Real jacsd = _dtractionglobal_djumpglobal[_qp](_component, off_diag_component);
   Real jac = 0;
 
   switch (type)
   {
-    case Moose::ElementElement:
-      jac = _traction_derivatives_global[_qp][_j](_component, off_diag_component);
-      jac *= _test[_i][_qp];
+    case Moose::ElementElement: // Residual_sign -1  ddeltaU_ddisp sign -1;
+      jac += _test[_i][_qp] * jacsd * _vars[off_diag_component]->phiFace()[_j][_qp];
+      jac -= _test[_i][_qp] * JacLD(off_diag_component, /*neighbor=*/false);
       break;
-    case Moose::ElementNeighbor:
-      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, off_diag_component);
-      jac *= -_test[_i][_qp];
+    case Moose::ElementNeighbor: // Residual_sign -1  ddeltaU_ddisp sign 1;
+      jac -= _test[_i][_qp] * jacsd * _vars[off_diag_component]->phiFaceNeighbor()[_j][_qp];
+      jac -= _test[_i][_qp] * JacLD(off_diag_component, /*neighbor=*/true);
       break;
-    case Moose::NeighborElement:
-      jac = _traction_derivatives_global[_qp][_j](_component, off_diag_component);
-      jac *= -_test_neighbor[_i][_qp];
+    case Moose::NeighborElement: // Residual_sign 1  ddeltaU_ddisp sign -1;
+      jac -= _test_neighbor[_i][_qp] * jacsd * _vars[off_diag_component]->phiFace()[_j][_qp];
+      jac += _test_neighbor[_i][_qp] * JacLD(off_diag_component, /*neighbor=*/false);
       break;
-    case Moose::NeighborNeighbor:
-      jac = _traction_derivatives_global_neighbor[_qp][_j](_component, off_diag_component);
-      jac *= _test_neighbor[_i][_qp];
+    case Moose::NeighborNeighbor: // Residual_sign 1  ddeltaU_ddisp sign 1;
+      jac +=
+          _test_neighbor[_i][_qp] * jacsd * _vars[off_diag_component]->phiFaceNeighbor()[_j][_qp];
+      jac += _test_neighbor[_i][_qp] * JacLD(off_diag_component, /*neighbor=*/true);
       break;
   }
-  return -jac;
+  return jac;
+}
+
+Real
+CZMInterfaceKernel::JacLD(const unsigned int cc, const bool neighbor) const
+{
+  Real jacld = 0;
+  RealVectorValue phi;
+  if (neighbor)
+    phi = 0.5 * _vars[cc]->gradPhiFaceNeighbor()[_j][_qp];
+  else
+    phi = 0.5 * _vars[cc]->gradPhiFace()[_j][_qp];
+
+  for (unsigned int j = 0; j < 3; j++)
+    jacld += _dtractionglobal_dF[_qp](_component, cc, j) * phi(j);
+  return jacld;
 }

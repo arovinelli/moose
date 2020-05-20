@@ -26,6 +26,9 @@ protected:
   virtual Real computeQpJacobian(Moose::DGJacobianType type);
   virtual Real computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigned int jvar);
 
+  /// method the jacobian contribution due to rotations and area changes
+  Real JacLD(const unsigned int cc, const bool neighbor) const;
+
   /// the displacement component this kernel is operating on (0=x, 1=y, 2 =z)
   const unsigned int _component;
 
@@ -36,12 +39,14 @@ protected:
   ///@{
   std::vector<unsigned int> _disp_var;
   std::vector<unsigned int> _disp_neighbor_var;
+
+  std::vector<MooseVariable *> _vars;
   ///@}
 
   // values of the traction and traction derivatives used
   ///@{
   const MaterialProperty<RealVectorValue> & _traction_global;
-  const MaterialProperty<std::vector<RankTwoTensor>> & _traction_derivatives_global;
-  const MaterialProperty<std::vector<RankTwoTensor>> & _traction_derivatives_global_neighbor;
+  const MaterialProperty<RankTwoTensor> & _dtractionglobal_djumpglobal;
+  const MaterialProperty<RankThreeTensor> & _dtractionglobal_dF;
   ///@}
 };

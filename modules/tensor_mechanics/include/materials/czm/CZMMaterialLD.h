@@ -90,9 +90,9 @@ protected:
   /// the traction's derivatives wrt the displacement jump in global and local
   /// coordinates
   ///@{
-  MaterialProperty<std::vector<RankTwoTensor>> & _traction_derivatives_global;
-  MaterialProperty<std::vector<RankTwoTensor>> & _traction_derivatives_global_neighbor;
-  MaterialProperty<RankTwoTensor> & _traction_derivatives;
+  MaterialProperty<RankTwoTensor> & _dtractionglobal_djumpglobal;
+  MaterialProperty<RankThreeTensor> & _dtractionglobal_dF;
+  MaterialProperty<RankTwoTensor> & _dtraction_djump;
   ///@}
 
   // MaterialProperty<RealVectorValue> &_traction_global_deformed;
@@ -145,6 +145,83 @@ protected:
 
   RankFourTensor computedRdF(const RankTwoTensor & R, const RankTwoTensor & U);
 
+  RankThreeTensor RijklVj(const RankFourTensor & R4, const RealVectorValue & V)
+  {
+    RankThreeTensor res;
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int k = 0; k < 3; k++)
+        for (unsigned int l = 0; l < 3; l++)
+        {
+          res(i, k, l) = 0;
+          for (unsigned int j = 0; j < 3; j++)
+            res(i, k, l) += R4(i, j, k, l) * V(j);
+        }
+    return res;
+  }
+
+  RankThreeTensor RijklVl(const RankFourTensor & R4, const RealVectorValue & V)
+  {
+    RankThreeTensor res;
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int k = 0; k < 3; k++)
+        for (unsigned int l = 0; l < 3; l++)
+        {
+          res(i, k, l) = 0;
+          for (unsigned int j = 0; j < 3; j++)
+            res(i, k, l) += R4(i, j, k, l) * V(j);
+        }
+    return res;
+  }
+
+  RankThreeTensor RjiklVj(const RankFourTensor & R4, const RealVectorValue & V)
+  {
+    RankThreeTensor res;
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int k = 0; k < 3; k++)
+        for (unsigned int l = 0; l < 3; l++)
+        {
+          res(i, k, l) = 0;
+          for (unsigned int j = 0; j < 3; j++)
+            res(i, k, l) += R4(j, i, k, l) * V(j);
+        }
+    return res;
+  }
+
+  RankFourTensor dR2inverse(const RankTwoTensor & R2_inv)
+  {
+    RankFourTensor res;
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int k = 0; k < 3; k++)
+        for (unsigned int l = 0; l < 3; l++)
+          for (unsigned int j = 0; j < 3; j++)
+            res(i, j, k, l) = R2_inv(i, k) * R2_inv(l, j);
+    return res;
+  }
+
+  RankThreeTensor RijRjkl(const RankTwoTensor & R2, const RankThreeTensor & R3)
+  {
+    RankThreeTensor res;
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int j = 0; j < 3; j++)
+        for (unsigned int k = 0; k < 3; k++)
+          for (unsigned int l = 0; l < 3; l++)
+            res(i, k, l) += R2(i, j) * R3(j, k, l);
+    return res;
+  }
+
+  RankFourTensor RijklRjm(const RankFourTensor & R4, const RankTwoTensor & R2)
+  {
+    RankFourTensor res;
+    res.zero();
+    for (unsigned int i = 0; i < 3; i++)
+      for (unsigned int j = 0; j < 3; j++)
+        for (unsigned int k = 0; k < 3; k++)
+          for (unsigned int l = 0; l < 3; l++)
+            for (unsigned int m = 0; m < 3; m++)
+              res(i, m, k, l) += R4(i, j, k, l) * R2(j, m);
+    return res;
+  }
+
   RankTwoTensor RijkVk(const RankThreeTensor & R3, const RealVectorValue & V)
   {
     RankTwoTensor res = RankTwoTensor::initNone;
@@ -152,6 +229,16 @@ protected:
       for (unsigned int j = 0; j < 3; j++)
         for (unsigned int k = 0; k < 3; k++)
           res(i, j) += R3(i, j, k) * V(k);
+    return res;
+  }
+
+  RankTwoTensor RijkVi(const RankThreeTensor & R3, const RealVectorValue & V)
+  {
+    RankTwoTensor res = RankTwoTensor::initNone;
+    for (unsigned int j = 0; j < 3; j++)
+      for (unsigned int k = 0; k < 3; k++)
+        for (unsigned int i = 0; i < 3; i++)
+          res(j, k) += R3(i, j, k) * V(i);
     return res;
   }
 
