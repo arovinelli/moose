@@ -265,4 +265,10 @@ protected:
               res(j, i, m) += R4(j, i, k, l) * R3(k, l, m);
     return res;
   }
+
+  void evaluateMP();
+
+  RankTwoTensor _perturbedF;
+  RealVectorValue _perturbedU;
+  RankFourTensor _dR_dF;
 };
