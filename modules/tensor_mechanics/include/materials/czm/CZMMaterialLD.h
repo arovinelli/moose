@@ -127,6 +127,7 @@ protected:
   RankTwoTensor _K = RankTwoTensor::Identity();
   const bool _ld;
   const bool _use_area_change;
+  const bool _check_jacobian;
 
   // void update_L_df_vorticity(const RankTwoTensor &def_grad,
   //                            const RankTwoTensor &def_grad_old,
@@ -194,7 +195,7 @@ protected:
       for (unsigned int k = 0; k < 3; k++)
         for (unsigned int l = 0; l < 3; l++)
           for (unsigned int j = 0; j < 3; j++)
-            res(i, j, k, l) = R2_inv(i, k) * R2_inv(l, j);
+            res(i, j, k, l) -= R2_inv(i, k) * R2_inv(l, j);
     return res;
   }
 
@@ -271,4 +272,5 @@ protected:
   RankTwoTensor _perturbedF;
   RealVectorValue _perturbedU;
   RankFourTensor _dR_dF;
+  RankTwoTensor _da_dF;
 };
