@@ -129,18 +129,9 @@ protected:
   const bool _use_area_change;
   const bool _check_jacobian;
 
-  // void update_L_df_vorticity(const RankTwoTensor &def_grad,
-  //                            const RankTwoTensor &def_grad_old,
-  //                            RankTwoTensor &L, RankTwoTensor &df,
-  //                            RankTwoTensor &vorticity_inc);
-
   void computeFandL();
 
   void PolarDecomposition(const RankTwoTensor & F, RankTwoTensor & R, RankTwoTensor & U) const;
-
-  // void computeRdot(const RankTwoTensor &F, const RankTwoTensor &L,
-  //                  const RankTwoTensor &R, const RankTwoTensor &U,
-  //                  RankTwoTensor &Rdot);
 
   void computeSdot(const RankTwoTensor & L, const RealVectorValue & n, Real & sdot);
 
@@ -195,7 +186,7 @@ protected:
       for (unsigned int k = 0; k < 3; k++)
         for (unsigned int l = 0; l < 3; l++)
           for (unsigned int j = 0; j < 3; j++)
-            res(i, j, k, l) -= R2_inv(i, k) * R2_inv(l, j);
+            res(i, j, k, l) = -R2_inv(i, k) * R2_inv(l, j);
     return res;
   }
 
@@ -269,8 +260,16 @@ protected:
 
   void evaluateMP();
 
+  Real _a;
+  RankTwoTensor _B;
+  RankTwoTensor _C;
+  RankTwoTensor _D;
+
   RankTwoTensor _perturbedF;
   RealVectorValue _perturbedU;
   RankFourTensor _dR_dF;
   RankTwoTensor _da_dF;
+  RankFourTensor _dB_dF;
+  RankFourTensor _dC_dF;
+  RankFourTensor _dCT_dF;
 };

@@ -144,19 +144,27 @@ CZMMaterialLD::computeQpProperties()
     evaluateMP();
     // actual values
     const RealVectorValue actual_traction = _traction_global[_qp];
-    const RankTwoTensor actual_R = _R_avg[_qp];
-    const Real dadA_actual = _dadA_avg[_qp];
+    const RankTwoTensor R_actual = _R_avg[_qp];
+    const Real a_actual = _a;
+    const RankTwoTensor B_actual = _B;
+    const RankTwoTensor C_actual = _C;
 
     // analytic derivatives
     const RankThreeTensor dt_df_an = _dtractionglobal_dF[_qp];
     const RankTwoTensor dt_du_an = _dtractionglobal_djumpglobal[_qp];
     const RankFourTensor dR_df_an = _dR_dF;
     const RankTwoTensor da_df_an = _da_dF;
+    const RankFourTensor dB_df_an = _dB_dF;
+    const RankFourTensor dC_df_an = _dC_dF;
+    const RankFourTensor dCT_df_an = _dCT_dF;
 
     // fd derivatives to compute
     RankFourTensor dR_df_fd;
     RankThreeTensor dt_df_fd;
     RankTwoTensor da_df_fd;
+    RankFourTensor dB_df_fd;
+    RankFourTensor dC_df_fd;
+    RankFourTensor dCT_df_fd;
     _perturbedF = RankTwoTensor::initNone;
     _perturbedU.zero();
     for (unsigned int i = 0; i < 3; i++)
@@ -166,14 +174,19 @@ CZMMaterialLD::computeQpProperties()
         _perturbedF(i, j) = delta;
         evaluateMP();
         // evaluate FD for scalars
-        da_df_fd(i, j) = (_dadA_avg[_qp] - dadA_actual) / _perturbedF(i, j);
+        da_df_fd(i, j) = (_a - a_actual) / _perturbedF(i, j);
         for (unsigned int k = 0; k < 3; k++)
         {
           // evaluate FD for RealVectors
           dt_df_fd(k, i, j) = (_traction_global[_qp](k) - actual_traction(k)) / _perturbedF(i, j);
           for (unsigned int l = 0; l < 3; l++)
+          {
             // evaluate FD for RankTwoTensors
-            dR_df_fd(k, l, i, j) = (_R_avg[_qp](k, l) - actual_R(k, l)) / _perturbedF(i, j);
+            dR_df_fd(k, l, i, j) = (_R_avg[_qp](k, l) - R_actual(k, l)) / _perturbedF(i, j);
+            dB_df_fd(k, l, i, j) = (_B(k, l) - B_actual(k, l)) / _perturbedF(i, j);
+            dC_df_fd(k, l, i, j) = (_C(k, l) - C_actual(k, l)) / _perturbedF(i, j);
+            dCT_df_fd(k, l, i, j) = (_C(l, k) - C_actual(l, k)) / _perturbedF(i, j);
+          }
         }
       }
 
@@ -241,6 +254,48 @@ CZMMaterialLD::computeQpProperties()
                         << " AN= " << da_df_an(i, j) << " FD= " << da_df_fd(i, j) << std::endl;
           }
         std::cout << "\n\n";
+
+        std::cout << " _DB_DF \n";
+        for (unsigned int i = 0; i < 3; i++)
+          for (unsigned int j = 0; j < 3; j++)
+            for (unsigned int k = 0; k < 3; k++)
+              for (unsigned int l = 0; l < 3; l++)
+              {
+                Real diff = std::abs(dB_df_an(i, j, k, l) - dB_df_fd(i, j, k, l));
+                if (diff > tol)
+                  std::cout << "component(" << i << "," << j << "," << k << "," << l
+                            << ")= " << diff << " AN= " << dB_df_an(i, j, k, l)
+                            << " FD= " << dB_df_fd(i, j, k, l) << std::endl;
+              }
+        std::cout << "\n\n";
+
+        std::cout << " _DC_DF \n";
+        for (unsigned int i = 0; i < 3; i++)
+          for (unsigned int j = 0; j < 3; j++)
+            for (unsigned int k = 0; k < 3; k++)
+              for (unsigned int l = 0; l < 3; l++)
+              {
+                Real diff = std::abs(dC_df_an(i, j, k, l) - dC_df_fd(i, j, k, l));
+                if (diff > tol)
+                  std::cout << "component(" << i << "," << j << "," << k << "," << l
+                            << ")= " << diff << " AN= " << dC_df_an(i, j, k, l)
+                            << " FD= " << dC_df_fd(i, j, k, l) << std::endl;
+              }
+        std::cout << "\n\n";
+
+        std::cout << " _DCT_DF \n";
+        for (unsigned int i = 0; i < 3; i++)
+          for (unsigned int j = 0; j < 3; j++)
+            for (unsigned int k = 0; k < 3; k++)
+              for (unsigned int l = 0; l < 3; l++)
+              {
+                Real diff = std::abs(dCT_df_an(i, j, k, l) - dCT_df_fd(i, j, k, l));
+                if (diff > tol)
+                  std::cout << "component(" << i << "," << j << "," << k << "," << l
+                            << ")= " << diff << " AN= " << dCT_df_an(i, j, k, l)
+                            << " FD= " << dCT_df_fd(i, j, k, l) << std::endl;
+              }
+        std::cout << "\n\n";
       }
 
       if (print && !_ld)
@@ -301,31 +356,31 @@ CZMMaterialLD::evaluateMP()
     if (_use_area_change)
     {
       _n_avg[_qp] = _R_avg[_qp] * _normals[_qp];
-      // _dsdotdS_avg[_qp] = _DL_avg[_qp].trace() - _n_avg[_qp] * (_DL_avg[_qp] * _n_avg[_qp]);
+      _dsdotdS_avg[_qp] = _DL_avg[_qp].trace() - _n_avg[_qp] * (_DL_avg[_qp] * _n_avg[_qp]);
       _dadA_avg[_qp] =
           _F_avg[_qp].det() * ((_F_avg[_qp].inverse().transpose() * _normals[_qp]).norm());
     }
   }
 
-  const Real a = _dadA_avg[_qp];
-  const RankTwoTensor C = _DR_avg[_qp] * Q0.transpose();
-  const RankTwoTensor D = _R_avg[_qp] * Q0.transpose();
-  const RankTwoTensor B = _dsdotdS_avg[_qp] * D;
+  _a = _dadA_avg[_qp];
+  _C = _DR_avg[_qp] * Q0.transpose();
+  _D = _R_avg[_qp] * Q0.transpose();
+  _B = _dsdotdS_avg[_qp] * _D;
 
   // compute local displacement jump
-  _displacement_jump[_qp] = D.transpose() * _displacement_jump_global[_qp];
-  _displacement_jump_inc[_qp] = C.transpose() * _displacement_jump_global[_qp] +
-                                D.transpose() * _displacement_jump_global_inc[_qp];
+  _displacement_jump[_qp] = _D.transpose() * _displacement_jump_global[_qp];
+  _displacement_jump_inc[_qp] = _C.transpose() * _displacement_jump_global[_qp] +
+                                _D.transpose() * _displacement_jump_global_inc[_qp];
 
   computeTractionAndDerivatives();
 
   // assemble PK1 traction
-  _traction_global_inc[_qp] = C * _traction[_qp] + D * _traction_inc[_qp];
+  _traction_global_inc[_qp] = _C * _traction[_qp] + _D * _traction_inc[_qp];
 
   if (_ld && _use_area_change)
   {
-    _traction_global_inc[_qp] += B * _traction[_qp];
-    _traction_global_inc[_qp] *= a;
+    _traction_global_inc[_qp] += _B * _traction[_qp];
+    _traction_global_inc[_qp] *= _a;
   }
 
   _traction_global[_qp] = _traction_global_old[_qp] + _traction_global_inc[_qp];
@@ -335,9 +390,9 @@ CZMMaterialLD::evaluateMP()
   ******************************************************/
 
   // here we compute the derivative of the global traction wrt the actual disaplcment jump
-  const RankTwoTensor djump_djumpglobal = (C + D).transpose();
+  const RankTwoTensor djump_djumpglobal = (_C + _D).transpose();
   const RankTwoTensor dtraction_djumpglobal = _dtraction_djump[_qp] * djump_djumpglobal;
-  _dtractionglobal_djumpglobal[_qp] = a * ((B + C + D) * dtraction_djumpglobal);
+  _dtractionglobal_djumpglobal[_qp] = _a * ((_B + _C + _D) * dtraction_djumpglobal);
 
   /*****************************************************
   COMPUTE DERIVATIVE W.R.T. THE DEFORMATION GRADIENT
@@ -347,24 +402,22 @@ CZMMaterialLD::evaluateMP()
   else
   {
     _dR_dF = computedRdF(_R_avg[_qp], _U_avg[_qp]);
-    // const RankFourTensor dD_dF = dC_dF;
-    RankFourTensor dC_dF, dC_dF_T;
+    // const RankFourTensor dD_dF = _dC_dF;
     for (unsigned int i = 0; i < 3; i++)
       for (unsigned int j = 0; j < 3; j++)
         for (unsigned int l = 0; l < 3; l++)
           for (unsigned int m = 0; m < 3; m++)
           {
-            dC_dF(i, j, l, m) = 0;
-            dC_dF_T(i, j, l, m) = 0;
+            _dC_dF(i, j, l, m) = 0;
+            _dCT_dF(i, j, l, m) = 0;
             for (unsigned int k = 0; k < 3; k++)
             {
-              dC_dF(i, j, l, m) += _dR_dF(i, k, l, m) * Q0(j, k);
-              dC_dF_T(i, j, l, m) += Q0(i, k) * _dR_dF(j, k, l, m);
+              _dC_dF(i, j, l, m) += _dR_dF(i, k, l, m) * Q0(j, k);
+              _dCT_dF(i, j, l, m) += Q0(i, k) * _dR_dF(j, k, l, m);
             }
           }
-    // const RankFourTensor dD_dF = dC_dF;
+    // const RankFourTensor dD_dF = _dC_dF;
 
-    RankFourTensor dB_dF;
     RealVectorValue tempV;
     RankTwoTensor R2temp;
     RankThreeTensor R3temp;
@@ -425,30 +478,32 @@ CZMMaterialLD::evaluateMP()
         for (unsigned int q = 0; q < 3; q++)
         {
           R2temp(p, q) = 0;
-          for (unsigned int r = 0; r < 3; r++)
-            for (unsigned int l = 0; l < 3; l++)
+          for (unsigned int i = 0; i < 3; i++)
+            for (unsigned int j = 0; j < 3; j++)
               for (unsigned int k = 0; k < 3; k++)
-                R2temp(p, q) +=
-                    _dR_dF(k, r, p, q) * _normals[_qp](r) * _DL_avg[_qp](k, l) * _n_avg[_qp](l) +
-                    _dR_dF(l, r, p, q) * _normals[_qp](r) * _DL_avg[_qp](k, l) * _n_avg[_qp](k) +
-                    dDL_dF(k, l, p, q) * _n_avg[_qp](k) * _n_avg[_qp](l);
+                for (unsigned int l = 0; l < 3; l++)
+                  R2temp(p, q) += _dR_dF(i, k, p, q) * _normals[_qp](k) * _DL_avg[_qp](i, j) *
+                                      _R_avg[_qp](j, l) * _normals[_qp](l) +
+                                  _dR_dF(j, l, p, q) * _normals[_qp](l) * _DL_avg[_qp](i, j) *
+                                      _R_avg[_qp](i, k) * _normals[_qp](k) +
+                                  dDL_dF(i, j, p, q) * _R_avg[_qp](i, k) * _normals[_qp](k) *
+                                      _R_avg[_qp](j, l) * _normals[_qp](l);
         }
 
-      // assemble ddsdotdS_dF*D
+      // assemble ddsdotdS_dF*_D
       for (unsigned int i = 0; i < 3; i++)
         for (unsigned int j = 0; j < 3; j++)
           for (unsigned int r = 0; r < 3; r++)
             for (unsigned int s = 0; s < 3; s++)
-              R4temp(i, j, r, s) = (dtraceDL_dF(r, s) - R2temp(r, s)) * D(i, j);
-      dB_dF = R4temp + _dsdotdS_avg[_qp] * dC_dF;
-      dB_dF.zero();
+              R4temp(i, j, r, s) = (dtraceDL_dF(r, s) - R2temp(r, s)) * _D(i, j);
+      _dB_dF = R4temp + _dsdotdS_avg[_qp] * _dC_dF;
     }
     RankThreeTensor T1, T2, T3;
 
     // assmble T1
     if (_use_area_change)
     {
-      tempV = (B + C) * _traction[_qp] + D * _traction_inc[_qp];
+      tempV = (_B + _C) * _traction[_qp] + _D * _traction_inc[_qp];
       for (unsigned int i = 0; i < 3; i++)
         for (unsigned int j = 0; j < 3; j++)
           for (unsigned int k = 0; k < 3; k++)
@@ -459,15 +514,15 @@ CZMMaterialLD::evaluateMP()
 
     // assemeble T2;
     tempV = _traction[_qp] + _traction_inc[_qp];
-    T2 = a * RijklVj(dC_dF, tempV);
+    T2 = _a * RijklVj(_dC_dF, tempV);
     if (_use_area_change)
-      T2 += a * RijklVj(dB_dF, _traction[_qp]);
+      T2 += _a * RijklVj(_dB_dF, _traction[_qp]);
 
     // assemeble T3;
-    R2temp = (B + C + D) * _dtraction_djump[_qp];
+    R2temp = (_B + _C + _D) * _dtraction_djump[_qp];
     tempV = _displacement_jump_global[_qp] + _displacement_jump_global_inc[_qp];
-    R3temp = RijklVj(dC_dF_T, tempV);
-    T3 = a * RijRjkl(R2temp, R3temp);
+    R3temp = RijklVj(_dCT_dF, tempV);
+    T3 = _a * RijRjkl(R2temp, R3temp);
 
     _dtractionglobal_dF[_qp] = T1 + T2 + T3;
   }
@@ -500,8 +555,8 @@ CZMMaterialLD::PolarDecomposition(const RankTwoTensor & F,
   std::vector<Real> e_value(3);
   RankTwoTensor e_vector, N1, N2, N3;
 
-  RankTwoTensor C = F.transpose() * F;
-  C.symmetricEigenvaluesEigenvectors(e_value, e_vector);
+  RankTwoTensor _C = F.transpose() * F;
+  _C.symmetricEigenvaluesEigenvectors(e_value, e_vector);
 
   const Real lambda1 = std::sqrt(e_value[0]);
   const Real lambda2 = std::sqrt(e_value[1]);
