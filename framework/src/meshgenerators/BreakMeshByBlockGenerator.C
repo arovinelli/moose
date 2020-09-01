@@ -12,7 +12,7 @@
 
 #include "libmesh/distributed_mesh.h"
 #include "libmesh/elem.h"
-
+#include "libmesh/partitioner.h"
 #include <typeinfo>
 
 registerMooseObject("MooseApp", BreakMeshByBlockGenerator);
@@ -163,6 +163,7 @@ BreakMeshByBlockGenerator::generate()
   }     // end nodeptr check
 
   addInterfaceBoundary(*mesh);
+  Partitioner::set_node_processor_ids(*mesh);
   return dynamic_pointer_cast<MeshBase>(mesh);
 }
 
