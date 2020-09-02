@@ -83,5 +83,6 @@
     min_parallel = 4
     max_parallel = 5
     recover = false
+    method = 'dbg'
   [../]
 []
