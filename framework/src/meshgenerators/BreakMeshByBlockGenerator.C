@@ -28,11 +28,20 @@ BreakMeshByBlockGenerator::validParams()
                              "attached. Naming convention for the new boundaries will be the old "
                              "boundary name plus \"_to_\" plus the subdomain name. At the moment"
                              "this only works on REPLICATED mesh");
+  params.addParam<std::vector<SubdomainID>>(
+      "block",
+      "The list of subdomain names where neml mehcanisc should be used, "
+      "default all blocks.");
   return params;
 }
 
 BreakMeshByBlockGenerator::BreakMeshByBlockGenerator(const InputParameters & parameters)
-  : BreakMeshByBlockGeneratorBase(parameters), _input(getMesh("input"))
+  : BreakMeshByBlockGeneratorBase(parameters),
+    _input(getMesh("input")),
+    _block(parameters.isParamSetByUser("block") ? getParam<std::vector<SubdomainID>>("block")
+                                                : std::vector<SubdomainID>(0)),
+    _block_set(_block.begin(), _block.end()),
+    _block_restricted(parameters.isParamSetByUser("block"))
 {
   if (typeid(_input).name() == typeid(DistributedMesh).name())
     mooseError("BreakMeshByBlockGenerator only works with ReplicatedMesh.");
@@ -47,7 +56,15 @@ BreakMeshByBlockGenerator::generate()
   std::map<dof_id_type, std::vector<dof_id_type>> node_to_elem_map;
   for (const auto & elem : mesh->active_element_ptr_range())
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      node_to_elem_map[elem->node_id(n)].push_back(elem->id());
+    {
+      if (!_block_restricted)
+        node_to_elem_map[elem->node_id(n)].push_back(elem->id());
+      else
+      {
+        if (_block_set.find(elem->subdomain_id()) != _block_set.end())
+          node_to_elem_map[elem->node_id(n)].push_back(elem->id());
+      }
+    }
 
   for (auto node_it = node_to_elem_map.begin(); node_it != node_to_elem_map.end(); ++node_it)
   {
@@ -61,7 +78,13 @@ BreakMeshByBlockGenerator::generate()
       for (auto elem_id = node_it->second.begin(); elem_id != node_it->second.end(); elem_id++)
       {
         const Elem * current_elem = mesh->elem_ptr(*elem_id);
+        //   if (!_block_restricted)
         connected_blocks.insert(current_elem->subdomain_id());
+        // else
+        // {
+        //   if (_block_set.find(current_elem->subdomain_id()) != _block_set.end())
+        //     connected_blocks.insert(current_elem->subdomain_id());
+        // }
       }
 
       unsigned int node_multiplicity = connected_blocks.size();
