@@ -27,17 +27,19 @@ public:
   std::unique_ptr<MeshBase> generate() override;
 
 protected:
+  int blockRestricteElementSubdomainID(const Elem * elem);
+
   std::unique_ptr<MeshBase> & _input;
   std::vector<SubdomainID> _block;
   std::unordered_set<SubdomainID> _block_set;
   const bool _block_restricted;
+  const bool _create_transition_boundary;
 
 private:
   /// generate the new boundary interface
   void addInterfaceBoundary(MeshBase & mesh);
 
   std::set<std::pair<subdomain_id_type, subdomain_id_type>> _neighboring_block_list;
-  std::map<std::pair<subdomain_id_type, subdomain_id_type>,
-           std::set<std::pair<dof_id_type, unsigned int>>>
+  std::map<std::pair<int, int>, std::set<std::pair<dof_id_type, unsigned int>>>
       _new_boundary_sides_map;
 };
