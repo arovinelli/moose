@@ -223,7 +223,7 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
     else // block resticted with transition boundary
     {
       if (boundary_side_map.first.first == -1 ||
-          boundary_side_map.first.second == -1) // we are creating the trnasition boundary
+          boundary_side_map.first.second == -1) // we are creating the transition boundary
       {
         boundaryID = findFreeBoundaryId(mesh);
         boundaryName = "interface_transition";
