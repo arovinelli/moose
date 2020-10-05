@@ -69,8 +69,8 @@ BreakMeshByBlockGeneratorBase::findFreeBoundaryId(MeshBase & mesh)
 
 std::string
 BreakMeshByBlockGeneratorBase::generateBoundaryName(MeshBase & mesh,
-                                                    const int & primaryBlockID,
-                                                    const int & secondaryBlockID)
+                                                    const subdomain_id_type & primaryBlockID,
+                                                    const subdomain_id_type & secondaryBlockID)
 {
   std::string primary_block_name = mesh.subdomain_name(primaryBlockID);
   std::string secondary_block_name = mesh.subdomain_name(secondaryBlockID);
@@ -91,8 +91,8 @@ BreakMeshByBlockGeneratorBase::mapBoundaryIdAndBoundaryName(boundary_id_type & b
 
 void
 BreakMeshByBlockGeneratorBase::findBoundaryNameAndInd(MeshBase & mesh,
-                                                      const int & primaryBlockID,
-                                                      const int & secondaryBlockID,
+                                                      const subdomain_id_type & primaryBlockID,
+                                                      const subdomain_id_type & secondaryBlockID,
                                                       std::string & boundaryName,
                                                       boundary_id_type & boundaryID,
                                                       BoundaryInfo & boundary_info)

@@ -72,7 +72,7 @@ BreakMeshByBlockGenerator::generate()
     if (current_node != nullptr)
     {
       // find node multiplicity
-      std::set<int> connected_blocks;
+      std::set<subdomain_id_type> connected_blocks;
       for (auto elem_id = node_it->second.begin(); elem_id != node_it->second.end(); elem_id++)
       {
         const Elem * current_elem = mesh->elem_ptr(*elem_id);
@@ -87,9 +87,13 @@ BreakMeshByBlockGenerator::generate()
         // retrieve connected elements from the map
         const std::vector<dof_id_type> & connected_elems = node_it->second;
 
-        // find reference_subdomain_id (e.g. the subdomain with lower id)
+        // find reference_subdomain_id (e.g. the subdomain with lower id or the
+        // Elem::invalid_subdomain_id)
         auto subdomain_it = connected_blocks.begin();
-        int reference_subdomain_id = *subdomain_it;
+        subdomain_id_type reference_subdomain_id =
+            connected_blocks.find(Elem::invalid_subdomain_id) != connected_blocks.end()
+                ? Elem::invalid_subdomain_id
+                : *subdomain_it;
         // multiplicity counter to keep track of how many nodes we added
         unsigned int multiplicity_counter = node_multiplicity;
         for (auto elem_id : connected_elems)
@@ -157,22 +161,25 @@ BreakMeshByBlockGenerator::generate()
           {
             Elem * current_elem = mesh->elem_ptr(elem_id);
             Elem * connected_elem = mesh->elem_ptr(connected_elem_id);
-            int curr_elem_subid = blockRestricteElementSubdomainID(current_elem);
-            int connected_elem_subid = blockRestricteElementSubdomainID(connected_elem);
+            subdomain_id_type curr_elem_subid = blockRestricteElementSubdomainID(current_elem);
+            subdomain_id_type connected_elem_subid =
+                blockRestricteElementSubdomainID(connected_elem);
 
             if (current_elem != connected_elem && curr_elem_subid < connected_elem_subid)
             {
               if (current_elem->has_neighbor(connected_elem))
               {
 
-                std::pair<int, int> blocks_pair =
+                std::pair<subdomain_id_type, subdomain_id_type> blocks_pair =
                     std::make_pair(curr_elem_subid, connected_elem_subid);
 
                 // we want to create a special boundary for the transition, much easier to do it
                 // here than later
                 if (_block_restricted && _create_transition_boundary &&
-                    (curr_elem_subid == -1 || connected_elem_subid == -1))
-                  blocks_pair = std::make_pair(-1, -1);
+                    (curr_elem_subid == Elem::invalid_subdomain_id ||
+                     connected_elem_subid == Elem::invalid_subdomain_id))
+                  blocks_pair =
+                      std::make_pair(Elem::invalid_subdomain_id, Elem::invalid_subdomain_id);
 
                 _new_boundary_sides_map[blocks_pair].insert(std::make_pair(
                     current_elem->id(), current_elem->which_neighbor_am_i(connected_elem)));
@@ -222,8 +229,9 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
     }
     else // block resticted with transition boundary
     {
-      if (boundary_side_map.first.first == -1 ||
-          boundary_side_map.first.second == -1) // we are creating the transition boundary
+      if (boundary_side_map.first.first == Elem::invalid_subdomain_id ||
+          boundary_side_map.first.second ==
+              Elem::invalid_subdomain_id) // we are creating the transition boundary
       {
         boundaryID = findFreeBoundaryId(mesh);
         boundaryName = "interface_transition";
@@ -253,12 +261,12 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
   }
 }
 
-int
+subdomain_id_type
 BreakMeshByBlockGenerator::blockRestricteElementSubdomainID(const Elem * elem)
 {
-  int elem_subdomain_id = elem->subdomain_id();
+  subdomain_id_type elem_subdomain_id = elem->subdomain_id();
   if (_block_restricted && (_block_set.find(elem_subdomain_id) == _block_set.end()))
-    elem_subdomain_id = -1;
+    elem_subdomain_id = Elem::invalid_subdomain_id;
 
   return elem_subdomain_id;
 }
