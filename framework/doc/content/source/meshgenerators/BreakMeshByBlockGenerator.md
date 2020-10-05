@@ -10,6 +10,8 @@ To split the mesh, nodes shared by multiple blocks are duplicated N-1 times (whe
 
 As an option, the interface can be split into $Q$ different sidesets, where $Q$ is the number of adjacent block pairs. This is achieved by setting `split_interface=true` and is useful when modeling interfaces with different parameters.
 
+The split can be restricted to the blocks listed in the `block` input parameter. When blocks are provided the additional boundary `interface_transition` is added. The `interface_transition` boundary identifies the interface between the provided blocks and the rest of the mesh. The creation of `interface_transition` boundary can be inhibited by setting `create_transition_boundary=false`. The `interface_transition` boundary cannot be split using `split_interface=true`.
+
 ## Example Input File Syntax
 
 ### Single Interface

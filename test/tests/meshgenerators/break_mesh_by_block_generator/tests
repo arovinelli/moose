@@ -91,9 +91,9 @@
     input = 'break_mesh_block_restricted.i'
     cli_args = '--mesh-only'
     exodiff = 'break_mesh_block_restricted_in.e'
-    requirement = 'The system shall be able to break teh mesh only for some blocks'
+    requirement = 'The system shall be able to break teh mesh only between listed blocks'
     design = 'meshgenerators/BreakMeshByBlockGenerator.md'
-    issues = '#15793'
+    issues = '#15895'
     mesh_mode = 'REPLICATED'
     recover = false
   [../]
