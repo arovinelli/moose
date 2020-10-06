@@ -33,7 +33,8 @@ protected:
   std::vector<SubdomainID> _block;
   std::unordered_set<SubdomainID> _block_set;
   const bool _block_restricted;
-  const bool _create_transition_boundary;
+  const bool _add_transition_interface;
+  const bool _split_transition_interface;
 
 private:
   /// generate the new boundary interface

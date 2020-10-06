@@ -32,8 +32,13 @@ BreakMeshByBlockGenerator::validParams()
       "block",
       "The list of subdomain names where neml mehcanisc should be used, "
       "default all blocks.");
-  params.addParam<bool>("create_transition_boundary",
+  params.addParam<bool>("add_transition_interface",
                         true,
+                        "If true (default) and block is not empty, a special boundary named "
+                        "interface_transition is generate between listed blocks and other blocks. "
+                        "The transition boundary will not be split if split_interface=true");
+  params.addParam<bool>("split_transition_interface",
+                        false,
                         "If true (default) and block is not empty, a special boundary named "
                         "interface_transition is generate between listed blocks and other blocks. "
                         "The transition boundary will not be split if split_interface=true");
@@ -47,10 +52,15 @@ BreakMeshByBlockGenerator::BreakMeshByBlockGenerator(const InputParameters & par
                                                 : std::vector<SubdomainID>(0)),
     _block_set(_block.begin(), _block.end()),
     _block_restricted(parameters.isParamSetByUser("block")),
-    _create_transition_boundary(getParam<bool>("create_transition_boundary"))
+    _add_transition_interface(getParam<bool>("add_transition_interface")),
+    _split_transition_interface(getParam<bool>("split_transition_interface"))
 {
   if (typeid(_input).name() == typeid(DistributedMesh).name())
     mooseError("BreakMeshByBlockGenerator only works with ReplicatedMesh.");
+
+  if (!_add_transition_interface && _split_transition_interface)
+    mooseError("BreakMeshByBlockGenerator cannot split the transition interface becasue "
+               "add_transition_interface is false");
 }
 
 std::unique_ptr<MeshBase>
@@ -170,19 +180,27 @@ BreakMeshByBlockGenerator::generate()
               if (current_elem->has_neighbor(connected_elem))
               {
 
+                dof_id_type elem_id = current_elem->id();
+                unsigned int side = current_elem->which_neighbor_am_i(connected_elem);
+
+                // in this case we need to play a game to reorder the sides
+                if (_block_restricted)
+                {
+                  connected_elem_subid = connected_elem->subdomain_id();
+                  if (curr_elem_subid > connected_elem_subid) // we need to switch the ids
+                  {
+                    connected_elem_subid = current_elem->subdomain_id();
+                    curr_elem_subid = connected_elem->subdomain_id();
+
+                    elem_id = connected_elem->id();
+                    side = connected_elem->which_neighbor_am_i(current_elem);
+                  }
+                }
+
                 std::pair<subdomain_id_type, subdomain_id_type> blocks_pair =
                     std::make_pair(curr_elem_subid, connected_elem_subid);
 
-                // we want to create a special boundary for the transition, much easier to do it
-                // here than later
-                if (_block_restricted && _create_transition_boundary &&
-                    (curr_elem_subid == Elem::invalid_subdomain_id ||
-                     connected_elem_subid == Elem::invalid_subdomain_id))
-                  blocks_pair =
-                      std::make_pair(Elem::invalid_subdomain_id, Elem::invalid_subdomain_id);
-
-                _new_boundary_sides_map[blocks_pair].insert(std::make_pair(
-                    current_elem->id(), current_elem->which_neighbor_am_i(connected_elem)));
+                _new_boundary_sides_map[blocks_pair].insert(std::make_pair(elem_id, side));
               }
             }
           }
@@ -203,13 +221,15 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
   BoundaryInfo & boundary_info = mesh.get_boundary_info();
 
   boundary_id_type boundaryID;
-  boundary_id_type boundaryID_interface = findFreeBoundaryId(mesh);
+  boundary_id_type boundaryID_interface = Moose::INVALID_BOUNDARY_ID;
+  boundary_id_type boundaryID_interface_transition = Moose::INVALID_BOUNDARY_ID;
+
   std::string boundaryName;
 
   // loop over boundary sides
   for (auto & boundary_side_map : _new_boundary_sides_map)
   {
-    if (!_block_restricted || (_block_restricted && !_create_transition_boundary))
+    if (!_block_restricted || (_block_restricted && !_add_transition_interface))
     {
       // find the appropriate boundary name and id
       //  given primary and secondary block ID
@@ -223,36 +243,49 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
       else
       {
         boundaryName = _interface_name;
+        boundaryID_interface = boundaryID_interface == Moose::INVALID_BOUNDARY_ID
+                                   ? findFreeBoundaryId(mesh)
+                                   : boundaryID_interface;
         boundaryID = boundaryID_interface;
         boundary_info.sideset_name(boundaryID_interface) = boundaryName;
       }
     }
     else // block resticted with transition boundary
     {
-      if (boundary_side_map.first.first == Elem::invalid_subdomain_id ||
-          boundary_side_map.first.second ==
-              Elem::invalid_subdomain_id) // we are creating the transition boundary
+
+      const bool interior_boundary =
+          _block_set.find(boundary_side_map.first.first) != _block_set.end() &&
+          _block_set.find(boundary_side_map.first.second) != _block_set.end();
+
+      if ((_split_interface && interior_boundary) ||
+          (_split_transition_interface && !interior_boundary))
       {
-        boundaryID = findFreeBoundaryId(mesh);
-        boundaryName = "interface_transition";
-        boundary_info.sideset_name(boundaryID) = boundaryName;
-        boundaryID_interface = boundaryID + 1;
+        findBoundaryNameAndInd(mesh,
+                               boundary_side_map.first.first,
+                               boundary_side_map.first.second,
+                               boundaryName,
+                               boundaryID,
+                               boundary_info);
+      }
+      else if (interior_boundary)
+      {
+        boundaryName = _interface_name;
+        boundaryID_interface = boundaryID_interface == Moose::INVALID_BOUNDARY_ID
+                                   ? findFreeBoundaryId(mesh)
+                                   : boundaryID_interface;
+
+        boundaryID = boundaryID_interface;
+        boundary_info.sideset_name(boundaryID_interface) = boundaryName;
       }
       else
       {
-        if (_split_interface)
-          findBoundaryNameAndInd(mesh,
-                                 boundary_side_map.first.first,
-                                 boundary_side_map.first.second,
-                                 boundaryName,
-                                 boundaryID,
-                                 boundary_info);
-        else
-        {
-          boundaryName = _interface_name;
-          boundaryID = boundaryID_interface;
-          boundary_info.sideset_name(boundaryID_interface) = boundaryName;
-        }
+        boundaryID_interface_transition =
+            boundaryID_interface_transition == Moose::INVALID_BOUNDARY_ID
+                ? findFreeBoundaryId(mesh)
+                : boundaryID_interface_transition;
+        boundaryID = boundaryID_interface_transition;
+        boundaryName = "interface_transition";
+        boundary_info.sideset_name(boundaryID) = boundaryName;
       }
     }
     // loop over all the side belonging to each pair and add it to the proper interface
