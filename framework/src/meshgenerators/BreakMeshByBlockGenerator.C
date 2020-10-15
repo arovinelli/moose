@@ -48,7 +48,7 @@ BreakMeshByBlockGenerator::validParams()
                         "If true write the fake neighbor list to a text file");
   params.addParam<std::string>("fake_neighbor_list_file_name",
                                "FakeNeighborList.txt",
-                               "The file name where teh fake neighbor list will be saved");
+                               "The file name where the fake neighbor list will be saved");
   return params;
 }
 
