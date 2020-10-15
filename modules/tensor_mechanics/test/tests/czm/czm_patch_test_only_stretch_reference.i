@@ -2,15 +2,15 @@
 [Mesh]
   [./msh]
     type = FileMeshGenerator
-    file = czm_break_patch_in.e
+    file = patch_mesh.e
   []
-  [./add_fake_neighbor]
-    type = AssignFakeNeighborFromList
+  [./break]
+    type = BreakMeshByBlockGenerator
     input = msh
   []
   [./add_surfaces]
     type = SideSetsFromNormalsGenerator
-    input = add_fake_neighbor
+    input = break
     normals = '0  0  1
                0  1  0
                1  0  0
@@ -146,9 +146,4 @@
 [Outputs]
   csv = true
   exodus = true
-  [./checkpoint]
-    type = Checkpoint
-    num_files = 1
-    interval = 3
-  [../]
 []

@@ -1,8 +1,8 @@
 # Patch test for cohesive zone modeling to check convergence
 [Mesh]
   [./msh]
-  type = FileMeshGenerator
-  file = patch_mesh.e
+    type = FileMeshGenerator
+    file = czm_patch_test_only_stretch_checkpoint_cp/0003_mesh.cpr
   []
   [./add_fake_neighbor]
     type = AssignFakeNeighborFromList
@@ -91,6 +91,14 @@
     fill_method = symmetric9
     C_ijkl = '1.684e5 0.176e5 0.176e5 1.684e5 0.176e5 1.684e5 0.754e5 0.754e5 0.754e5'
   [../]
+  [./czm_mat]
+    boundary = 'interface'
+    type=SalehaniIrani3DCTraction
+    normal_gap_at_maximum_normal_traction=0.05
+    tangential_gap_at_maximum_shear_traction=0.05
+    maximum_normal_traction=1e1
+    maximum_shear_traction=7e0
+  [../]
 []
 
 
@@ -116,7 +124,6 @@
   nl_max_its = 15
   nl_rel_tol = 1e-10
   nl_abs_tol = 1e-10
-  start_time = 0.0
   dt = 0.25
   end_time = 1
 []

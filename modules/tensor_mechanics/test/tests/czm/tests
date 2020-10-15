@@ -108,4 +108,24 @@
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
     recover = false
   [../]
+  [./czm_only_stretch_reference]
+    type = Exodiff
+    input = 'czm_patch_test_only_stretch_reference.i'
+    exodiff = 'czm_patch_test_only_stretch_reference_out.e'
+    requirement = "This is a baseline result for relaod tests."
+    issues = '#15368'
+    mesh_mode = 'REPLICATED'
+    design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
+    recover = false
+  [../]
+  [./czm_only_stretch]
+    type = Exodiff
+    input = 'czm_patch_test_only_stretch.i'
+    exodiff = 'czm_patch_test_only_stretch_out.e'
+    requirement = "This is a baseline result for relaod tests."
+    issues = '#15368'
+    mesh_mode = 'REPLICATED'
+    design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
+    recover = false
+  [../]
 []
