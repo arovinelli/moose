@@ -28,6 +28,7 @@ public:
 
 protected:
   subdomain_id_type blockRestricteElementSubdomainID(const Elem * elem);
+  void writeFakeNeighborListToFile(MeshBase & mesh) const;
 
   std::unique_ptr<MeshBase> & _input;
   std::vector<SubdomainID> _block;
@@ -35,6 +36,10 @@ protected:
   const bool _block_restricted;
   const bool _add_transition_interface;
   const bool _split_transition_interface;
+  const bool _write_fake_neighbor_list_to_file;
+  const std::string _fake_neighbor_list_file_name;
+  /// the total number of fake neighbors
+  int _n_fake_neighbors = 0;
 
 private:
   /// generate the new boundary interface

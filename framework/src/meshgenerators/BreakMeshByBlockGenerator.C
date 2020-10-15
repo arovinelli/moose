@@ -14,6 +14,7 @@
 #include "libmesh/elem.h"
 #include "libmesh/partitioner.h"
 #include <typeinfo>
+#include <fstream>
 
 registerMooseObject("MooseApp", BreakMeshByBlockGenerator);
 
@@ -42,6 +43,12 @@ BreakMeshByBlockGenerator::validParams()
                         "If true (default) and block is not empty, a special boundary named "
                         "interface_transition is generate between listed blocks and other blocks. "
                         "The transition boundary will not be split if split_interface=true");
+  params.addParam<bool>("write_fake_neighbor_list_to_file",
+                        false,
+                        "If true write the fake neighbor list to a text file");
+  params.addParam<std::string>("fake_neighbor_list_file_name",
+                               "FakeNeighborList.txt",
+                               "The file name where teh fake neighbor list will be saved");
   return params;
 }
 
@@ -53,7 +60,9 @@ BreakMeshByBlockGenerator::BreakMeshByBlockGenerator(const InputParameters & par
     _block_set(_block.begin(), _block.end()),
     _block_restricted(parameters.isParamSetByUser("block")),
     _add_transition_interface(getParam<bool>("add_transition_interface")),
-    _split_transition_interface(getParam<bool>("split_transition_interface"))
+    _split_transition_interface(getParam<bool>("split_transition_interface")),
+    _write_fake_neighbor_list_to_file(getParam<bool>("write_fake_neighbor_list_to_file")),
+    _fake_neighbor_list_file_name(getParam<std::string>("fake_neighbor_list_file_name"))
 {
   if (typeid(_input).name() == typeid(DistributedMesh).name())
     mooseError("BreakMeshByBlockGenerator only works with ReplicatedMesh.");
@@ -212,6 +221,8 @@ BreakMeshByBlockGenerator::generate()
 
   addInterfaceBoundary(*mesh);
   Partitioner::set_node_processor_ids(*mesh);
+  if (_write_fake_neighbor_list_to_file == true)
+    writeFakeNeighborListToFile(*mesh);
   return dynamic_pointer_cast<MeshBase>(mesh);
 }
 
@@ -225,7 +236,7 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
   boundary_id_type boundaryID_interface_transition = Moose::INVALID_BOUNDARY_ID;
 
   std::string boundaryName;
-
+  _n_fake_neighbors = 0;
   // loop over boundary sides
   for (auto & boundary_side_map : _new_boundary_sides_map)
   {
@@ -290,7 +301,10 @@ BreakMeshByBlockGenerator::addInterfaceBoundary(MeshBase & mesh)
     }
     // loop over all the side belonging to each pair and add it to the proper interface
     for (auto & element_side : boundary_side_map.second)
+    {
       boundary_info.add_side(element_side.first, element_side.second, boundaryID);
+      _n_fake_neighbors++;
+    }
   }
 }
 
@@ -302,4 +316,31 @@ BreakMeshByBlockGenerator::blockRestricteElementSubdomainID(const Elem * elem)
     elem_subdomain_id = Elem::invalid_subdomain_id;
 
   return elem_subdomain_id;
+}
+
+void
+BreakMeshByBlockGenerator::writeFakeNeighborListToFile(MeshBase & mesh) const
+{
+  if (mesh.processor_id() == 0)
+  {
+    std::ofstream myfile(_fake_neighbor_list_file_name);
+
+    if (myfile.is_open())
+    {
+      myfile << _n_fake_neighbors << std::endl;
+      // loop over boundary sides
+      for (auto & boundary_side_map : _new_boundary_sides_map)
+        for (auto & element_side : boundary_side_map.second)
+        {
+          myfile << element_side.first << " " << element_side.second << " ";
+          const Elem * elem = mesh.elem_ptr(element_side.first);
+          const Elem * neighbor = elem->neighbor_ptr(element_side.second);
+          myfile << neighbor->id() << " " << neighbor->which_neighbor_am_i(elem) << std::endl;
+        }
+
+      myfile.close();
+    }
+    else
+      mooseError("BreakMeshByBlockGenerator: can't write fakeneighbor list ot file ");
+  }
 }
