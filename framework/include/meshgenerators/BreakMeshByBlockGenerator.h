@@ -37,7 +37,7 @@ protected:
   const bool _add_transition_interface;
   const bool _split_transition_interface;
   const bool _write_fake_neighbor_list_to_file;
-  const std::string _fake_neighbor_list_file_name;
+  const FileName _fake_neighbor_list_file_name;
   /// the total number of fake neighbors
   int _n_fake_neighbors = 0;
 

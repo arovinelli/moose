@@ -46,9 +46,9 @@ BreakMeshByBlockGenerator::validParams()
   params.addParam<bool>("write_fake_neighbor_list_to_file",
                         false,
                         "If true write the fake neighbor list to a text file");
-  params.addParam<std::string>("fake_neighbor_list_file_name",
-                               "FakeNeighborList.txt",
-                               "The file name where the fake neighbor list will be saved");
+  params.addParam<FileName>("fake_neighbor_list_file_name",
+                            "FakeNeighborList.txt",
+                            "The file name where the fake neighbor list will be saved");
   return params;
 }
 
@@ -62,7 +62,7 @@ BreakMeshByBlockGenerator::BreakMeshByBlockGenerator(const InputParameters & par
     _add_transition_interface(getParam<bool>("add_transition_interface")),
     _split_transition_interface(getParam<bool>("split_transition_interface")),
     _write_fake_neighbor_list_to_file(getParam<bool>("write_fake_neighbor_list_to_file")),
-    _fake_neighbor_list_file_name(getParam<std::string>("fake_neighbor_list_file_name"))
+    _fake_neighbor_list_file_name(getParam<FileName>("fake_neighbor_list_file_name"))
 {
   if (typeid(_input).name() == typeid(DistributedMesh).name())
     mooseError("BreakMeshByBlockGenerator only works with ReplicatedMesh.");

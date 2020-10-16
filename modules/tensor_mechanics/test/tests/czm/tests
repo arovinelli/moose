@@ -112,7 +112,18 @@
     type = Exodiff
     input = 'czm_patch_test_only_stretch_reference.i'
     exodiff = 'czm_patch_test_only_stretch_reference_out.e'
-    requirement = "This is a baseline result for relaod tests."
+    requirement = "The system should be able to use a split mesh. This iwll also serve as baseline for restart."
+    issues = '#15368'
+    mesh_mode = 'REPLICATED'
+    design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
+    recover = false
+  [../]
+  [./czm_only_stretch_reference_restart]
+    type = Exodiff
+    prereq = 'czm_only_stretch_reference'
+    input = 'czm_patch_test_only_stretch_reference_restart.i'
+    exodiff = 'czm_patch_test_only_stretch_reference_restart_out.e'
+    requirement = "The system should be able to use a split mesh. This iwll also serve as baseline for restart."
     issues = '#15368'
     mesh_mode = 'REPLICATED'
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
@@ -122,7 +133,18 @@
     type = Exodiff
     input = 'czm_patch_test_only_stretch.i'
     exodiff = 'czm_patch_test_only_stretch_out.e'
-    requirement = "This is a baseline result for relaod tests."
+    requirement = "The system should be able to use a split mesh. This iwll also serve as baseline for restart."
+    issues = '#15368'
+    mesh_mode = 'REPLICATED'
+    design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'
+    recover = false
+  [../]
+  [./czm_only_stretch_restart]
+    type = Exodiff
+    prereq = 'czm_only_stretch'
+    input = 'czm_patch_test_only_stretch_restart.i'
+    exodiff = 'czm_patch_test_only_stretch_restart_out.e'
+    requirement = "This is use checkpoints from  czm_only_stretch test to check reload is done properly"
     issues = '#15368'
     mesh_mode = 'REPLICATED'
     design = 'source/materials/czm/SalehaniIrani3DCTraction.md source/interfacekernels/CZMInterfaceKernel.md'

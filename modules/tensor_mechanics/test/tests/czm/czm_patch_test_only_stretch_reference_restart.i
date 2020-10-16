@@ -2,30 +2,17 @@
 [Mesh]
   [./msh]
     type = FileMeshGenerator
-    file = patch_mesh.e
+    file = czm_patch_test_only_stretch_reference_out_cp/0003_mesh.cpr
   []
-  [./transform]
-    type = TransformGenerator
+  [./add_fake_neighbor]
+    type = AssignFakeNeighborFromList
     input = msh
-    transform = TRANSLATE
-    vector_value = '-0.5 -0.5 -0.5'
   []
-  [./break]
-    type = BreakMeshByBlockGenerator
-    input = transform
-  []
-  [./add_surfaces]
-    type = SideSetsFromNormalsGenerator
-    input = break
-    normals = '0  0  1
-               0  1  0
-               1  0  0
-               0  0 -1
-               0 -1  0
-              -1  0  0'
-    fixed_normal = true
-    new_boundary = 'front top right back bottom left'
-  []
+[]
+
+[Problem]
+  #Note that the suffix is left off in the parameter below.
+  restart_file_base = czm_patch_test_only_stretch_reference_out_cp/0003  # You may also use a specific number here
 []
 
 [GlobalParams]
@@ -137,7 +124,6 @@
   nl_max_its = 15
   nl_rel_tol = 1e-10
   nl_abs_tol = 1e-10
-  start_time = 0.0
   dt = 0.25
   end_time = 1
 []

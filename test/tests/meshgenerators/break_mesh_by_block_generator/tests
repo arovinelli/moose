@@ -170,4 +170,59 @@
     recover = false
   [../]
 
+  [./bmbb_simple_diffusion]
+    type = 'Exodiff'
+    input = 'simple_diffusion.i'
+    exodiff = 'simple_diffusion_out.e'
+    requirement = 'The system shall be able to break teh mesh only between listed blocks without creating a transition boundary'
+    design = 'meshgenerators/BreakMeshByBlockGenerator.md'
+    issues = '#15895'
+    mesh_mode = 'REPLICATED'
+    recover = false
+  [../]
+  [./bmbb_simple_diffusion_restart]
+    type = 'Exodiff'
+    prereq = 'bmbb_simple_diffusion'
+    input = 'simple_diffusion_restart.i'
+    exodiff = 'simple_diffusion_restart_out.e'
+    requirement = 'The system shall be able to break teh mesh only between listed blocks without creating a transition boundary'
+    design = 'meshgenerators/BreakMeshByBlockGenerator.md'
+    issues = '#15895'
+    mesh_mode = 'REPLICATED'
+    recover = false
+  [../]
+  [./simple_diffusion_break_mesh]
+    type = 'Exodiff'
+    cli_args = '--mesh-only'
+    input = 'simple_diffusion_break_mesh.i'
+    exodiff = 'simple_diffusion_break_mesh_in.e'
+    requirement = 'The system shall be able to break teh mesh only between listed blocks without creating a transition boundary'
+    design = 'meshgenerators/BreakMeshByBlockGenerator.md'
+    issues = '#15895'
+    mesh_mode = 'REPLICATED'
+    recover = false
+  [../]
+  [./bmbb_simple_diffusion_presplit]
+    type = 'Exodiff'
+    prereq = 'simple_diffusion_break_mesh bmbb_simple_diffusion'
+    input = 'simple_diffusion_presplit.i'
+    exodiff = 'simple_diffusion_presplit_out.e'
+    requirement = 'The system shall be able to break teh mesh only between listed blocks without creating a transition boundary'
+    design = 'meshgenerators/BreakMeshByBlockGenerator.md'
+    issues = '#15895'
+    mesh_mode = 'REPLICATED'
+    recover = false
+  [../]
+  [./bmbb_simple_diffusion_presplit_restart]
+    type = 'Exodiff'
+    prereq = 'bmbb_simple_diffusion_presplit'
+    input = 'simple_diffusion_presplit_restart.i'
+    exodiff = 'simple_diffusion_presplit_restart_out.e'
+    requirement = 'The system shall be able to break teh mesh only between listed blocks without creating a transition boundary'
+    design = 'meshgenerators/BreakMeshByBlockGenerator.md'
+    issues = '#15895'
+    mesh_mode = 'REPLICATED'
+    recover = false
+  [../]
+
 []
