@@ -144,8 +144,12 @@
 
 
 [Outputs]
-  csv = true
-  exodus = true
+  [./out]
+    type = Exodus
+    sync_only = true
+    sync_times = '1'
+    execute_on = 'TIMESTEP_END'
+  []
   [./checkpoint]
     type = Checkpoint
     num_files = 1
