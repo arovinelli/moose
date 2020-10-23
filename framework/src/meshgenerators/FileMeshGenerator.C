@@ -16,6 +16,7 @@
 #include "libmesh/face_quad4.h"
 #include "libmesh/exodusII_io.h"
 #include "libmesh/mesh_communication.h"
+#include "libmesh/remote_elem.h"
 
 registerMooseObject("MooseApp", FileMeshGenerator);
 
