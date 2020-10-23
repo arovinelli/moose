@@ -12,6 +12,7 @@
 #include "RestartableDataIO.h"
 
 #include "libmesh/replicated_mesh.h"
+#include "libmesh/default_coupling.h"
 #include "libmesh/face_quad4.h"
 #include "libmesh/exodusII_io.h"
 #include "libmesh/mesh_communication.h"
@@ -50,8 +51,8 @@ FileMeshGenerator::FileMeshGenerator(const InputParameters & parameters)
 {
   if (_has_fake_neighbors && !parameters.isParamSetByUser("fake_neighbor_list_file_name"))
     paramError("fake_neighbor_list_file_name",
-               "whe setting has_fake_neighbors=true, you als need to provide "
-               "fake_neighbor_list_file_name ");
+               "when setting has_fake_neighbors=true, you also must provide "
+               "fake_neighbor_list_file_name");
 
   if (_has_fake_neighbors)
     readFakeNeighborListFromFile();
@@ -123,8 +124,11 @@ FileMeshGenerator::generate()
 
   if (_has_fake_neighbors)
   {
+    mesh->add_ghosting_functor(std::make_shared<DefaultCoupling>());
     reassignFakeNeighbors(*mesh);
     mesh->skip_partitioning(false);
+    mesh->allow_remote_element_removal(true);
+#ifndef NDEBUG
     // now we loop over all the elements and sides, search for fake neighbors and rrelink them
     for (auto elem : mesh->active_element_ptr_range())
     {
@@ -143,6 +147,7 @@ FileMeshGenerator::generate()
       }
       std::cerr << "\n \n  ";
     }
+#endif
   }
 
   return dynamic_pointer_cast<MeshBase>(mesh);
