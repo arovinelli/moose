@@ -1,9 +1,19 @@
 [Mesh]
   [msh]
     type = FileMeshGenerator
-    # file = testfile.cpr
-    # has_fake_neighbors = true
-    # fake_neighbor_list_file_name = 'fake_neighbors_test_bmbb.csv'
+    file = RVE_test_mesh.e
+  []
+  [add_side_sets]
+    input = msh
+    type = SideSetsFromNormalsGenerator
+    normals = '0 -1  0
+               0  1  0
+               -1 0  0
+               1  0  0
+               0  0 -1
+               0  0  1'
+    fixed_normal = true
+    new_boundary = 'y0 y1 x0 x1 z0 z1'
   []
 []
 
@@ -122,7 +132,7 @@
 
 
 [Outputs]
-  sync_times = '0 0.1 1 10 100 1000 10000 100000 1000000'
+  sync_times = '0 0.1 1'
   csv = true
   #print_linear_converged_reason = false
   #print_nonlinear_converged_reason = false

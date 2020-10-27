@@ -18,15 +18,18 @@ EXECUTIONER=$MOOSE_DIR"/modules/tensor_mechanics/tensor_mechanics-"$EXEXCUTIONER
 # $MOOSE_DIR/test/moose_test-$MOOSE_TEST_EXEXCUTIONER_TYPE -i simple_diffusion_test_mesh_prepare_split.i Mesh/msh/file=simple_diffusion_test_mesh_break_out.e Mesh/msh/exodus_extra_element_integers='bmbb_element_id' --split-mesh $NCPU --split-file $CHECKPOINT_FILE_NAME
 
 ## Step 2-3: break and split the mesh this seems safe
-$EXECUTIONER -i TM_test_break.i --split-mesh 10 --split-file $CHECKPOINT_FILE_NAME
+$EXECUTIONER -i TM_test_run0_split.i --split-mesh 10 --split-file $CHECKPOINT_FILE_NAME
 
 ##Step 4: runnign the simulation for the first time
-mpirun -np $NCPU $EXECUTIONER -i TM_test_run0_split.i --distributed-mesh Mesh/msh/file=$CHECKPOINT_FILE_NAME Outputs/nemesis=true Outputs/checkpoint=true
+mpirun -np $NCPU $EXECUTIONER -i TM_test_run0_split.i --distributed-mesh Mesh/active=msh Mesh/msh/file=$CHECKPOINT_FILE_NAME Outputs/nemesis=true Outputs/checkpoint=true
 
-#Step 5: restarting the simulation using the msae input file, notice the problem paramter to relaod stateful var
-RESTART_CHECKPOINT_FILE_LOCATION="TM_test_run0_split_out_cp"
-CHECKPOINT_ID="0009"
-mpirun -np $NCPU $EXECUTIONER -i TM_test_run0_split.i Mesh/msh/file=$RESTART_CHECKPOINT_FILE_LOCATION/${CHECKPOINT_ID}_mesh.cpr  Problem/restart_file_base=$RESTART_CHECKPOINT_FILE_LOCATION/$CHECKPOINT_ID Outputs/nemesis=true Outputs/checkpoint=true Outputs/file_base="restart"
+##Step 4: runnign the simulation for the first time
+mpirun -np $NCPU $EXECUTIONER -i TM_test_run0_split.i --use-split --split-file $CHECKPOINT_FILE_NAME Outputs/nemesis=true Outputs/checkpoint=true
+
+# #Step 5: restarting the simulation using the msae input file, notice the problem paramter to relaod stateful var
+# RESTART_CHECKPOINT_FILE_LOCATION="TM_test_run0_split_out_cp"
+# CHECKPOINT_ID="0009"
+# mpirun -np $NCPU $EXECUTIONER -i TM_test_run0_split.i Mesh/msh/file=$RESTART_CHECKPOINT_FILE_LOCATION/${CHECKPOINT_ID}_mesh.cpr  Problem/restart_file_base=$RESTART_CHECKPOINT_FILE_LOCATION/$CHECKPOINT_ID Outputs/nemesis=true Outputs/checkpoint=true Outputs/file_base="restart"
 
 ## STEP 5a and 5b are two restart procedure you should not try!!!!! In way way or another tehy will broak teh output. hence they are commented
 
