@@ -129,6 +129,7 @@ FileMeshGenerator::generate()
     reassignFakeNeighbors(*mesh);
     mesh->skip_partitioning(false);
     mesh->allow_remote_element_removal(true);
+    mesh->prepare_for_use();
 #ifndef NDEBUG
     // now we loop over all the elements and sides, search for fake neighbors and rrelink them
     for (auto elem : mesh->active_element_ptr_range())
