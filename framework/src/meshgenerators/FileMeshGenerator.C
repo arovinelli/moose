@@ -125,44 +125,30 @@ FileMeshGenerator::generate()
 
   if (_has_fake_neighbors)
   {
+    mesh->prepare_for_use(); // we run this jsut to  be sure and find neighboirs
+
+    /// check if we have the proper element integer in teh mesh
+    const std::string _integer_name = "bmbb_element_id";
+    if (!mesh->has_elem_integer(_integer_name))
+      mooseError("FileMeshGenerator: Mesh does not have an element integer names as",
+                 _integer_name);
+    _integer_id = mesh->get_elem_integer_index(_integer_name);
+
     mesh->add_ghosting_functor(std::make_shared<DefaultCoupling>());
     reassignFakeNeighbors(*mesh);
     mesh->skip_partitioning(false);
     mesh->allow_remote_element_removal(true);
+    mesh->allow_find_neighbors(false);
     mesh->prepare_for_use();
-#ifndef NDEBUG
-    // now we loop over all the elements and sides, search for fake neighbors and rrelink them
-    for (auto elem : mesh->active_element_ptr_range())
-    {
-      std::cerr << "working on element " << elem->get_extra_integer(_integer_id) << "\n";
-      for (unsigned int s = 0; s < elem->n_sides(); s++)
-      {
-        std::cerr << "  side  " << s << " elem ";
-        Elem * neighbor = elem->neighbor_ptr(s);
-        if (neighbor == nullptr)
-          std::cerr << "null_ptr   ";
-        else if (neighbor == remote_elem)
-          std::cerr << "remote_elem";
-        else
-          std::cerr << neighbor->get_extra_integer(_integer_id);
-        std::cerr << "\n";
-      }
-      std::cerr << "\n \n  ";
-    }
-#endif
-  }
 
+    // TODO add mesh integrity check in debug
+  }
   return dynamic_pointer_cast<MeshBase>(mesh);
 }
 
 void
 FileMeshGenerator::reassignFakeNeighbors(MeshBase & mesh)
 {
-  /// check if we have the proper element integer in teh mesh
-  const std::string _integer_name = "bmbb_element_id";
-  if (!mesh.has_elem_integer(_integer_name))
-    mooseError("FileMeshGenerator: Mesh does not have an element integer names as", _integer_name);
-  _integer_id = mesh.get_elem_integer_index(_integer_name);
 
   // we start by generating a map between element integers and element ids
   for (const auto & elem : mesh.active_element_ptr_range())
@@ -202,6 +188,7 @@ FileMeshGenerator::assignFakeNeighbors(
     // let's get the neighbor from the map
     const unsigned int neighbor_integer = it_check->second.first;
     const dof_id_type neighbor_id = getRealIDFromInteger(neighbor_integer);
+
     if (neighbor_id != DofObject::invalid_id)
     {
       // the id is in the map, means this is an active element
