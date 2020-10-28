@@ -1,0 +1,79 @@
+[Tests]
+  [./simple_test_diffusion]
+    type = RunApp
+    input = RVE_test_run0_split_diffusion.i
+    requirement = 'MOOSE shall run this test in repliceted mode as proof that this problem can be solved'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+  [../]
+  [./simple_test_diffusion_create_split_mesh]
+    type = RunApp
+    input = RVE_test_run0_split_diffusion.i
+    requirement = 'MOOSE shall be able to split this mesh'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--split-mesh 16 --split-file split_rve_diffusion.cpr'
+    prereq='simple_test_diffusion'
+  [../]
+  [./simple_test_diffusion_use_split_mesh]
+    type = RunApp
+    input = RVE_test_run0_split_diffusion.i
+    requirement = 'MOOSE shall be able to use the split mesh generated with --split-mesh and use it as input for a distributed calculation'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--use-split --split-file split_rve_diffusion.cpr'
+    prereq='simple_test_diffusion_create_split_mesh'
+  [../]
+  [./simple_test_diffusion_use_split_mesh_distributed_checkpoint_input]
+    type = RunApp
+    input = RVE_test_run0_split_diffusion.i
+    requirement = 'MOOSE shall be able to use a split mesh file as input and run a distributed simulation'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='Mesh/active="msh" Mesh/msh/file=split_rve_diffusion.cpr --distributed-mesh'
+    prereq='simple_test_diffusion_create_split_mesh'
+  [../]
+  [./simple_test]
+    type = RunApp
+    input = RVE_test_run0_split.i
+    requirement = 'MOOSE shall run this test in repliceted mode as proof that this problem can be solved'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+  [../]
+  [./simple_test_create_split_mesh]
+    type = RunApp
+    input = RVE_test_run0_split.i
+    requirement = 'MOOSE shall be able to split this mesh'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--split-mesh 16 --split-file split_rve.cpr'
+    prereq='simple_test'
+  [../]
+  [./simple_test_use_split_mesh]
+    type = RunApp
+    input = RVE_test_run0_split.i
+    requirement = 'MOOSE shall be able to use the split mesh generated with --split-mesh and use it as input for a distributed calculation'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--use-split --split-file split_rve.cpr'
+    prereq='simple_test_create_split_mesh'
+  [../]
+  [./simple_test_use_split_mesh_distributed_checkpoint_input]
+    type = RunApp
+    input = RVE_test_run0_split.i
+    requirement = 'MOOSE shall be able to use a split mesh file as input and run a distributed simulation'
+    min_parallel = 16
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='Mesh/active="msh" Mesh/msh/file=split_rve.cpr --distributed-mesh'
+    prereq='simple_test_create_split_mesh'
+  [../]
+[]
