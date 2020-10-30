@@ -56,7 +56,11 @@ FileMeshGenerator::FileMeshGenerator(const InputParameters & parameters)
                "fake_neighbor_list_file_name");
 
   if (_has_fake_neighbors)
+  {
+    std::cerr << "FileMeshGenerator reading neighbor list from file \n";
     readFakeNeighborListFromFile();
+    std::cerr << "FileMeshGenerator donbe reading neighbor list from file \n";
+  }
 }
 
 std::unique_ptr<MeshBase>
@@ -71,6 +75,7 @@ FileMeshGenerator::generate()
     mesh->skip_partitioning(true);
   }
 
+  std::cerr << "Start reading the mesh \n";
   bool exodus =
       _file_name.rfind(".exd") < _file_name.size() || _file_name.rfind(".e") < _file_name.size();
   bool has_exodus_integers = isParamValid("exodus_extra_element_integers");
@@ -122,9 +127,10 @@ FileMeshGenerator::generate()
         restartable.readRestartableData(meta_data, DataNames());
     }
   }
-
+  std::cerr << "FileMeshGenerator done reading the mesh input file, either exo or cpr \n";
   if (_has_fake_neighbors)
   {
+    std::cerr << "First prepare for use to make sure we have all neighbors \n";
     mesh->prepare_for_use(); // we run this jsut to  be sure and find neighboirs
 
     /// check if we have the proper element integer in teh mesh
@@ -136,13 +142,16 @@ FileMeshGenerator::generate()
 
     mesh->add_ghosting_functor(std::make_shared<DefaultCoupling>());
     reassignFakeNeighbors(*mesh);
+    std::cerr << "done assgining fake neighbors \n";
     mesh->skip_partitioning(false);
     mesh->allow_remote_element_removal(true);
     mesh->allow_find_neighbors(false);
     mesh->prepare_for_use();
-
+    std::cerr << "finished last prepare_for_use without deleting fake neighbors \n";
     // TODO add mesh integrity check in debug
   }
+
+  std::cerr << "complelty done with the mesh, returning it it the main app \n";
   return dynamic_pointer_cast<MeshBase>(mesh);
 }
 
