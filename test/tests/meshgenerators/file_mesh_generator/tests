@@ -22,12 +22,14 @@
     issues = '#14916'
   [../]
   [./simple_test_diffusion_serial]
-    type = RunApp
     input = FMG_serial_and_split.i
+    type = 'Exodiff'
+    exodiff = 'simple_test_diffusion_serial_out.e'
     requirement = 'MOOSE shall run this test in repliceted mode as proof that this problem can be solved'
     min_parallel = 16
     max_parallel = 16
     recover = false
+    cli_args='Outputs/exodus=true Outputs/file_base=simple_test_diffusion_serial_out'
   [../]
   [./simple_test_diffusion_create_split]
     type = RunApp
@@ -40,23 +42,25 @@
     prereq='simple_test_diffusion_serial'
   [../]
   [./simple_test_diffusion_use_split]
-    type = RunApp
+    type = 'Exodiff'
+    exodiff = 'simple_test_diffusion_use_split_out.e'
     input = FMG_use_split.i
     requirement = 'MOOSE shall be able to use the split mesh generated with --split-mesh and use it as input for a distributed calculation'
     min_parallel = 16
     max_parallel = 16
     recover = false
-    cli_args='--use-split --split-file split_FMG_diffusion.cpr'
+    cli_args='Outputs/exodus=true Outputs/file_base=simple_test_diffusion_use_split_out --use-split --split-file split_FMG_diffusion.cpr'
     prereq='simple_test_diffusion_create_split'
   [../]
   [./simple_test_diffusion_reload_cpr]
-    type = RunApp
+    type = 'Exodiff'
+    exodiff = 'simple_test_diffusion_reload_cpr_out.e'
     input = FMG_use_split.i
     requirement = 'MOOSE shall be able to use a split mesh file as input and run a distributed simulation'
     min_parallel = 16
     max_parallel = 16
     recover = false
-    cli_args='--distributed-mesh'
+    cli_args='Outputs/exodus=true Outputs/file_base=simple_test_diffusion_reload_cpr_out --distributed-mesh'
     prereq='simple_test_diffusion_create_split'
   [../]
 []

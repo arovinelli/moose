@@ -71,8 +71,6 @@ FileMeshGenerator::generate()
         exreader->read(_file_name);
       MeshCommunication().broadcast(*mesh);
     }
-
-    mesh->prepare_for_use();
   }
   else
   {
@@ -98,6 +96,6 @@ FileMeshGenerator::generate()
         restartable.readRestartableData(meta_data, DataNames());
     }
   }
-
+  mesh->prepare_for_use();
   return dynamic_pointer_cast<MeshBase>(mesh);
 }

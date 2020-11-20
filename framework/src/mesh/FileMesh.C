@@ -136,6 +136,7 @@ FileMesh::buildMesh()
         getMesh().allow_renumbering(allow_renumbering_later);
         getMesh().skip_partitioning(skip_partitioning_later);
       }
+      getMesh().prepare_for_use();
     }
   }
 }
