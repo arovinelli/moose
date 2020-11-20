@@ -21,4 +21,42 @@
     design = 'meshgenerators/FileMeshGenerator.md'
     issues = '#14916'
   [../]
+  [./simple_test_diffusion_serial]
+    type = RunApp
+    input = FMG_serial_and_split.i
+    requirement = 'MOOSE shall run this test in repliceted mode as proof that this problem can be solved'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+  [../]
+  [./simple_test_diffusion_create_split]
+    type = RunApp
+    input = FMG_serial_and_split.i
+    requirement = 'MOOSE shall be able to split this mesh'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--split-mesh 16 --split-file split_FMG_diffusion.cpr'
+    prereq='simple_test_diffusion_serial'
+  [../]
+  [./simple_test_diffusion_use_split]
+    type = RunApp
+    input = FMG_use_split.i
+    requirement = 'MOOSE shall be able to use the split mesh generated with --split-mesh and use it as input for a distributed calculation'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--use-split --split-file split_FMG_diffusion.cpr'
+    prereq='simple_test_diffusion_create_split'
+  [../]
+  [./simple_test_diffusion_reload_cpr]
+    type = RunApp
+    input = FMG_use_split.i
+    requirement = 'MOOSE shall be able to use a split mesh file as input and run a distributed simulation'
+    min_parallel = 16
+    max_parallel = 16
+    recover = false
+    cli_args='--distributed-mesh'
+    prereq='simple_test_diffusion_create_split'
+  [../]
 []
