@@ -62,8 +62,11 @@
 
 [Executioner]
   type = FixedPointSteady
-  nl_rel_tol = 1e-2
+  nl_rel_tol = 1e-50
   nl_abs_tol = 1e-12
+  nl_max_its = 50
+  line_search = none
+  n_max_nonlinear_pingpong = 3
 []
 
 [Outputs]
